@@ -283,48 +283,66 @@ html,body{height:100%;overflow:hidden;font-family:'DM Sans',-apple-system,BlinkM
 /* ═══════════════════════════════════════
    ONBOARDING
 ═══════════════════════════════════════ */
-#ob{position:fixed;inset:0;z-index:999;background:var(--ink);display:flex;align-items:center;justify-content:center;padding:1.5rem;overflow-y:auto;}
-.ob-card{background:var(--paper);border-radius:20px;width:100%;max-width:480px;padding:2.2rem 2rem;}
-.ob-logo{font-family:'DM Serif Display',Georgia,'Times New Roman',serif;font-size:1.5rem;color:var(--green);margin-bottom:2rem;display:flex;align-items:center;gap:.5rem;}
+#ob{position:fixed;inset:0;z-index:999;background:linear-gradient(135deg,#0a1a10 0%,#0d2318 50%,#0a1a10 100%);display:flex;align-items:center;justify-content:center;padding:1.2rem;overflow-y:auto;}
+.ob-card{background:#fff;border-radius:24px;width:100%;max-width:460px;padding:2.4rem 2.2rem;box-shadow:0 32px 80px rgba(0,0,0,.35);}
+[data-theme="dark"] .ob-card{background:#161616;box-shadow:0 32px 80px rgba(0,0,0,.6);}
+.ob-logo{font-family:'DM Serif Display',Georgia,'Times New Roman',serif;font-size:1.4rem;color:var(--green);margin-bottom:2.2rem;display:flex;align-items:center;gap:.45rem;letter-spacing:-.01em;}
 .ob-logo span{color:var(--ink);}
+.ob-logo-icon{font-size:1.1rem;}
 .ob-screen{display:none;}
-.ob-screen.show{display:block;animation:fadeUp .3s ease;}
-@keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
-.ob-prog{display:flex;gap:.35rem;margin-bottom:1.8rem;}
-.ob-prog-dot{height:4px;border-radius:4px;background:var(--line);flex:1;transition:all .25s;}
+.ob-screen.show{display:block;animation:obIn .35s cubic-bezier(.22,1,.36,1);}
+@keyframes obIn{from{opacity:0;transform:translateY(16px) scale(.98)}to{opacity:1;transform:translateY(0) scale(1)}}
+/* Progress bar */
+.ob-prog{display:flex;gap:.3rem;margin-bottom:2rem;}
+.ob-prog-dot{height:3px;border-radius:3px;background:var(--line);flex:1;transition:all .4s cubic-bezier(.22,1,.36,1);}
 .ob-prog-dot.done{background:var(--green);}
-.ob-prog-dot.on{background:var(--ink);}
-.ob-h{font-family:'DM Serif Display',Georgia,'Times New Roman',serif;font-size:2rem;line-height:1.15;margin-bottom:.4rem;}
+.ob-prog-dot.on{background:var(--ink);flex:2;}
+/* Typography */
+.ob-h{font-family:'DM Serif Display',Georgia,'Times New Roman',serif;font-size:2.1rem;line-height:1.12;margin-bottom:.5rem;letter-spacing:-.02em;}
 .ob-h em{font-style:italic;color:var(--green);}
-.ob-sub{font-size:.88rem;color:var(--muted);line-height:1.65;margin-bottom:1.6rem;}
-.ob-label{display:block;font-size:.68rem;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);margin-bottom:.35rem;}
-.ob-input{width:100%;border:1.5px solid var(--line);border-radius:10px;padding:.78rem 1rem;font-family:'DM Sans',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:.95rem;font-weight:400;outline:none;background:var(--paper);color:var(--ink);margin-bottom:1rem;}
-.ob-input:focus{border-color:var(--ink);}
-.ob-btn{width:100%;background:var(--ink);color:var(--paper);border:none;border-radius:10px;padding:.88rem;font-family:'DM Sans',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:.95rem;font-weight:600;cursor:pointer;transition:opacity .15s;}
-.ob-btn:hover{opacity:.85;}
-.ob-ghost{width:100%;background:none;color:var(--muted);border:1.5px solid var(--line);border-radius:10px;padding:.72rem;font-family:'DM Sans',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:.88rem;font-weight:500;cursor:pointer;margin-top:.55rem;}
-/* struggle grid */
+.ob-sub{font-size:.86rem;color:var(--muted);line-height:1.7;margin-bottom:1.7rem;}
+.ob-label{display:block;font-size:.65rem;font-weight:700;text-transform:uppercase;letter-spacing:.12em;color:var(--muted);margin-bottom:.4rem;}
+/* Inputs */
+.ob-input{width:100%;border:1.5px solid var(--line);border-radius:12px;padding:.82rem 1rem;font-family:'DM Sans',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:.95rem;font-weight:400;outline:none;background:var(--paper);color:var(--ink);margin-bottom:1rem;box-sizing:border-box;transition:border-color .15s;}
+.ob-input:focus{border-color:var(--green);box-shadow:0 0 0 3px rgba(22,163,74,.1);}
+/* Buttons */
+.ob-btn{width:100%;background:var(--ink);color:var(--paper);border:none;border-radius:12px;padding:.92rem;font-family:'DM Sans',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:.95rem;font-weight:600;cursor:pointer;transition:all .15s;letter-spacing:-.01em;}
+.ob-btn:hover{opacity:.88;transform:translateY(-1px);}
+.ob-btn:active{transform:translateY(0);}
+.ob-ghost{width:100%;background:none;color:var(--muted);border:1.5px solid var(--line);border-radius:12px;padding:.72rem;font-family:'DM Sans',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:.85rem;font-weight:500;cursor:pointer;margin-top:.55rem;transition:all .15s;}
+.ob-ghost:hover{border-color:var(--ink);color:var(--ink);}
+/* Struggle cards */
 .sg-grid{display:grid;grid-template-columns:1fr 1fr;gap:.5rem;margin-bottom:1.5rem;}
-.sg-card{background:var(--paper2);border:1.5px solid var(--line);border-radius:10px;padding:.65rem .8rem;cursor:pointer;display:flex;align-items:center;gap:.55rem;transition:all .15s;}
-.sg-card.sel{border-color:var(--ink);background:var(--paper);}
-.sg-icon{font-size:1rem;flex-shrink:0;}
-.sg-lbl{font-size:.74rem;font-weight:500;line-height:1.3;flex:1;}
-.sg-chk{width:15px;height:15px;border-radius:50%;background:var(--ink);display:flex;align-items:center;justify-content:center;font-size:.5rem;color:var(--paper);opacity:0;transition:opacity .15s;flex-shrink:0;}
-.sg-card.sel .sg-chk{opacity:1;}
-/* companion grid */
-.comp-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:.65rem;margin-bottom:1.5rem;}
-.comp-card{background:var(--paper2);border:2px solid var(--line);border-radius:14px;padding:.9rem .6rem;cursor:pointer;text-align:center;position:relative;transition:all .2s;}
-.comp-card:hover{transform:translateY(-2px);background:var(--paper);}
-.comp-card.sel{border-color:var(--ink);background:var(--paper);}
-.comp-card.sel::after{content:'✓';position:absolute;top:7px;right:8px;background:var(--ink);color:var(--paper);border-radius:50%;width:16px;height:16px;display:flex;align-items:center;justify-content:center;font-size:.5rem;font-weight:800;}
-.comp-avi{width:52px;height:52px;border-radius:50%;margin:0 auto .45rem;display:block;border:2px solid var(--line);object-fit:cover;}
-.comp-card.sel .comp-avi{border-color:var(--ink);}
-.comp-name{font-family:'DM Serif Display',Georgia,'Times New Roman',serif;font-size:.92rem;margin-bottom:.1rem;}
-.comp-vibe{font-size:.6rem;color:var(--muted);font-weight:500;}
-/* subject chips */
-.sub-grid{display:flex;flex-wrap:wrap;gap:.4rem;margin-bottom:1.5rem;}
-.sub-chip{border:1.5px solid var(--line);background:var(--paper2);border-radius:20px;padding:.32rem .75rem;font-size:.78rem;font-weight:500;cursor:pointer;transition:all .15s;}
+.sg-card{background:var(--paper2);border:1.5px solid var(--line);border-radius:12px;padding:.7rem .85rem;cursor:pointer;display:flex;align-items:center;gap:.6rem;transition:all .18s;position:relative;}
+.sg-card:hover{border-color:var(--green);background:var(--paper);transform:translateY(-1px);}
+.sg-card.sel{border-color:var(--green);background:rgba(22,163,74,.07);}
+[data-theme="dark"] .sg-card.sel{background:rgba(22,163,74,.12);}
+.sg-icon{font-size:1.05rem;flex-shrink:0;}
+.sg-lbl{font-size:.75rem;font-weight:600;line-height:1.3;flex:1;color:var(--ink);}
+.sg-chk{width:16px;height:16px;border-radius:50%;background:var(--green);display:flex;align-items:center;justify-content:center;font-size:.52rem;color:#fff;opacity:0;transition:all .2s;flex-shrink:0;transform:scale(.5);}
+.sg-card.sel .sg-chk{opacity:1;transform:scale(1);}
+/* Coach cards */
+.comp-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:.6rem;margin-bottom:1.5rem;}
+.comp-card{background:var(--paper2);border:2px solid var(--line);border-radius:16px;padding:1rem .7rem .8rem;cursor:pointer;text-align:center;position:relative;transition:all .2s;}
+.comp-card:hover{transform:translateY(-3px);box-shadow:0 8px 24px rgba(0,0,0,.1);border-color:var(--green);}
+.comp-card.sel{border-color:var(--green);background:rgba(22,163,74,.06);transform:translateY(-2px);box-shadow:0 8px 24px rgba(22,163,74,.15);}
+[data-theme="dark"] .comp-card.sel{background:rgba(22,163,74,.1);}
+.comp-card.sel::after{content:'✓';position:absolute;top:8px;right:8px;background:var(--green);color:#fff;border-radius:50%;width:17px;height:17px;display:flex;align-items:center;justify-content:center;font-size:.55rem;font-weight:800;}
+.comp-avi{width:54px;height:54px;border-radius:50%;margin:0 auto .5rem;display:block;border:2.5px solid var(--line);object-fit:cover;transition:border-color .2s;}
+.comp-card.sel .comp-avi{border-color:var(--green);}
+.comp-name{font-family:'DM Serif Display',Georgia,'Times New Roman',serif;font-size:.95rem;margin-bottom:.2rem;}
+.comp-vibe{font-size:.6rem;color:var(--muted);font-weight:500;line-height:1.4;}
+/* Subject chips */
+.sub-grid{display:flex;flex-wrap:wrap;gap:.4rem;margin-bottom:1.2rem;}
+.sub-chip{border:1.5px solid var(--line);background:var(--paper2);border-radius:20px;padding:.35rem .8rem;font-size:.78rem;font-weight:500;cursor:pointer;transition:all .15s;}
+.sub-chip:hover{border-color:var(--green);color:var(--green);}
 .sub-chip.sel{background:var(--ink);color:var(--paper);border-color:var(--ink);}
+/* Welcome screen special */
+.ob-welcome-emoji{font-size:2.8rem;margin-bottom:1rem;display:block;animation:wave 1.2s ease-in-out;}
+@keyframes wave{0%,100%{transform:rotate(0)}25%{transform:rotate(-10deg)}75%{transform:rotate(10deg)}}
+.ob-time-row{display:flex;gap:.5rem;margin-bottom:1rem;}
+.ob-time-row .ob-input{margin-bottom:0;flex:1;}
+[data-theme="dark"] .ob-card .ob-input{background:#1e1e1e;border-color:#333;}
 
 /* ═══════════════════════════════════════
    APP SHELL
@@ -1158,86 +1176,100 @@ html, body, #app {
 <!-- ════ ONBOARDING ════ -->
 <div id="ob">
 <div class="ob-card">
-  <div class="ob-logo">Flow<span>Notes</span> 📚</div>
+  <div class="ob-logo">Flow<span>Notes</span> <span class="ob-logo-icon">📚</span></div>
 
   <!-- Step 1: Name -->
   <div class="ob-screen show" id="ob1">
     <div class="ob-prog"><div class="ob-prog-dot on"></div><div class="ob-prog-dot"></div><div class="ob-prog-dot"></div><div class="ob-prog-dot"></div><div class="ob-prog-dot"></div></div>
-    <div class="ob-h">Welcome,<br/><em>what's your name?</em></div>
-    <div class="ob-sub">Let's make this feel like yours.</div>
+    <span class="ob-welcome-emoji">👋</span>
+    <div class="ob-h">Welcome.<br/><em>What's your name?</em></div>
+    <div class="ob-sub">Let's make this feel like it was built for you.</div>
     <label class="ob-label">First name</label>
-    <input class="ob-input" id="ob-name" placeholder="e.g. Amir" onkeydown="if(event.key==='Enter')goOB(2)"/>
-    <button class="ob-btn" onclick="goOB(2)">Continue →</button>
+    <input class="ob-input" id="ob-name" placeholder="e.g. Amir" autocomplete="given-name" onkeydown="if(event.key==='Enter')goOB(2)"/>
+    <button class="ob-btn" onclick="goOB(2)">Let's go →</button>
   </div>
 
   <!-- Step 2: Subjects -->
   <div class="ob-screen" id="ob2">
     <div class="ob-prog"><div class="ob-prog-dot done"></div><div class="ob-prog-dot on"></div><div class="ob-prog-dot"></div><div class="ob-prog-dot"></div><div class="ob-prog-dot"></div></div>
     <div class="ob-h">What are you<br/><em>studying?</em></div>
-    <div class="ob-sub">Pick all that apply — you can always add more later.</div>
+    <div class="ob-sub">Pick everything that applies — you can always change this later.</div>
     <div class="sub-grid" id="ob-sub-grid">
       <div class="sub-chip" onclick="togSub(this,'Biology')">🧬 Biology</div>
       <div class="sub-chip" onclick="togSub(this,'Chemistry')">⚗️ Chemistry</div>
       <div class="sub-chip" onclick="togSub(this,'Physics')">⚛️ Physics</div>
       <div class="sub-chip" onclick="togSub(this,'Maths')">📐 Maths</div>
       <div class="sub-chip" onclick="togSub(this,'History')">📜 History</div>
-      <div class="sub-chip" onclick="togSub(this,'AP Calc')">📐 AP Calc</div>
       <div class="sub-chip" onclick="togSub(this,'Literature')">📖 Literature</div>
       <div class="sub-chip" onclick="togSub(this,'Psychology')">🧠 Psychology</div>
       <div class="sub-chip" onclick="togSub(this,'Computer Science')">💻 CS</div>
       <div class="sub-chip" onclick="togSub(this,'Economics')">📊 Economics</div>
       <div class="sub-chip" onclick="togSub(this,'Languages')">🗣️ Languages</div>
+      <div class="sub-chip" onclick="togSub(this,'Geography')">🌍 Geography</div>
       <div class="sub-chip" onclick="togSub(this,'Art')">🎨 Art</div>
     </div>
-    <!-- Custom subject input -->
-    <div style="display:flex;gap:.5rem;margin-top:.75rem;">
-      <input class="ob-input" id="ob-custom-sub" placeholder="+ Add your own (e.g. AP Calc)" style="margin-bottom:0;flex:1;" onkeydown="if(event.key==='Enter')addCustomSubject()"/>
-      <button onclick="addCustomSubject()" style="background:var(--green);color:#fff;border:none;border-radius:10px;padding:.5rem .9rem;font-weight:700;cursor:pointer;font-size:.82rem;white-space:nowrap;">Add</button>
+    <div style="display:flex;gap:.5rem;margin-bottom:.9rem;">
+      <input class="ob-input" id="ob-custom-sub" placeholder="✏️ Add your own subject…" style="margin-bottom:0;flex:1;" onkeydown="if(event.key==='Enter')addCustomSubject()"/>
+      <button onclick="addCustomSubject()" style="background:var(--green);color:#fff;border:none;border-radius:12px;padding:.5rem 1rem;font-weight:700;cursor:pointer;font-size:.82rem;white-space:nowrap;font-family:inherit;">+ Add</button>
     </div>
-    <button class="ob-btn" onclick="goOB(3)" style="margin-top:.75rem;">Next →</button>
-    <button class="ob-ghost" onclick="goOB(3)">Skip</button>
+    <button class="ob-btn" onclick="goOB(3)">Continue →</button>
+    <button class="ob-ghost" onclick="goOB(3)">Skip for now</button>
   </div>
 
   <!-- Step 3: Struggles -->
   <div class="ob-screen" id="ob3">
     <div class="ob-prog"><div class="ob-prog-dot done"></div><div class="ob-prog-dot done"></div><div class="ob-prog-dot on"></div><div class="ob-prog-dot"></div><div class="ob-prog-dot"></div></div>
     <div class="ob-h">What's been<br/><em>hardest?</em></div>
-    <div class="ob-sub">Be honest — this helps your coach actually help you.</div>
+    <div class="ob-sub">Be honest — this helps your coach actually personalise their advice for you.</div>
     <div class="sg-grid">
-      <div class="sg-card" onclick="togS(this,'Forgetting quickly')"><span class="sg-icon">🧠</span><span class="sg-lbl">Forgetting things quickly</span><div class="sg-chk">✓</div></div>
-      <div class="sg-card" onclick="togS(this,'Staying focused')"><span class="sg-icon">🎯</span><span class="sg-lbl">Staying focused</span><div class="sg-chk">✓</div></div>
-      <div class="sg-card" onclick="togS(this,'Procrastinating')"><span class="sg-icon">⏳</span><span class="sg-lbl">Putting off studying</span><div class="sg-chk">✓</div></div>
-      <div class="sg-card" onclick="togS(this,'Understanding concepts')"><span class="sg-icon">💡</span><span class="sg-lbl">Understanding concepts</span><div class="sg-chk">✓</div></div>
-      <div class="sg-card" onclick="togS(this,'Overwhelmed')"><span class="sg-icon">🌊</span><span class="sg-lbl">Feeling overwhelmed</span><div class="sg-chk">✓</div></div>
-      <div class="sg-card" onclick="togS(this,'Low motivation')"><span class="sg-icon">🪫</span><span class="sg-lbl">Low motivation</span><div class="sg-chk">✓</div></div>
+      <div class="sg-card" onclick="togS(this,'Forgetting quickly')">
+        <span class="sg-icon">🧠</span><span class="sg-lbl">Forgetting things quickly</span><div class="sg-chk">✓</div>
+      </div>
+      <div class="sg-card" onclick="togS(this,'Staying focused')">
+        <span class="sg-icon">🎯</span><span class="sg-lbl">Staying focused</span><div class="sg-chk">✓</div>
+      </div>
+      <div class="sg-card" onclick="togS(this,'Procrastinating')">
+        <span class="sg-icon">⏳</span><span class="sg-lbl">Putting off studying</span><div class="sg-chk">✓</div>
+      </div>
+      <div class="sg-card" onclick="togS(this,'Understanding concepts')">
+        <span class="sg-icon">💡</span><span class="sg-lbl">Understanding concepts</span><div class="sg-chk">✓</div>
+      </div>
+      <div class="sg-card" onclick="togS(this,'Overwhelmed')">
+        <span class="sg-icon">🌊</span><span class="sg-lbl">Feeling overwhelmed</span><div class="sg-chk">✓</div>
+      </div>
+      <div class="sg-card" onclick="togS(this,'Low motivation')">
+        <span class="sg-icon">🪫</span><span class="sg-lbl">Low motivation</span><div class="sg-chk">✓</div>
+      </div>
     </div>
-    <button class="ob-btn" onclick="goOB(4)">Next →</button>
+    <button class="ob-btn" onclick="goOB(4)">Continue →</button>
+    <button class="ob-ghost" onclick="goOB(4)">Skip</button>
   </div>
 
-  <!-- Step 4: Companion -->
+  <!-- Step 4: Coach -->
   <div class="ob-screen" id="ob4">
     <div class="ob-prog"><div class="ob-prog-dot done"></div><div class="ob-prog-dot done"></div><div class="ob-prog-dot done"></div><div class="ob-prog-dot on"></div><div class="ob-prog-dot"></div></div>
     <div class="ob-h">Pick your<br/><em>coach.</em></div>
-    <div class="ob-sub">They'll track your memory gaps and check in on you. Switch anytime.</div>
+    <div class="ob-sub">They'll know your subjects, track your gaps, and check in on you. Switch anytime in Profile.</div>
     <div class="comp-grid" id="ob-comp-grid"></div>
-    <button class="ob-btn" onclick="goOB(5)">Next →</button>
+    <button class="ob-btn" onclick="goOB(5)">This is my coach →</button>
   </div>
 
   <!-- Step 5: First reminder -->
   <div class="ob-screen" id="ob5">
     <div class="ob-prog"><div class="ob-prog-dot done"></div><div class="ob-prog-dot done"></div><div class="ob-prog-dot done"></div><div class="ob-prog-dot done"></div><div class="ob-prog-dot on"></div></div>
-    <div class="ob-h">Set your<br/><em>study reminder.</em></div>
-    <div class="ob-sub">One daily nudge to keep the momentum going.</div>
-    <label class="ob-label">What do you want to be reminded about?</label>
+    <div class="ob-h">One last thing —<br/><em>set a reminder.</em></div>
+    <div class="ob-sub">A single daily nudge goes a long way. You can add more inside the app.</div>
+    <label class="ob-label">What's the reminder?</label>
     <input class="ob-input" id="ob-r-text" placeholder="e.g. Review today's lecture notes"/>
     <label class="ob-label">When?</label>
-    <div style="display:flex;gap:.5rem;margin-bottom:1rem;">
-      <input class="ob-input" type="time" id="ob-r-time" style="flex:1;margin-bottom:0;"/>
-      <select class="ob-input" id="ob-r-ampm" style="max-width:85px;margin-bottom:0;"><option>AM</option><option>PM</option></select>
+    <div class="ob-time-row">
+      <input class="ob-input" type="time" id="ob-r-time"/>
+      <select class="ob-input" id="ob-r-ampm" style="max-width:85px;"><option>AM</option><option>PM</option></select>
     </div>
-    <button class="ob-btn" onclick="finishOB()">Let's go →</button>
+    <button class="ob-btn" onclick="finishOB()">Take me in 🚀</button>
     <button class="ob-ghost" onclick="finishOB()">Skip for now</button>
   </div>
+
 </div>
 </div>
 
@@ -2145,7 +2177,8 @@ function addCustomSubject(){
 }
 
 function togS(el,label){
-  if(el.classList.contains('sel'))userStruggles.push(label);
+  el.classList.toggle('sel');
+  if(el.classList.contains('sel')) userStruggles.push(label);
   else userStruggles=userStruggles.filter(s=>s!==label);
 }
 function goOB(n){
