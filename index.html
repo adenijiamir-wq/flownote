@@ -244,7 +244,16 @@
 [data-theme="dark"] .ob-prog-dot.done{background:var(--green);}
 [data-theme="dark"] .ob-prog-dot.on{background:var(--ink);}
 
-/* Profile tabs */
+/* Voice mic button */
+.mic-btn{background:none;border:1.5px solid var(--line);border-radius:10px;padding:.52rem .65rem;cursor:pointer;font-size:1rem;flex-shrink:0;transition:all .2s;color:var(--muted);}
+.mic-btn:hover{border-color:var(--ink);color:var(--ink);}
+.mic-btn.listening{background:#fee2e2;border-color:#ef4444;color:#ef4444;animation:pulse-mic .8s ease-in-out infinite;}
+@keyframes pulse-mic{0%,100%{transform:scale(1);}50%{transform:scale(1.1);}}
+[data-theme="dark"] .mic-btn.listening{background:rgba(239,68,68,.15);}
+/* Draggable QC button on mobile */
+#qc-fab{position:fixed;z-index:201;width:52px;height:52px;border-radius:50%;background:var(--ink);color:var(--paper);border:none;cursor:grab;display:none;align-items:center;justify-content:center;font-size:1.25rem;box-shadow:0 4px 16px rgba(0,0,0,.25);touch-action:none;user-select:none;transition:box-shadow .15s;}
+#qc-fab:active{cursor:grabbing;box-shadow:0 8px 24px rgba(0,0,0,.3);}
+#qc-fab.dragging{transition:none;}
 .prof-tabs{display:flex;gap:.35rem;margin-bottom:1.1rem;background:var(--paper2);border-radius:10px;padding:.25rem;}
 .prof-tab{flex:1;border:none;background:none;border-radius:8px;padding:.5rem .3rem;font-family:'DM Sans',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:.72rem;font-weight:600;color:var(--muted);cursor:pointer;transition:all .18s;}
 .prof-tab.active{background:var(--paper);color:var(--ink);box-shadow:0 1px 4px rgba(0,0,0,.08);}
@@ -894,6 +903,7 @@ html,body{height:100%;overflow:hidden;font-family:'DM Sans',-apple-system,BlinkM
   }
   #qc-sidebar.open{ transform:translateY(0); }
   #qc-toggle{ display:none; }
+  #qc-fab{ display:flex; }
 
   /* ── Toast ── */
   .toast{bottom:calc(env(safe-area-inset-bottom,0px) + 68px);font-size:.75rem;}
@@ -1451,6 +1461,7 @@ html, body, #app {
           <textarea class="note-body-input" id="note-body" placeholder="Write your notes here. Your AI coach will automatically generate study cards from this…" rows="5"></textarea>
           <div class="note-editor-foot">
             <select class="note-subj-select" id="note-subj-sel"></select>
+            <button class="mic-btn" id="note-mic-btn" onclick="toggleVoice('note')" title="Dictate note" style="padding:.3rem .5rem;font-size:.85rem;">🎤</button>
             <button class="nca-btn" style="background:var(--paper2);border:none;border-radius:6px;padding:.3rem .6rem;cursor:pointer;font-size:.72rem;" onclick="closeNoteEditor()">Cancel</button>
             <button class="note-save-btn" onclick="saveNote()">Save Note</button>
           </div>
@@ -1552,6 +1563,7 @@ html, body, #app {
           <div class="typing-bubble"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div>
         </div>
         <div class="chat-bar">
+          <button class="mic-btn" id="chat-mic-btn" onclick="toggleVoice('chat')" title="Speak to your coach">🎤</button>
           <textarea class="chat-input" id="chat-input" placeholder="Ask your coach anything…" rows="1"
             onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendMsg();}"
             oninput="this.style.height='auto';this.style.height=this.scrollHeight+'px'"></textarea>
@@ -1603,7 +1615,11 @@ html, body, #app {
           <div class="prof-panel" id="prof-panel-notifs">
             <div class="prof-section-label">Push Notifications</div>
             <button id="notif-toggle-btn" style="width:100%;border:1.5px solid var(--line);background:var(--paper2);color:var(--muted);border-radius:10px;padding:.65rem .9rem;font-family:'DM Sans',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:.82rem;font-weight:600;cursor:pointer;margin-bottom:.55rem;transition:all .2s;">🔕 Enable notifications</button>
-            <div style="font-size:.66rem;color:var(--muted);line-height:1.55;">Get reminders at their set time, a daily nudge when cards are due, and alerts for overdue tasks. A chime sound plays when each fires.</div>
+            <div style="font-size:.66rem;color:var(--muted);line-height:1.55;margin-bottom:1rem;">Get reminders at their set time, a daily nudge when cards are due, and alerts for overdue tasks. A chime sound plays when each fires.</div>
+
+            <div class="prof-section-label">🎙 Voice Coach</div>
+            <button id="tts-toggle-btn" onclick="toggleTTS()" style="width:100%;border:1.5px solid var(--line);background:var(--paper2);color:var(--muted);border-radius:10px;padding:.65rem .9rem;font-family:'DM Sans',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:.82rem;font-weight:600;cursor:pointer;margin-bottom:.55rem;transition:all .2s;">🔇 Coach voice: Off</button>
+            <div style="font-size:.66rem;color:var(--muted);line-height:1.55;">When on, your coach will speak their replies out loud. Tap the 🎤 button in chat to speak to them instead of typing.</div>
           </div>
 
           <!-- Data tab -->
@@ -1647,8 +1663,13 @@ html, body, #app {
 <div id="qc-sidebar">
   <div class="qc-head"><div class="qc-title">💭 Quick Capture</div><button class="qc-x" onclick="closeQC()">✕</button></div>
   <textarea id="qc-textarea" placeholder="Write a thought, concept, or note before it disappears…"></textarea>
-  <div class="qc-foot"><button class="qc-save" id="qc-btn" onclick="saveCapture()">Save →</button></div>
+  <div class="qc-foot" style="display:flex;gap:.5rem;align-items:center;">
+    <button class="mic-btn" id="qc-mic-btn" onclick="toggleVoice('qc')" title="Speak your capture">🎤</button>
+    <button class="qc-save" id="qc-btn" onclick="saveCapture()" style="flex:1;">Save →</button>
+  </div>
 </div>
+<!-- Draggable FAB for mobile -->
+<button id="qc-fab" title="Quick Capture">💭</button>
 <button id="qc-toggle" onclick="toggleQC()">Quick<br/>Capture</button>
 
 <!-- Add Reminder Modal -->
@@ -1821,9 +1842,6 @@ html, body, #app {
 </div>
 
 <div class="toast" id="toast"></div>
-
-<!-- Mobile Quick Capture FAB (visible on mobile only) -->
-<button id="mobile-qc-fab" onclick="toggleQC()" title="Quick Capture" aria-label="Quick Capture">💭</button>
 
 <!-- Android/Chrome install banner -->
 <div id="install-banner">
@@ -2234,6 +2252,7 @@ function startApp(){
   buildProfList(); buildChatSwitcher(); buildSidebarSubjects();
   buildSubjectFilters(); buildSubjectSelects(); populateCardSubjectFilter();
   initChat(); renderAll(); renderNotes(); renderCards(); renderGaps(); checkReviewBadge(); renderNextAction();
+  initFAB(); updateTTSBtn();
 }
 
 // ══════════════════════════════════════════════════════
@@ -2334,19 +2353,20 @@ function toggleQC(){qcOpen?closeQC():openQC();}
 function openQC(){
   qcOpen=true;
   document.getElementById('qc-sidebar').classList.add('open');
-  const toggle = document.getElementById('qc-toggle');
-  if(toggle && toggle.offsetParent !== null) toggle.classList.add('pushed');
-  const fab = document.getElementById('mobile-qc-fab');
-  if(fab) fab.style.display = 'none';
+  const toggle=document.getElementById('qc-toggle');
+  if(toggle&&toggle.offsetParent!==null) toggle.classList.add('pushed');
+  const fab=document.getElementById('qc-fab');
+  if(fab) fab.style.opacity='0.4';
   setTimeout(()=>document.getElementById('qc-textarea').focus(),300);
 }
 function closeQC(){
   qcOpen=false;
   document.getElementById('qc-sidebar').classList.remove('open');
-  const toggle = document.getElementById('qc-toggle');
+  const toggle=document.getElementById('qc-toggle');
   if(toggle) toggle.classList.remove('pushed');
-  const fab = document.getElementById('mobile-qc-fab');
-  if(fab) fab.style.display = '';
+  const fab=document.getElementById('qc-fab');
+  if(fab) fab.style.opacity='1';
+  stopVoice();
 }
 async function saveCapture(){
   const text=document.getElementById('qc-textarea').value.trim();
@@ -3121,6 +3141,7 @@ function appendMsg(type,text){
     d.innerHTML='<div><div class="bubble">'+text+'</div><div class="msg-time">'+nowTime12()+'</div></div>';
   }
   msgs.appendChild(d);msgs.scrollTop=99999;
+  if(type==='ai') speakReply(text);
 }
 
 function giveFeedback(type,msgId){
@@ -3317,6 +3338,7 @@ function switchProfTab(id, btn){
   btn.classList.add('active');
   document.getElementById('prof-panel-'+id).classList.add('show');
   if(id==='data') renderTrash();
+  if(id==='notifs') updateTTSBtn();
 }
 
 function buildProfList(){
@@ -3342,6 +3364,203 @@ function openSettings(){
 function closeSettings(){document.getElementById('settings-modal').classList.remove('open');}
 
 let _secretTaps=0,_secretTimer=null;
+// ══════════════════════════════════════════════════════
+// VOICE — Speech Recognition + Text-to-Speech
+// ══════════════════════════════════════════════════════
+let _recognition=null, _voiceTarget=null, _voiceActive=false;
+
+function voiceSupported(){
+  return !!(window.SpeechRecognition||window.webkitSpeechRecognition);
+}
+
+function toggleVoice(target){
+  if(!voiceSupported()){
+    toast('🎤 Voice not supported in this browser. Try Chrome.');
+    return;
+  }
+  if(_voiceActive && _voiceTarget===target){
+    stopVoice();
+    return;
+  }
+  if(_voiceActive) stopVoice();
+  startVoice(target);
+}
+
+function startVoice(target){
+  const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+  _recognition=new SR();
+  _recognition.lang='en-US';
+  _recognition.continuous=true;
+  _recognition.interimResults=true;
+  _voiceTarget=target;
+  _voiceActive=true;
+  setMicState(target,true);
+
+  let finalText='';
+
+  _recognition.onresult=e=>{
+    let interim='';
+    for(let i=e.resultIndex;i<e.results.length;i++){
+      const t=e.results[i][0].transcript;
+      if(e.results[i].isFinal) finalText+=t+' ';
+      else interim=t;
+    }
+    // Live preview
+    if(target==='chat'){
+      const inp=document.getElementById('chat-input');
+      inp.value=finalText+interim;
+      inp.style.height='auto';inp.style.height=inp.scrollHeight+'px';
+    } else if(target==='note'){
+      const nb=document.getElementById('note-body');
+      nb.value=finalText+interim;
+    } else if(target==='qc'){
+      document.getElementById('qc-textarea').value=finalText+interim;
+    }
+  };
+
+  _recognition.onerror=e=>{
+    if(e.error!=='aborted') toast('🎤 Mic error: '+e.error);
+    stopVoice();
+  };
+
+  _recognition.onend=()=>{
+    if(_voiceActive){
+      // Auto-send for chat when speech ends naturally
+      if(target==='chat' && finalText.trim()){
+        const inp=document.getElementById('chat-input');
+        inp.value=finalText.trim();
+        stopVoice();
+        setTimeout(()=>sendMsg(),200);
+        return;
+      }
+    }
+    stopVoice();
+  };
+
+  try{
+    _recognition.start();
+    toast('🎤 Listening… tap mic to stop');
+  }catch(e){
+    stopVoice();
+    toast('Could not start mic. Allow microphone access first.');
+  }
+}
+
+function stopVoice(){
+  _voiceActive=false;
+  if(_recognition){try{_recognition.stop();}catch(e){}}
+  _recognition=null;
+  setMicState('chat',false);
+  setMicState('note',false);
+  setMicState('qc',false);
+  _voiceTarget=null;
+}
+
+function setMicState(target,on){
+  const ids={chat:'chat-mic-btn',note:'note-mic-btn',qc:'qc-mic-btn'};
+  const btn=document.getElementById(ids[target]);
+  if(!btn)return;
+  btn.classList.toggle('listening',on);
+  btn.textContent=on?'⏹':'🎤';
+}
+
+// Text-to-speech for coach replies
+let _ttsEnabled=localStorage.getItem('fn_tts')==='1';
+function speakReply(text){
+  if(!_ttsEnabled||!window.speechSynthesis)return;
+  window.speechSynthesis.cancel();
+  const utt=new SpeechSynthesisUtterance(text);
+  utt.rate=1.05;utt.pitch=1;utt.volume=0.9;
+  const voices=window.speechSynthesis.getVoices();
+  const pick=voices.find(v=>v.lang.startsWith('en')&&v.name.includes('Female'))
+    ||voices.find(v=>v.lang.startsWith('en'))
+    ||voices[0];
+  if(pick) utt.voice=pick;
+  window.speechSynthesis.speak(utt);
+}
+function toggleTTS(){
+  _ttsEnabled=!_ttsEnabled;
+  localStorage.setItem('fn_tts',_ttsEnabled?'1':'0');
+  updateTTSBtn();
+  toast(_ttsEnabled?'🔊 Coach voice on':'🔇 Coach voice off');
+}
+function updateTTSBtn(){
+  const btn=document.getElementById('tts-toggle-btn');
+  if(!btn)return;
+  if(_ttsEnabled){
+    btn.textContent='🔊 Coach voice: On';
+    btn.style.background='rgba(22,163,74,.08)';
+    btn.style.borderColor='var(--green)';
+    btn.style.color='var(--green)';
+  } else {
+    btn.textContent='🔇 Coach voice: Off';
+    btn.style.background='var(--paper2)';
+    btn.style.borderColor='var(--line)';
+    btn.style.color='var(--muted)';
+  }
+}
+
+// ══════════════════════════════════════════════════════
+// DRAGGABLE QC FAB (mobile)
+// ══════════════════════════════════════════════════════
+function initFAB(){
+  const fab=document.getElementById('qc-fab');
+  if(!fab)return;
+
+  // Load saved position
+  const saved=JSON.parse(localStorage.getItem('fn_fab_pos')||'null');
+  const vw=window.innerWidth, vh=window.innerHeight;
+  let x=saved?saved.x:vw-70, y=saved?saved.y:vh*0.6;
+  // Clamp to screen
+  x=Math.max(10,Math.min(vw-62,x));
+  y=Math.max(10,Math.min(vh-62,y));
+  fab.style.left=x+'px';fab.style.top=y+'px';
+
+  let startX,startY,origX,origY,dragged=false;
+
+  function onMove(cx,cy){
+    const dx=cx-startX, dy=cy-startY;
+    if(Math.abs(dx)>4||Math.abs(dy)>4) dragged=true;
+    const nx=Math.max(10,Math.min(vw-62,origX+dx));
+    const ny=Math.max(10,Math.min(vh-62,origY+dy));
+    fab.style.left=nx+'px';fab.style.top=ny+'px';
+  }
+
+  // Touch
+  fab.addEventListener('touchstart',e=>{
+    const t=e.touches[0];
+    startX=t.clientX;startY=t.clientY;
+    origX=parseInt(fab.style.left);origY=parseInt(fab.style.top);
+    dragged=false;fab.classList.add('dragging');
+  },{passive:true});
+  fab.addEventListener('touchmove',e=>{
+    e.preventDefault();
+    onMove(e.touches[0].clientX,e.touches[0].clientY);
+  },{passive:false});
+  fab.addEventListener('touchend',()=>{
+    fab.classList.remove('dragging');
+    localStorage.setItem('fn_fab_pos',JSON.stringify({x:parseInt(fab.style.left),y:parseInt(fab.style.top)}));
+    if(!dragged) toggleQC();
+  });
+
+  // Mouse (desktop fallback)
+  fab.addEventListener('mousedown',e=>{
+    startX=e.clientX;startY=e.clientY;
+    origX=parseInt(fab.style.left);origY=parseInt(fab.style.top);
+    dragged=false;fab.classList.add('dragging');
+    const mm=ev=>{e.preventDefault();onMove(ev.clientX,ev.clientY);};
+    const mu=()=>{
+      fab.classList.remove('dragging');
+      document.removeEventListener('mousemove',mm);
+      document.removeEventListener('mouseup',mu);
+      localStorage.setItem('fn_fab_pos',JSON.stringify({x:parseInt(fab.style.left),y:parseInt(fab.style.top)}));
+      if(!dragged) toggleQC();
+    };
+    document.addEventListener('mousemove',mm);
+    document.addEventListener('mouseup',mu);
+  });
+}
+
 function secretTap(){
   _secretTaps++;
   clearTimeout(_secretTimer);
