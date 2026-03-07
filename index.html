@@ -1943,7 +1943,22 @@ function load(){
     userName=d.userName||''; userStruggles=d.userStruggles||[];
     userSubjects=d.userSubjects||[]; currentChar=d.currentChar||'zack';
     reminders=(d.reminders||[]).map(r=>({...r,id:Number(r.id)}));
-    notes=d.notes||[]; studyCards=d.studyCards||[]; streakDays=d.streakDays||0;
+    notes=d.notes||[]; studyCards=d.studyCards||[];
+    // Validate streak against real date tracking
+    const lastDay=localStorage.getItem('fn_streak_date')||'';
+    const today=todayStr();
+    const yesterday=new Date(Date.now()-864e5).toISOString().slice(0,10);
+    if(!lastDay){
+      // No date tracking yet — reset streak to 0 (was counting wrong before)
+      streakDays=0;
+    } else if(lastDay===today||lastDay===yesterday){
+      // Valid streak — keep it
+      streakDays=d.streakDays||0;
+    } else {
+      // Streak broken by a gap
+      streakDays=0;
+      localStorage.removeItem('fn_streak_date');
+    }
     // Load trash bin
     try{deletedReminders=JSON.parse(localStorage.getItem('fn_trash')||'[]');}catch{deletedReminders=[];}
     return d.onboarded||false;
@@ -2388,6 +2403,9 @@ async function saveNote(){
   const body=document.getElementById('note-body').value.trim();
   const subject=document.getElementById('note-subj-sel').value||'General';
   if(!body&&!title){toast('Write something first!');return;}
+  const isNewNote=!editingNoteId;
+  // Detect quick captures (short, no title, tagged)
+  const isQC=notes.find(x=>x.id===editingNoteId)?.quickCapture||false;
 
   if(editingNoteId){
     const n=notes.find(x=>x.id===editingNoteId);
@@ -2401,21 +2419,33 @@ async function saveNote(){
   renderNotes();renderAll();
   toast('📝 Note saved!');
 
-  if(body.length>80){
-    const noteId=editingNoteId||(notes[0]?.id);
-    setTimeout(()=>autoGenCardsFromNote(noteId,body,subject),500);
+  if(body.length>120 && isNewNote && !isQC){
+    const noteId=notes[0]?.id;
+    // Only generate if no cards already exist for this note
+    const alreadyHasCards=studyCards.some(c=>c.sourceNoteId===noteId);
+    if(!alreadyHasCards) setTimeout(()=>autoGenCardsFromNote(noteId,body,subject),800);
   }
 }
 async function autoGenCardsFromNote(noteId,body,subject){
   try{
-    toast('🃏 Generating study cards from note…');
+    toast('🃏 Analysing note for study cards…');
     const raw=await callAI(
-      `You are a study card generator. From the text below, create 2-4 concise flashcard question-answer pairs covering the KEY concepts. Return ONLY a JSON array like: [{"q":"question","a":"answer"},…]. Focus on facts, definitions, and relationships. Maximum 4 cards.`,
-      body.substring(0,1200),300
+      `You are a smart study card generator. Analyse the note below and decide if it contains factual, conceptual, or educational content worth studying.
+
+RULES:
+- If the note is a to-do list, personal journal, random thoughts, short reminders, or anything NOT educational → return exactly: []
+- If the note contains facts, definitions, concepts, processes, or knowledge worth memorising → create 2-5 flashcards
+- Cards must test SPECIFIC knowledge, not vague questions
+- Return ONLY a JSON array: [{"q":"question","a":"answer"}] or []
+- No explanation, no markdown, just the array`,
+      body.substring(0,1500), 400
     );
     let cards;
     try{cards=JSON.parse(raw.replace(/```json|```/g,'').trim());}catch{return;}
-    if(!Array.isArray(cards))return;
+    if(!Array.isArray(cards)||cards.length===0){
+      // AI decided not worth it — silently do nothing
+      return;
+    }
     let added=0;
     cards.forEach(c=>{
       if(c.q&&c.a){
@@ -2423,7 +2453,10 @@ async function autoGenCardsFromNote(noteId,body,subject){
         added++;
       }
     });
-    if(added){save();renderCards();populateCardSubjectFilter();checkReviewBadge();toast(`🃏 ${added} study cards generated!`);}
+    if(added){
+      save();renderCards();populateCardSubjectFilter();checkReviewBadge();
+      toast('🃏 '+added+' study card'+(added>1?'s':'')+' generated from your note!');
+    }
   }catch(e){console.warn('Card gen failed',e);}
 }
 function deleteNote(id){
@@ -2817,7 +2850,22 @@ function toggleR(id){
   const r=reminders.find(x=>x.id===id);if(!r)return;
   r.done=!r.done;
   if(r.done){
-    streakDays++;
+    // Streak = consecutive DAYS with at least one completion — not task count
+    const today=todayStr();
+    const lastDay=localStorage.getItem('fn_streak_date')||'';
+    const yesterday=new Date(Date.now()-864e5).toISOString().slice(0,10);
+    if(lastDay===today){
+      // Already counted today, no streak change
+    } else if(lastDay===yesterday){
+      // Consecutive day — extend streak
+      streakDays++;
+      localStorage.setItem('fn_streak_date',today);
+    } else {
+      // Gap — reset to 1
+      streakDays=1;
+      localStorage.setItem('fn_streak_date',today);
+    }
+    save();
     const milestones={3:'🔥 3-day streak! You\'re building a habit.',7:'🏆 7 days straight! That\'s genuinely impressive.',14:'🌟 14-day streak — you\'re in the zone now!',30:'🎯 30 DAYS. You\'ve changed your life. Seriously.'};
     if(milestones[streakDays]){
       const t=document.getElementById('toast');
