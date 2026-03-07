@@ -405,7 +405,7 @@ html,body{height:100%;overflow:hidden;font-family:'DM Sans',-apple-system,BlinkM
 .sg-chk{width:16px;height:16px;border-radius:50%;background:var(--green);display:flex;align-items:center;justify-content:center;font-size:.52rem;color:#fff;opacity:0;transition:all .2s;flex-shrink:0;transform:scale(.5);}
 .sg-card.sel .sg-chk{opacity:1;transform:scale(1);}
 /* Coach cards */
-.comp-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:.6rem;margin-bottom:1.5rem;}
+.comp-grid{display:grid;grid-template-columns:1fr 1fr;gap:.6rem;margin-bottom:1.5rem;}
 .comp-card{background:var(--paper2);border:2px solid var(--line);border-radius:16px;padding:1rem .7rem .8rem;cursor:pointer;text-align:center;position:relative;transition:all .2s;}
 .comp-card:hover{transform:translateY(-3px);box-shadow:0 8px 24px rgba(0,0,0,.1);border-color:var(--green);}
 .comp-card.sel{border-color:var(--green);background:rgba(22,163,74,.06);transform:translateY(-2px);box-shadow:0 8px 24px rgba(22,163,74,.15);}
@@ -1750,11 +1750,7 @@ html, body, #app {
           <div class="prof-panel" id="prof-panel-notifs">
             <div class="prof-section-label">Push Notifications</div>
             <button id="notif-toggle-btn" style="width:100%;border:1.5px solid var(--line);background:var(--paper2);color:var(--muted);border-radius:10px;padding:.65rem .9rem;font-family:'DM Sans',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:.82rem;font-weight:600;cursor:pointer;margin-bottom:.55rem;transition:all .2s;">🔕 Enable notifications</button>
-            <div style="font-size:.66rem;color:var(--muted);line-height:1.55;margin-bottom:1rem;">Get reminders at their set time, a daily nudge when cards are due, and alerts for overdue tasks. A chime sound plays when each fires.</div>
-
-            <div class="prof-section-label">🎙 Voice Coach</div>
-            <button id="tts-toggle-btn" onclick="toggleTTS()" style="width:100%;border:1.5px solid var(--line);background:var(--paper2);color:var(--muted);border-radius:10px;padding:.65rem .9rem;font-family:'DM Sans',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:.82rem;font-weight:600;cursor:pointer;margin-bottom:.55rem;transition:all .2s;">🔇 Coach voice: Off</button>
-            <div style="font-size:.66rem;color:var(--muted);line-height:1.55;">When on, your coach will speak their replies out loud. Tap the 🎤 button in chat to speak to them instead of typing.</div>
+            <div style="font-size:.66rem;color:var(--muted);line-height:1.55;">Get reminders at their set time, a daily nudge when cards are due, and alerts for overdue tasks. A chime sound plays when each fires.</div>
           </div>
 
           <!-- Data tab -->
@@ -2030,7 +2026,7 @@ function toggleDark() {
 // ══════════════════════════════════════════════════════
 const CHARS={
   zack:{id:'zack',name:'Zack',vibe:'Hype coach · energy & accountability',badge:'🔥',
-    img:'https://api.dicebear.com/7.x/adventurer/svg?seed=zack&backgroundColor=b6e3f4',
+    img:'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iODAiIGhlaWdodD0iODAiIHZpZXdCb3g9IjAgMCA4MCA4MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KICA8Y2lyY2xlIGN4PSI0MCIgY3k9IjQwIiByPSI0MCIgZmlsbD0iI2ZiOTIzYyIvPgogIDxjaXJjbGUgY3g9IjQwIiBjeT0iMzgiIHI9IjIyIiBmaWxsPSIjRkREQkI0Ii8+CiAgPGVsbGlwc2UgY3g9IjQwIiBjeT0iMTkiIHJ4PSIxNiIgcnk9IjgiIGZpbGw9IiMyZDFiMDAiLz4KICA8cG9seWdvbiBwb2ludHM9IjI4LDIyIDI0LDEyIDMwLDIwIiBmaWxsPSIjMmQxYjAwIi8+CiAgPHBvbHlnb24gcG9pbnRzPSI0MCwxOCAzOCw4IDQzLDE4IiBmaWxsPSIjMmQxYjAwIi8+CiAgPHBvbHlnb24gcG9pbnRzPSI1MiwyMiA1NiwxMiA1MCwyMCIgZmlsbD0iIzJkMWIwMCIvPgogIDxwYXRoIGQ9Ik0zMCAyNyBRMzQgMjMgMzggMjYiIHN0cm9rZT0iIzJkMWIwMCIgc3Ryb2tlLXdpZHRoPSIyLjUiIGZpbGw9Im5vbmUiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIvPgogIDxwYXRoIGQ9Ik00MiAyNiBRNDYgMjMgNTAgMjciIHN0cm9rZT0iIzJkMWIwMCIgc3Ryb2tlLXdpZHRoPSIyLjUiIGZpbGw9Im5vbmUiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIvPgogIDxlbGxpcHNlIGN4PSIzNCIgY3k9IjMzIiByeD0iNCIgcnk9IjQuNSIgZmlsbD0id2hpdGUiLz4KICA8ZWxsaXBzZSBjeD0iNDYiIGN5PSIzMyIgcng9IjQiIHJ5PSI0LjUiIGZpbGw9IndoaXRlIi8+CiAgPGNpcmNsZSBjeD0iMzUiIGN5PSIzNCIgcj0iMi41IiBmaWxsPSIjMWEwYTAwIi8+CiAgPGNpcmNsZSBjeD0iNDciIGN5PSIzNCIgcj0iMi41IiBmaWxsPSIjMWEwYTAwIi8+CiAgPGNpcmNsZSBjeD0iMzYiIGN5PSIzMyIgcj0iMSIgZmlsbD0id2hpdGUiLz4KICA8Y2lyY2xlIGN4PSI0OCIgY3k9IjMzIiByPSIxIiBmaWxsPSJ3aGl0ZSIvPgogIDxwYXRoIGQ9Ik0zMCA0NCBRNDAgNTQgNTAgNDQiIGZpbGw9IiMxYTBhMDAiLz4KICA8cmVjdCB4PSIzMiIgeT0iNDQiIHdpZHRoPSIxNiIgaGVpZ2h0PSI1IiByeD0iMSIgZmlsbD0id2hpdGUiLz4KICA8ZWxsaXBzZSBjeD0iMjciIGN5PSI0MSIgcng9IjQiIHJ5PSIzIiBmaWxsPSIjZjk3MzE2IiBvcGFjaXR5PSIwLjQiLz4KICA8ZWxsaXBzZSBjeD0iNTMiIGN5PSI0MSIgcng9IjQiIHJ5PSIzIiBmaWxsPSIjZjk3MzE2IiBvcGFjaXR5PSIwLjQiLz4KPC9zdmc+',
     greetings:["Yo! Ready to lock in? Let's get it 🔥","AYYYY you showed up. That's already a W 💪","No cap, today we're gonna crush it. Let's go 🚀"],
     speech:["Let's make today's session count fr 🔥","You came back. That's already the hardest part 💪","Every review session = brain gains. Let's go 🧠"],
     p:`You're Zack — a hype, Gen-Z study coach who genuinely cares. You're energetic, funny, and real. You use casual language ('fr', 'no cap', 'lowkey', 'W', 'bussin') but you're never cringe about it. You remember this student actually has to deal with staying focused and keeping track of things — you get it, life is a lot. You celebrate every single win, no matter how small. When they miss something, you don't shame them — you just redirect with energy. You quiz them like a friend who happens to know everything. Keep replies SHORT (2-3 sentences max) unless they ask for an explanation — then be as clear as possible. No bullet points, no formal headers. Talk like a text message.`,
@@ -2041,7 +2037,7 @@ const CHARS={
     ]
   },
   rex:{id:'rex',name:'Rex',vibe:'Firm coach · direct & no-nonsense',badge:'📋',
-    img:'https://api.dicebear.com/7.x/adventurer/svg?seed=rex&backgroundColor=1e293b',
+    img:'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iODAiIGhlaWdodD0iODAiIHZpZXdCb3g9IjAgMCA4MCA4MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KICA8Y2lyY2xlIGN4PSI0MCIgY3k9IjQwIiByPSI0MCIgZmlsbD0iIzFlMjkzYiIvPgogIDxjaXJjbGUgY3g9IjQwIiBjeT0iMzgiIHI9IjIyIiBmaWxsPSIjYWU3YzViIi8+CiAgPGVsbGlwc2UgY3g9IjQwIiBjeT0iMTgiIHJ4PSIxNyIgcnk9IjEwIiBmaWxsPSIjMWEwYTAwIi8+CiAgPHJlY3QgeD0iMjMiIHk9IjE4IiB3aWR0aD0iMzQiIGhlaWdodD0iOCIgZmlsbD0iIzFhMGEwMCIvPgogIDxwYXRoIGQ9Ik0yOCAyOCBRMzQgMjUgMzggMjgiIHN0cm9rZT0iIzFhMGEwMCIgc3Ryb2tlLXdpZHRoPSIzLjUiIGZpbGw9Im5vbmUiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIvPgogIDxwYXRoIGQ9Ik00MiAyOCBRNDYgMjUgNTIgMjgiIHN0cm9rZT0iIzFhMGEwMCIgc3Ryb2tlLXdpZHRoPSIzLjUiIGZpbGw9Im5vbmUiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIvPgogIDxlbGxpcHNlIGN4PSIzNCIgY3k9IjM1IiByeD0iNCIgcnk9IjMiIGZpbGw9IndoaXRlIi8+CiAgPGVsbGlwc2UgY3g9IjQ2IiBjeT0iMzUiIHJ4PSI0IiByeT0iMyIgZmlsbD0id2hpdGUiLz4KICA8Y2lyY2xlIGN4PSIzNCIgY3k9IjM1IiByPSIyLjUiIGZpbGw9IiMwZjE3MmEiLz4KICA8Y2lyY2xlIGN4PSI0NiIgY3k9IjM1IiByPSIyLjUiIGZpbGw9IiMwZjE3MmEiLz4KICA8Y2lyY2xlIGN4PSIzNSIgY3k9IjM0IiByPSIwLjgiIGZpbGw9IndoaXRlIi8+CiAgPGNpcmNsZSBjeD0iNDciIGN5PSIzNCIgcj0iMC44IiBmaWxsPSJ3aGl0ZSIvPgogIDxwYXRoIGQ9Ik0zMiA0NiBMNDggNDYiIHN0cm9rZT0iIzdhNTU0MCIgc3Ryb2tlLXdpZHRoPSIyLjUiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIvPgo8L3N2Zz4=',
     greetings:["Good. You showed up. What are we working on?","No time to waste. What needs reviewing?","You're here. Let's make it count."],
     speech:["Good study habits compound. Let's review.","Focus. One topic at a time.","Consistency beats intensity. Let's begin."],
     p:`You're Rex — firm, direct, and efficient. You speak in short declarative sentences. No fluff, no small talk. But underneath the tough exterior you genuinely want this student to succeed — you just show it through results, not comfort. When they struggle, you acknowledge it briefly and immediately redirect to action. You quiz them with precision and hold them to their answers. You notice when they're doing well and say so — once, directly. Keep replies to 1-3 sentences. Never use exclamation marks unless it's a major achievement. No emojis except occasionally 📋.`,
@@ -2052,7 +2048,7 @@ const CHARS={
     ]
   },
   priya:{id:'priya',name:'Priya',vibe:'Gentle coach · mindful & nurturing',badge:'🌿',
-    img:'https://api.dicebear.com/7.x/adventurer/svg?seed=priya&backgroundColor=fde68a',
+    img:'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iODAiIGhlaWdodD0iODAiIHZpZXdCb3g9IjAgMCA4MCA4MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KICA8Y2lyY2xlIGN4PSI0MCIgY3k9IjQwIiByPSI0MCIgZmlsbD0iI2ZkZTY4YSIvPgogIDxjaXJjbGUgY3g9IjQwIiBjeT0iMzgiIHI9IjIyIiBmaWxsPSIjRkREQkI0Ii8+CiAgPGVsbGlwc2UgY3g9IjQwIiBjeT0iMTciIHJ4PSIxNyIgcnk9IjkiIGZpbGw9IiMzZDFmMDAiLz4KICA8cmVjdCB4PSIyMCIgeT0iMTciIHdpZHRoPSI4IiBoZWlnaHQ9IjI4IiByeD0iNCIgZmlsbD0iIzNkMWYwMCIvPgogIDxyZWN0IHg9IjUyIiB5PSIxNyIgd2lkdGg9IjgiIGhlaWdodD0iMjgiIHJ4PSI0IiBmaWxsPSIjM2QxZjAwIi8+CiAgPHBhdGggZD0iTTMwIDI4IFEzNCAyNiAzOCAyOCIgc3Ryb2tlPSIjM2QxZjAwIiBzdHJva2Utd2lkdGg9IjIiIGZpbGw9Im5vbmUiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIvPgogIDxwYXRoIGQ9Ik00MiAyOCBRNDYgMjYgNTAgMjgiIHN0cm9rZT0iIzNkMWYwMCIgc3Ryb2tlLXdpZHRoPSIyIiBmaWxsPSJub25lIiBzdHJva2UtbGluZWNhcD0icm91bmQiLz4KICA8ZWxsaXBzZSBjeD0iMzQiIGN5PSIzNCIgcng9IjQiIHJ5PSI0IiBmaWxsPSJ3aGl0ZSIvPgogIDxlbGxpcHNlIGN4PSI0NiIgY3k9IjM0IiByeD0iNCIgcnk9IjQiIGZpbGw9IndoaXRlIi8+CiAgPGNpcmNsZSBjeD0iMzQiIGN5PSIzNSIgcj0iMi41IiBmaWxsPSIjM2QxZjAwIi8+CiAgPGNpcmNsZSBjeD0iNDYiIGN5PSIzNSIgcj0iMi41IiBmaWxsPSIjM2QxZjAwIi8+CiAgPGNpcmNsZSBjeD0iMzUiIGN5PSIzNCIgcj0iMSIgZmlsbD0id2hpdGUiLz4KICA8Y2lyY2xlIGN4PSI0NyIgY3k9IjM0IiByPSIxIiBmaWxsPSJ3aGl0ZSIvPgogIDxwYXRoIGQ9Ik0zMyA0NSBRNDAgNTEgNDcgNDUiIHN0cm9rZT0iI2M0N2E1YSIgc3Ryb2tlLXdpZHRoPSIyLjUiIGZpbGw9Im5vbmUiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIvPgogIDxlbGxpcHNlIGN4PSIyNyIgY3k9IjQwIiByeD0iNCIgcnk9IjIuNSIgZmlsbD0iI2Y5YThkNCIgb3BhY2l0eT0iMC41Ii8+CiAgPGVsbGlwc2UgY3g9IjUzIiBjeT0iNDAiIHJ4PSI0IiByeT0iMi41IiBmaWxsPSIjZjlhOGQ0IiBvcGFjaXR5PSIwLjUiLz4KPC9zdmc+',
     greetings:["Hey, I'm so glad you're here 🌿","Welcome back! You're doing better than you think 💛","Hi there 🌸 Let's take it one step at a time"],
     speech:["You're here, and that's enough to start 🌿","Breathe. You've got this, one card at a time 🌸","Progress over perfection, always 💛"],
     p:`You're Priya — warm, patient, and genuinely kind. You understand that studying is hard and that some days are just difficult. You never rush or pressure. You validate feelings before offering solutions. You use gentle language and the occasional emoji (🌿💛🌸). When they don't know something, you make it feel safe to not know — then you help them understand it in the simplest possible way. You celebrate consistency and effort over results. You check in on how they're actually doing as a person, not just academically. Keep replies warm and brief (2-4 sentences) — like a message from a caring friend who's also really smart.`,
@@ -2060,6 +2056,26 @@ const CHARS={
       {u:"I'm forgetting my biology terms",b:"That's completely okay — our brains need repetition before things really stick 🌿 Let's go through them gently together. Can you tell me which terms feel the most slippery right now?"},
       {u:"I don't feel like studying today",b:"I hear you, and it's okay to feel that way 💛 You don't have to do everything today — even just reading through one note counts as progress. What's been on your mind?"},
       {u:"I got that question wrong",b:"Getting it wrong just means your brain is still learning — that's literally what this is for 🌸 Let's look at it together and I'll explain it in a way that makes it click for you."}
+    ]
+  },
+  milo:{id:'milo',name:'Milo',vibe:'Chaos coach · jokes, roasts & good vibes 😂',badge:'😂',
+    img:'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iODAiIGhlaWdodD0iODAiIHZpZXdCb3g9IjAgMCA4MCA4MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KICA8Y2lyY2xlIGN4PSI0MCIgY3k9IjQwIiByPSI0MCIgZmlsbD0iI2E4NTVmNyIvPgogIDxjaXJjbGUgY3g9IjQwIiBjeT0iMzgiIHI9IjIyIiBmaWxsPSIjRkREQkI0Ii8+CiAgPGNpcmNsZSBjeD0iMjUiIGN5PSIyMCIgcj0iNyIgZmlsbD0iIzFhMGEwMCIvPgogIDxjaXJjbGUgY3g9IjMzIiBjeT0iMTUiIHI9IjciIGZpbGw9IiMxYTBhMDAiLz4KICA8Y2lyY2xlIGN4PSI0MCIgY3k9IjE0IiByPSI3IiBmaWxsPSIjMWEwYTAwIi8+CiAgPGNpcmNsZSBjeD0iNDciIGN5PSIxNSIgcj0iNyIgZmlsbD0iIzFhMGEwMCIvPgogIDxjaXJjbGUgY3g9IjU1IiBjeT0iMjAiIHI9IjciIGZpbGw9IiMxYTBhMDAiLz4KICA8cGF0aCBkPSJNMjggMjYgUTM0IDIxIDM4IDI1IiBzdHJva2U9IiMxYTBhMDAiIHN0cm9rZS13aWR0aD0iMi41IiBmaWxsPSJub25lIiBzdHJva2UtbGluZWNhcD0icm91bmQiLz4KICA8cGF0aCBkPSJNNDIgMjUgUTQ2IDIxIDUyIDI2IiBzdHJva2U9IiMxYTBhMDAiIHN0cm9rZS13aWR0aD0iMi41IiBmaWxsPSJub25lIiBzdHJva2UtbGluZWNhcD0icm91bmQiLz4KICA8cGF0aCBkPSJNMzAgMzMgUTM0IDMwIDM4IDMzIiBzdHJva2U9IiMxYTBhMDAiIHN0cm9rZS13aWR0aD0iMi41IiBmaWxsPSJub25lIiBzdHJva2UtbGluZWNhcD0icm91bmQiLz4KICA8cGF0aCBkPSJNNDIgMzMgUTQ2IDMwIDUwIDMzIiBzdHJva2U9IiMxYTBhMDAiIHN0cm9rZS13aWR0aD0iMi41IiBmaWxsPSJub25lIiBzdHJva2UtbGluZWNhcD0icm91bmQiLz4KICA8ZWxsaXBzZSBjeD0iMjgiIGN5PSIzNyIgcng9IjIiIHJ5PSIzIiBmaWxsPSIjYmZkYmZlIiBvcGFjaXR5PSIwLjgiLz4KICA8ZWxsaXBzZSBjeD0iNTIiIGN5PSIzNyIgcng9IjIiIHJ5PSIzIiBmaWxsPSIjYmZkYmZlIiBvcGFjaXR5PSIwLjgiLz4KICA8cGF0aCBkPSJNMjcgNDMgUTQwIDYwIDUzIDQzIiBmaWxsPSIjMWEwYTAwIi8+CiAgPGVsbGlwc2UgY3g9IjQwIiBjeT0iNDciIHJ4PSIxMCIgcnk9IjYiIGZpbGw9IiNlMTFkNDgiLz4KICA8cmVjdCB4PSIzMCIgeT0iNDMiIHdpZHRoPSIyMCIgaGVpZ2h0PSI1IiByeD0iMSIgZmlsbD0id2hpdGUiLz4KICA8ZWxsaXBzZSBjeD0iMjUiIGN5PSI0MiIgcng9IjUiIHJ5PSIzLjUiIGZpbGw9IiNmOTczMTYiIG9wYWNpdHk9IjAuNDUiLz4KICA8ZWxsaXBzZSBjeD0iNTUiIGN5PSI0MiIgcng9IjUiIHJ5PSIzLjUiIGZpbGw9IiNmOTczMTYiIG9wYWNpdHk9IjAuNDUiLz4KPC9zdmc+',
+    greetings:[
+      "OHHH you actually showed up 😂 I was taking bets on whether you'd bail. You proved me wrong. Barely.",
+      "Welcome back! Quick joke before we start: Why did the student eat his homework? Because the teacher said it was a piece of cake 😂 Okay now let's get this bread.",
+      "Ah yes, my favourite student returns 🎉 Don't let that go to your head, you're also my only student. Let's go!"
+    ],
+    speech:[
+      "I've got jokes AND flashcards. You're basically getting two for one 😂",
+      "Study time! Or as I call it, 'pretending to be smart for 20 minutes'",
+      "Your brain called. It says it's ready but it lied. Let's fix that 😂"
+    ],
+    p:`You're Milo — a wildly entertaining study coach who happens to be genuinely good at teaching. You use humour CONSTANTLY. You tell actual jokes, make funny observations, use playful roasts (never mean, always affectionate), reference memes and pop culture, and generally make studying feel like hanging out with the funniest person you know. You ALWAYS slip in a joke or something funny in every single reply — even when being serious about the content. You celebrate wins dramatically and treat mistakes like the plot twist in a comedy show. Your teaching is hidden inside the entertainment — you sneak in real explanations while being ridiculous. Use emojis liberally 😂🎭🎪. Keep replies 2-4 sentences. NEVER be boring. If you're about to write something dry, add a punchline.`,
+    examples:[
+      {u:"I'm forgetting my biology terms",b:"Your brain is basically a group chat where mitosis keeps getting left on read 😂 Let's fix that — I'll quiz you and every wrong answer costs you… absolutely nothing but your dignity. What's the powerhouse of the cell? And don't you DARE say the mitochondria without knowing what it actually does."},
+      {u:"I don't feel like studying today",b:"Neither did Einstein. He studied anyway and look how that turned out 😂 Here's the deal — we do 5 cards, I tell you a joke after each one, and if you're still not feeling it after that, you're legally allowed to blame me. Deal?"},
+      {u:"I got that question wrong",b:"PLOT TWIST 😂 Your brain just pulled a surprise villain arc — but every villain has a redemption glow-up. That wrong answer is now officially your origin story. Let's look at why it tripped you up and come back stronger."},
+      {u:"Can you tell me a joke?",b:"Why don't scientists trust atoms? Because they make up everything 😂 Speaking of making things up — that's what you're gonna do on your exam if we don't review. What subject should we tackle so I can sneak more jokes in?"}
     ]
   }
 };
@@ -2390,7 +2406,7 @@ function startApp(){
   buildProfList(); buildChatSwitcher(); buildSidebarSubjects();
   buildSubjectFilters(); buildSubjectSelects(); populateCardSubjectFilter();
   initChat(); renderAll(); renderNotes(); renderCards(); renderGaps(); checkReviewBadge(); renderNextAction();
-  initFAB(); updateTTSBtn();
+  initFAB();
   // Reload avatar
   const imgUrl=localStorage.getItem('fn_avatar_img');
   if(imgUrl && currentAvatar==='__img__') _updateAvatarDisplay(null,imgUrl);
@@ -3234,20 +3250,57 @@ function buildChatSwitcher(){
       <img src="${c.img}" alt="${c.name}"/>
     </button>`).join('');
 }
+// Per-coach persistent chat storage
+function saveChatForCoach(id){
+  const msgs=document.getElementById('chat-msgs');
+  if(!msgs) return;
+  try{
+    localStorage.setItem('fn_chat_html_'+id, msgs.innerHTML);
+    localStorage.setItem('fn_chat_hist_'+id, JSON.stringify(chatHistory));
+  }catch(e){}
+}
+function loadChatForCoach(id){
+  const msgs=document.getElementById('chat-msgs');
+  if(!msgs) return false;
+  const html=localStorage.getItem('fn_chat_html_'+id);
+  const hist=localStorage.getItem('fn_chat_hist_'+id);
+  if(html && hist){
+    msgs.innerHTML=html;
+    msgs.scrollTop=99999;
+    try{ chatHistory=JSON.parse(hist); }catch(e){ chatHistory=[]; }
+    return true;
+  }
+  return false;
+}
+function clearChatForCoach(id){
+  localStorage.removeItem('fn_chat_html_'+id);
+  localStorage.removeItem('fn_chat_hist_'+id);
+}
+
 function initChat(){
   const c=CHARS[currentChar];
   document.getElementById('chat-avi').src=c.img;
   document.getElementById('chat-cname').textContent=c.name;
   document.getElementById('chat-cvibe').textContent=c.vibe;
   document.getElementById('t-avi').src=c.img;
-  document.getElementById('chat-msgs').innerHTML='';
-  appendMsg('ai',c.greetings[Math.floor(Math.random()*c.greetings.length)]);
+  // Try to restore saved history, else show greeting
+  const restored=loadChatForCoach(currentChar);
+  if(!restored){
+    chatHistory=[];
+    document.getElementById('chat-msgs').innerHTML='';
+    appendMsg('ai',c.greetings[Math.floor(Math.random()*c.greetings.length)]);
+    saveChatForCoach(currentChar);
+  }
   checkReviewBadge();
 }
+
 function switchChar(id,btn){
+  if(id===currentChar) return;
+  // Save current coach's chat before switching
+  saveChatForCoach(currentChar);
   currentChar=id;
   document.querySelectorAll('.char-btn').forEach(b=>b.classList.remove('active'));
-  if(btn)btn.classList.add('active');
+  if(btn) btn.classList.add('active');
   const c=CHARS[id];
   ['chat-avi','sb-avi','home-avi'].forEach(el=>{const e=document.getElementById(el);if(e)e.src=c.img;});
   document.getElementById('chat-cname').textContent=c.name;
@@ -3258,10 +3311,16 @@ function switchChar(id,btn){
   document.getElementById('home-badge').textContent=c.badge;
   document.getElementById('home-speech').textContent=c.speech[Math.floor(Math.random()*c.speech.length)];
   buildProfList();
-  document.getElementById('chat-msgs').innerHTML='';
-  chatHistory=[];
-  appendMsg('ai',c.greetings[Math.floor(Math.random()*c.greetings.length)]);
-  save();toast('Switched to '+c.name+'!');
+  // Restore this coach's history or start fresh
+  const restored=loadChatForCoach(id);
+  if(!restored){
+    chatHistory=[];
+    document.getElementById('chat-msgs').innerHTML='';
+    appendMsg('ai',c.greetings[Math.floor(Math.random()*c.greetings.length)]);
+    saveChatForCoach(id);
+  }
+  save();
+  toast('Switched to '+c.name+' — '+( restored ? 'chat history restored 💬' : 'starting fresh 👋'));
 }
 function appendMsg(type,text){
   const msgs=document.getElementById('chat-msgs');
@@ -3283,7 +3342,6 @@ function appendMsg(type,text){
     d.innerHTML='<div><div class="bubble">'+text+'</div><div class="msg-time">'+nowTime12()+'</div></div>';
   }
   msgs.appendChild(d);msgs.scrollTop=99999;
-  if(type==='ai') speakReply(text);
 }
 
 function giveFeedback(type,msgId){
@@ -3464,6 +3522,7 @@ Q: [question]|A: [answer]
       appendMsg('ai',displayReply);
     }
     chatHistory.push({role:'assistant',content:reply});
+    saveChatForCoach(currentChar);
   }catch(err){
     typing.classList.remove('show');
     appendMsg('ai',"Hmm, something went wrong on my end. Try again in a sec.");
@@ -3480,7 +3539,6 @@ function switchProfTab(id, btn){
   btn.classList.add('active');
   document.getElementById('prof-panel-'+id).classList.add('show');
   if(id==='data') renderTrash();
-  if(id==='notifs') updateTTSBtn();
   if(id==='style'){ updateAccentUI(); updateThemeUI(); updateAvatarUI(); }
 }
 
@@ -3661,20 +3719,6 @@ function setMicState(target,on){
   }
 }
 
-// Text-to-speech for coach replies
-let _ttsEnabled=localStorage.getItem('fn_tts')==='1';
-function speakReply(text){
-  if(!_ttsEnabled||!window.speechSynthesis)return;
-  window.speechSynthesis.cancel();
-  const utt=new SpeechSynthesisUtterance(text);
-  utt.rate=1.05;utt.pitch=1;utt.volume=0.9;
-  const voices=window.speechSynthesis.getVoices();
-  const pick=voices.find(v=>v.lang.startsWith('en')&&v.name.includes('Female'))
-    ||voices.find(v=>v.lang.startsWith('en'))
-    ||voices[0];
-  if(pick) utt.voice=pick;
-  window.speechSynthesis.speak(utt);
-}
 // ══════════════════════════════════════════════════════
 // PERSONALISATION — accent, theme, avatar
 // ══════════════════════════════════════════════════════
@@ -3787,28 +3831,6 @@ function loadPersonalisation(){
   updateAccentUI();
   updateThemeUI();
   updateAvatarUI();
-}
-
-function toggleTTS(){
-  _ttsEnabled=!_ttsEnabled;
-  localStorage.setItem('fn_tts',_ttsEnabled?'1':'0');
-  updateTTSBtn();
-  toast(_ttsEnabled?'🔊 Coach voice on':'🔇 Coach voice off');
-}
-function updateTTSBtn(){
-  const btn=document.getElementById('tts-toggle-btn');
-  if(!btn)return;
-  if(_ttsEnabled){
-    btn.textContent='🔊 Coach voice: On';
-    btn.style.background='rgba(22,163,74,.08)';
-    btn.style.borderColor='var(--green)';
-    btn.style.color='var(--green)';
-  } else {
-    btn.textContent='🔇 Coach voice: Off';
-    btn.style.background='var(--paper2)';
-    btn.style.borderColor='var(--line)';
-    btn.style.color='var(--muted)';
-  }
 }
 
 // ══════════════════════════════════════════════════════
@@ -3927,7 +3949,11 @@ function saveSettings(){
 }
 function resetAccount(){
   if(!confirm('Reset everything? This cannot be undone.'))return;
-  ['mb7_data','mb7_key','mb7_backend'].forEach(k=>localStorage.removeItem(k));
+  ['mb7_data','mb7_key','mb7_backend','fn_feedback','fn_streak_date','fn_avatar','fn_avatar_img','fn_accent','fn_theme_pref','fn_tts','fn_fab_pos'].forEach(k=>localStorage.removeItem(k));
+  Object.keys(CHARS).forEach(id=>{
+    localStorage.removeItem('fn_chat_html_'+id);
+    localStorage.removeItem('fn_chat_hist_'+id);
+  });
   location.reload();
 }
 
@@ -4413,12 +4439,12 @@ function timeTo24(timeStr){
   let h = parseInt(m[1]), min = m[2], ap = m[3].toUpperCase();
   if(ap==='PM' && h!==12) h+=12;
   if(ap==='AM' && h===12) h=0;
-  return `${String(h).padStart(2,'0')}:${min}`;
+  return String(h).padStart(2,'0')+':'+min;
 }
 
 function getNowHHMM(){
-  const n = new Date();
-  return `${String(n.getHours()).padStart(2,'0')}:${String(n.getMinutes()).padStart(2,'0')}`;
+  const n=new Date();
+  return String(n.getHours()).padStart(2,'0')+':'+String(n.getMinutes()).padStart(2,'0');
 }
 
 let _lastCheckedMinute='';
