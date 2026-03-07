@@ -316,7 +316,17 @@
 .avatar-pick{width:40px;height:40px;border-radius:10px;border:2px solid var(--line);background:var(--paper2);font-size:1.25rem;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .15s;}
 .avatar-pick:hover{border-color:var(--green);transform:scale(1.1);}
 .avatar-pick.active{border-color:var(--green);background:var(--green-light);box-shadow:0 0 0 2px var(--green);}
-#prof-avatar{font-size:1.5rem;width:52px;height:52px;border-radius:50%;background:var(--green-light);border:2px solid var(--green);display:flex;align-items:center;justify-content:center;transition:transform .15s;flex-shrink:0;}
+/* Upload zone */
+.avatar-upload-zone{display:flex;align-items:center;gap:.85rem;border:1.5px dashed var(--line);border-radius:14px;padding:.85rem 1rem;cursor:pointer;transition:all .2s;background:var(--paper2);}
+.avatar-upload-zone:hover{border-color:var(--green);background:var(--green-light);}
+#avatar-preview-large{width:52px;height:52px;border-radius:50%;border:2px solid var(--green);background:var(--green-light);display:flex;align-items:center;justify-content:center;font-size:1.6rem;flex-shrink:0;overflow:hidden;}
+#avatar-preview-large img{width:100%;height:100%;object-fit:cover;border-radius:50%;}
+.avatar-upload-hint{display:flex;flex-direction:column;gap:.15rem;}
+.avatar-upload-title{font-size:.82rem;font-weight:600;color:var(--ink);}
+.avatar-upload-sub{font-size:.67rem;color:var(--muted);}
+/* Profile header avatar */
+#prof-avatar{width:52px;height:52px;border-radius:50%;background:var(--green-light);border:2px solid var(--green);display:flex;align-items:center;justify-content:center;font-size:1.5rem;flex-shrink:0;overflow:hidden;}
+#prof-avatar img{width:100%;height:100%;object-fit:cover;border-radius:50%;}
 /* Profile tabs */
 .prof-tabs{display:flex;gap:.35rem;margin-bottom:1.1rem;background:var(--paper2);border-radius:10px;padding:.25rem;}
 .prof-tab{flex:1;border:none;background:none;border-radius:8px;padding:.5rem .3rem;font-family:'DM Sans',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:.72rem;font-weight:600;color:var(--muted);cursor:pointer;transition:all .18s;}
@@ -1617,7 +1627,7 @@ html, body, #app {
             <div class="chat-cname" id="chat-cname">—</div>
             <div class="chat-cvibe" id="chat-cvibe">—</div>
           </div>
-          <div class="char-switcher" id="char-sw"></div>
+          <div class="char-switcher" id="char-sw" style="display:none"></div>
         </div>
         <div id="review-banner" class="review-banner" style="display:none;">
           <span id="review-banner-text">⏰ You have cards due for review</span>
@@ -1702,20 +1712,37 @@ html, body, #app {
               <button class="theme-pill" data-theme-val="system" onclick="applyTheme('system')">⚙️ System</button>
             </div>
 
-            <div class="prof-section-label" style="margin-top:1.1rem;">Avatar</div>
+            <div class="prof-section-label" style="margin-top:1.1rem;">Profile picture</div>
+
+            <!-- Upload zone -->
+            <div class="avatar-upload-zone" onclick="document.getElementById('avatar-file-input').click()">
+              <div id="avatar-preview-large">🙂</div>
+              <div class="avatar-upload-hint">
+                <span class="avatar-upload-title">Tap to upload photo or GIF</span>
+                <span class="avatar-upload-sub">JPG, PNG, GIF, WebP · Any size</span>
+              </div>
+              <input type="file" id="avatar-file-input" accept="image/*,image/gif" style="display:none" onchange="handleAvatarUpload(this)"/>
+            </div>
+
+            <!-- Or pick an emoji -->
+            <div style="display:flex;align-items:center;gap:.5rem;margin:.9rem 0 .55rem;">
+              <div style="flex:1;height:1px;background:var(--line);"></div>
+              <span style="font-size:.65rem;color:var(--muted);font-weight:600;letter-spacing:.08em;text-transform:uppercase;">or pick one</span>
+              <div style="flex:1;height:1px;background:var(--line);"></div>
+            </div>
             <div class="avatar-grid" id="avatar-grid">
-              <button class="avatar-pick" data-av="🙂" onclick="pickAvatar('🙂')">🙂</button>
               <button class="avatar-pick" data-av="😎" onclick="pickAvatar('😎')">😎</button>
-              <button class="avatar-pick" data-av="🧑‍💻" onclick="pickAvatar('🧑‍💻')">🧑‍💻</button>
+              <button class="avatar-pick" data-av="🧠" onclick="pickAvatar('🧠')">🧠</button>
+              <button class="avatar-pick" data-av="🚀" onclick="pickAvatar('🚀')">🚀</button>
+              <button class="avatar-pick" data-av="🦁" onclick="pickAvatar('🦁')">🦁</button>
+              <button class="avatar-pick" data-av="🐉" onclick="pickAvatar('🐉')">🐉</button>
               <button class="avatar-pick" data-av="🦊" onclick="pickAvatar('🦊')">🦊</button>
-              <button class="avatar-pick" data-av="🐼" onclick="pickAvatar('🐼')">🐼</button>
+              <button class="avatar-pick" data-av="🐺" onclick="pickAvatar('🐺')">🐺</button>
               <button class="avatar-pick" data-av="🦋" onclick="pickAvatar('🦋')">🦋</button>
-              <button class="avatar-pick" data-av="🌙" onclick="pickAvatar('🌙')">🌙</button>
               <button class="avatar-pick" data-av="⚡" onclick="pickAvatar('⚡')">⚡</button>
               <button class="avatar-pick" data-av="🔥" onclick="pickAvatar('🔥')">🔥</button>
               <button class="avatar-pick" data-av="🌊" onclick="pickAvatar('🌊')">🌊</button>
               <button class="avatar-pick" data-av="🎯" onclick="pickAvatar('🎯')">🎯</button>
-              <button class="avatar-pick" data-av="🌸" onclick="pickAvatar('🌸')">🌸</button>
             </div>
           </div>
 
@@ -2364,9 +2391,10 @@ function startApp(){
   buildSubjectFilters(); buildSubjectSelects(); populateCardSubjectFilter();
   initChat(); renderAll(); renderNotes(); renderCards(); renderGaps(); checkReviewBadge(); renderNextAction();
   initFAB(); updateTTSBtn();
-  // Apply saved avatar
-  const av=document.getElementById('prof-avatar');
-  if(av) av.textContent=currentAvatar;
+  // Reload avatar
+  const imgUrl=localStorage.getItem('fn_avatar_img');
+  if(imgUrl && currentAvatar==='__img__') _updateAvatarDisplay(null,imgUrl);
+  else _updateAvatarDisplay(currentAvatar,null);
 }
 
 // ══════════════════════════════════════════════════════
@@ -3691,9 +3719,42 @@ function applyTheme(pref){
 function pickAvatar(av){
   currentAvatar=av;
   localStorage.setItem('fn_avatar',av);
-  const el=document.getElementById('prof-avatar');
-  if(el) el.textContent=av;
+  localStorage.removeItem('fn_avatar_img'); // clear any uploaded image
+  _updateAvatarDisplay(av, null);
   updateAvatarUI();
+}
+
+function handleAvatarUpload(input){
+  const file=input.files[0]; if(!file)return;
+  const reader=new FileReader();
+  reader.onload=e=>{
+    const dataUrl=e.target.result;
+    // Store as image (base64) — up to ~500KB to keep localStorage safe
+    if(dataUrl.length > 600000){ toast('Image too large — try a smaller file'); return; }
+    localStorage.setItem('fn_avatar_img', dataUrl);
+    currentAvatar='__img__';
+    localStorage.setItem('fn_avatar','__img__');
+    _updateAvatarDisplay(null, dataUrl);
+    // Clear emoji active state
+    document.querySelectorAll('.avatar-pick').forEach(b=>b.classList.remove('active'));
+    toast('✓ Profile picture updated!');
+  };
+  reader.readAsDataURL(file);
+}
+
+function _updateAvatarDisplay(emoji, imgUrl){
+  // Update profile header
+  const prof=document.getElementById('prof-avatar');
+  if(prof){
+    if(imgUrl) prof.innerHTML='<img src="'+imgUrl+'" alt="avatar"/>';
+    else{ prof.innerHTML=''; prof.textContent=emoji||'🙂'; }
+  }
+  // Update large preview in Style tab
+  const prev=document.getElementById('avatar-preview-large');
+  if(prev){
+    if(imgUrl) prev.innerHTML='<img src="'+imgUrl+'" alt="avatar"/>';
+    else{ prev.innerHTML=''; prev.textContent=emoji||'🙂'; }
+  }
 }
 
 function updateAccentUI(){
@@ -3708,14 +3769,20 @@ function updateThemeUI(){
 }
 function updateAvatarUI(){
   document.querySelectorAll('.avatar-pick').forEach(b=>{
-    b.classList.toggle('active', b.dataset.av===currentAvatar);
+    b.classList.toggle('active', currentAvatar!=='__img__' && b.dataset.av===currentAvatar);
   });
+  // Sync preview
+  const imgUrl=localStorage.getItem('fn_avatar_img');
+  if(currentAvatar==='__img__' && imgUrl) _updateAvatarDisplay(null, imgUrl);
+  else _updateAvatarDisplay(currentAvatar, null);
 }
 function loadPersonalisation(){
-  // Avatar
-  const av=document.getElementById('prof-avatar');
-  if(av) av.textContent=currentAvatar;
-  // Theme
+  const imgUrl=localStorage.getItem('fn_avatar_img');
+  if(imgUrl && currentAvatar==='__img__'){
+    _updateAvatarDisplay(null, imgUrl);
+  } else {
+    _updateAvatarDisplay(currentAvatar, null);
+  }
   applyTheme(currentThemePref);
   updateAccentUI();
   updateThemeUI();
