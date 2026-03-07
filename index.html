@@ -1280,7 +1280,7 @@ html, body, #app {
     <!-- SIDEBAR -->
     <aside class="sidebar" id="sidebar">
       <div class="sb-logo">
-        <span class="sb-logo-text">Flow<span>Notes</span></span>
+        <span class="sb-logo-text" id="sb-logo-tap" onclick="secretTap()">Flow<span>Notes</span></span>
         <button class="sb-close" onclick="closeSidebar()">✕</button>
       </div>
       <div class="sb-nav">
@@ -1295,7 +1295,7 @@ html, body, #app {
         <div id="sb-subjects"></div>
         <div style="flex:1;"></div>
         <div class="sb-section">Settings</div>
-        <button class="nav-btn" onclick="openSettings()"><span class="nav-icon">⚙️</span>Settings</button>
+        <button class="nav-btn" onclick="openSettings()" id="nav-settings" style="display:none"><span class="nav-icon">⚙️</span>Settings</button>
         <button class="nav-btn" id="nav-profile" onclick="navTo('profile',this)"><span class="nav-icon">👤</span>Profile</button>
       </div>
       <div class="sb-comp" onclick="navTo('chat',document.getElementById('nav-chat'))">
@@ -3292,6 +3292,18 @@ function openSettings(){
   document.getElementById('settings-modal').classList.add('open');
 }
 function closeSettings(){document.getElementById('settings-modal').classList.remove('open');}
+
+let _secretTaps=0,_secretTimer=null;
+function secretTap(){
+  _secretTaps++;
+  clearTimeout(_secretTimer);
+  _secretTimer=setTimeout(()=>{_secretTaps=0;},2000);
+  if(_secretTaps>=5){
+    _secretTaps=0;
+    openSettings();
+    toast('🔧 Developer settings');
+  }
+}
 function switchAITab(tab){
   aiBackend=tab;
   const tabs=['anthropic','none'];
