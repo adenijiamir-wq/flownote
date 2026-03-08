@@ -529,6 +529,8 @@ html,body{height:100%;overflow:hidden;font-family:'DM Sans',-apple-system,BlinkM
 .greet-card::after{content:'';position:absolute;right:20px;bottom:-30px;width:80px;height:80px;border-radius:50%;background:rgba(255,255,255,.03);}
 .greet-top{display:flex;align-items:center;gap:.8rem;margin-bottom:.85rem;position:relative;z-index:1;}
 .greet-avi{width:52px;height:52px;border-radius:50%;object-fit:cover;border:2px solid rgba(255,255,255,.2);}
+.greet-avi-user{display:flex;align-items:center;justify-content:center;font-size:1.7rem;background:rgba(255,255,255,.1);overflow:hidden;}
+.greet-avi-user img{width:100%;height:100%;object-fit:cover;border-radius:50%;}
 .greet-badge-wrap{position:relative;}
 .greet-badge{position:absolute;top:-3px;right:-4px;font-size:.85rem;}
 .greet-name{font-family:'DM Serif Display',Georgia,'Times New Roman',serif;font-size:1.2rem;line-height:1.2;}
@@ -1427,7 +1429,7 @@ html, body, #app {
             <div class="greet-card">
               <div class="greet-top">
                 <div class="greet-badge-wrap">
-                  <img id="home-avi" src="" class="greet-avi" alt=""/>
+                  <div id="home-avi" class="greet-avi greet-avi-user"></div>
                   <span class="greet-badge" id="home-badge">👍</span>
                 </div>
                 <div class="greet-name">
@@ -1515,7 +1517,8 @@ html, body, #app {
               <div id="big-r-list"></div>
 
               <!-- Subtle clear all at bottom -->
-              <div id="rem-clear-row" style="display:none;margin-top:1rem;padding-top:.75rem;border-top:1px solid var(--line);text-align:center;">
+              <div id="rem-clear-row" style="display:none;margin-top:1rem;padding-top:.75rem;border-top:1px solid var(--line);text-align:center;display:flex;gap:.75rem;justify-content:center;">
+                <button onclick="clearCompletedReminders()" id="clear-completed-btn" style="background:none;border:none;color:var(--muted);font-size:.68rem;font-family:inherit;cursor:pointer;opacity:.7;">🗑 Clear completed</button>
                 <button onclick="clearAllReminders()" style="background:none;border:none;color:var(--muted);font-size:.68rem;font-family:inherit;cursor:pointer;opacity:.7;">Clear all tasks</button>
               </div>
             </div>
@@ -2427,7 +2430,6 @@ function startApp(){
   document.getElementById('sb-avi').src=c.img;
   document.getElementById('sb-cname').textContent=c.name;
   document.getElementById('chat-nav-lbl').textContent='Chat with '+c.name;
-  document.getElementById('home-avi').src=c.img;
   document.getElementById('home-badge').textContent=c.badge;
   document.getElementById('greet-name').textContent=userName||'there';
   document.getElementById('home-speech').textContent=c.speech[Math.floor(Math.random()*c.speech.length)];
@@ -3263,7 +3265,11 @@ function renderAll(){
 
   bl.innerHTML=html;
   const clearRow = document.getElementById('rem-clear-row');
-  if(clearRow) clearRow.style.display = reminders.filter(r=>!r.done).length > 1 ? 'block' : 'none';
+  const hasDone=reminders.filter(r=>r.done).length>0;
+  const hasPending=reminders.filter(r=>!r.done).length>1;
+  if(clearRow) clearRow.style.display=(hasDone||hasPending)?'flex':'none';
+  const ccBtn=document.getElementById('clear-completed-btn');
+  if(ccBtn) ccBtn.style.display=hasDone?'':'none';
   const sDone=document.getElementById('s-done'); if(sDone) sDone.textContent=reminders.filter(r=>r.done).length;
   const sNotes=document.getElementById('s-notes'); if(sNotes) sNotes.textContent=notes.length;
   const sCards=document.getElementById('s-cards'); if(sCards) sCards.textContent=studyCards.length;
@@ -3332,7 +3338,7 @@ function switchChar(id,btn){
   document.querySelectorAll('.char-btn').forEach(b=>b.classList.remove('active'));
   if(btn) btn.classList.add('active');
   const c=CHARS[id];
-  ['chat-avi','sb-avi','home-avi'].forEach(el=>{const e=document.getElementById(el);if(e)e.src=c.img;});
+  ['chat-avi','sb-avi'].forEach(el=>{const e=document.getElementById(el);if(e)e.src=c.img;});
   document.getElementById('chat-cname').textContent=c.name;
   document.getElementById('chat-cvibe').textContent=c.vibe;
   document.getElementById('t-avi').src=c.img;
@@ -3830,6 +3836,15 @@ function _updateAvatarDisplay(emoji, imgUrl){
     if(imgUrl) prev.innerHTML='<img src="'+imgUrl+'" alt="avatar"/>';
     else{ prev.innerHTML=''; prev.textContent=emoji||'🙂'; }
   }
+  // Update home screen greeting avatar
+  const homeAvi=document.getElementById('home-avi');
+  if(homeAvi){
+    if(imgUrl) homeAvi.innerHTML='<img src="'+imgUrl+'" alt="avatar"/>';
+    else homeAvi.textContent=emoji||'🙂';
+  }
+  // Update sidebar avatar
+  const sbAvi=document.getElementById('sb-avi');
+  if(sbAvi && !imgUrl) sbAvi.src=''; // only clear if no custom image
 }
 
 function updateAccentUI(){
@@ -4700,10 +4715,8 @@ function testInAppNotif(){
 // Convert stored "9:00 AM" / "14:30" → "HH:MM" 24h for comparison
 function timeTo24(timeStr){
   if(!timeStr) return null;
-  // Pure 24h: "9:00" or "09:00"
   let m=timeStr.match(/^(\d{1,2}):(\d{2})$/);
   if(m) return String(parseInt(m[1])).padStart(2,'0')+':'+m[2];
-  // AM/PM: "9:00 AM" or "09:30 PM"
   m=timeStr.match(/^(\d{1,2}):(\d{2})\s*(AM|PM)$/i);
   if(!m) return null;
   let h=parseInt(m[1]),min=m[2],ap=m[3].toUpperCase();
@@ -4726,74 +4739,18 @@ document.addEventListener('DOMContentLoaded',()=>{
       startSWPing();
     }
   });
-  startNotifScheduler(); // always run — banners work without push permission
+  startNotifScheduler();
   updateNotifBtn();
+  // Init home screen avatar from user's saved profile
+  (function(){
+    const imgUrl=localStorage.getItem('fn_avatar_img');
+    const emoji=localStorage.getItem('fn_avatar')||'🙂';
+    const el=document.getElementById('home-avi');
+    if(!el) return;
+    if(imgUrl) el.innerHTML='<img src="'+imgUrl+'" alt="" style="width:100%;height:100%;object-fit:cover;border-radius:50%"/>';
+    else el.textContent=emoji;
+  })();
 });
-
-// ── Debug panel ──
-function dbgRefresh(){
-  const now=getNowHHMM();
-  const today=todayStr();
-  const fired=JSON.parse(localStorage.getItem('fn_notif_fired')||'{}');
-  const todayFired=fired[today]||{};
-  let html='<b>Now:</b> '+now+' | <b>Today:</b> '+today+'<br>';
-  html+='<b>Scheduler running:</b> '+(notifInterval?'YES ✅':'NO ❌')+'<br>';
-  html+='<b>Push permission:</b> '+(typeof Notification!=='undefined'?Notification.permission:'unsupported')+'<br>';
-  html+='<b>Last checked minute:</b> '+(_lastCheckedMinute||'(none)')+'<br><br>';
-  html+='<b>REMINDERS ('+reminders.length+' total):</b><br>';
-  reminders.forEach(function(r,i){
-    var raw=r.time||(r.startTime||'');
-    var t24=timeTo24(raw);
-    var isToday=r.date===today||r.date==='everyday'||r.date==='everyweek';
-    var alreadyFired=!!todayFired['rem-'+r.id];
-    var willFire=!!t24&&isToday&&!alreadyFired;
-    var matches=t24===now;
-    html+='<div style="border:1px solid #333;padding:.4rem;margin:.3rem 0;border-radius:4px;background:'+(willFire?'#011':'#111')+'">';
-    html+='['+i+'] <b>'+r.text+'</b><br>';
-    html+='  raw time: <b>'+(raw||'NONE ❌')+'</b> → parsed: <b>'+(t24||'NULL ❌')+'</b><br>';
-    html+='  date: '+r.date+' | isToday: '+(isToday?'✅':'❌')+' | fired: '+(alreadyFired?'yes':'no')+' | done: '+(r.done?'yes':'no')+'<br>';
-    html+='  → <b style="color:'+(willFire?'#0f0':'#f44')+'">'+(willFire?'WILL FIRE when time matches':'BLOCKED — see above')+'</b>';
-    if(matches) html+=' <b style="color:#ff0">← TIME MATCHES NOW!</b>';
-    html+='</div>';
-  });
-  if(reminders.length===0) html+='<span style="color:#f44">No reminders saved!</span>';
-  document.getElementById('dbg-content').innerHTML=html;
-}
-function dbgFireNow(){
-  const today=todayStr();
-  const fired=JSON.parse(localStorage.getItem('fn_notif_fired')||'{}');
-  const todayFired=fired[today]||{};
-  var count=0;
-  reminders.filter(function(r){return !r.done;}).forEach(function(r){
-    var raw=r.time||(r.startTime||'');
-    var t24=timeTo24(raw);
-    var isToday=r.date===today||r.date==='everyday'||r.date==='everyweek';
-    if(t24&&isToday&&!todayFired['rem-'+r.id]){
-      sendNotif((r.emoji||'🔔')+' '+r.text,'Debug: forced fire','rem-'+r.id,'reminder');
-      todayFired['rem-'+r.id]=true; count++;
-    }
-  });
-  var nf={};nf[today]=todayFired;localStorage.setItem('fn_notif_fired',JSON.stringify(nf));
-  toast('Fired '+count+' reminder(s)');
-  dbgRefresh();
-}
-// Open with long-press on the clock icon or by pressing D key
-document.addEventListener('keydown',function(e){if(e.key==='d'||e.key==='D'){var p=document.getElementById('dbg-panel');p.style.display=p.style.display==='none'?'block':'none';if(p.style.display==='block')dbgRefresh();}});
-// Also update debug every time scheduler runs
-var _origCheck=checkAndSendNotifs;
-checkAndSendNotifs=function(){_origCheck();if(document.getElementById('dbg-panel').style.display!=='none')dbgRefresh();};
-
 </script>
-
-<!-- Debug panel — shake phone or press D to toggle -->
-<div id="dbg-panel" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.92);z-index:99999;overflow-y:auto;padding:1rem;font-family:monospace;font-size:.72rem;color:#0f0;">
-  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.75rem;">
-    <span style="font-weight:700;font-size:.85rem;">🔍 Notification Debug</span>
-    <button onclick="document.getElementById('dbg-panel').style.display='none'" style="background:#333;border:none;color:#fff;border-radius:6px;padding:.3rem .7rem;cursor:pointer;">Close</button>
-  </div>
-  <div id="dbg-content">loading…</div>
-  <button onclick="dbgRefresh()" style="margin-top:.75rem;background:#1a3;border:none;color:#fff;border-radius:6px;padding:.4rem .8rem;cursor:pointer;font-size:.75rem;">🔄 Refresh</button>
-  <button onclick="dbgFireNow()" style="margin-top:.75rem;margin-left:.5rem;background:#a31;border:none;color:#fff;border-radius:6px;padding:.4rem .8rem;cursor:pointer;font-size:.75rem;">⚡ Force fire all due now</button>
-</div>
 </body>
 </html>
