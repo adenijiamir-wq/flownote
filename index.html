@@ -4537,18 +4537,89 @@ async function installPWA(){
   const {outcome}=await _deferredInstall.userChoice;
   if(outcome==='accepted') _deferredInstall=null;
 }
-// Register SW purely for background push (sw.js handles its own schedule via syncScheduleToSW)
+// ── Service Worker — registers and keeps schedule in sync ──
+var _swReg = null;
+
 async function registerSW(){
   if(!('serviceWorker' in navigator)) return null;
   try{
-    const reg=await navigator.serviceWorker.register('/sw.js');
-    return reg;
-  }catch(e){ return null; }
+    _swReg = await navigator.serviceWorker.register('/sw.js');
+    // Wait for SW to be active
+    if(_swReg.installing || _swReg.waiting){
+      await new Promise(function(resolve){
+        var sw = _swReg.installing || _swReg.waiting;
+        sw.addEventListener('statechange', function(){
+          if(sw.state==='activated') resolve();
+        });
+      });
+    }
+    // Listen for SW telling us it fired a notification
+    navigator.serviceWorker.addEventListener('message', function(e){
+      if(e.data && e.data.type==='FIRED'){
+        var today = todayStr();
+        var fired = {}; try{ fired=JSON.parse(localStorage.getItem('fn_fired')||'{}'); }catch(err){}
+        if(!fired[today]) fired[today]={};
+        fired[today][e.data.tag] = true;
+        localStorage.setItem('fn_fired', JSON.stringify(fired));
+        nlog('SW fired: '+e.data.tag);
+        // Show in-app banner too if tab is visible
+        if(document.visibilityState==='visible' && e.data.title){
+          showInAppNotif(e.data.title, e.data.body||'', 'reminder');
+        }
+      }
+    });
+    nlog('SW registered');
+    return _swReg;
+  }catch(e){ nlog('SW reg fail: '+e.message); return null; }
 }
-// Stubs — kept so any old call sites don't crash
-function syncScheduleToSW(){}
-function startSWPing(){}
-function buildNotifSchedule(){ return []; }
+
+function buildNotifSchedule(){
+  var today = todayStr();
+  var fired = {}; try{ fired=JSON.parse(localStorage.getItem('fn_fired')||'{}'); }catch(e){}
+  var firedToday = fired[today]||{};
+  var data; try{ data=JSON.parse(localStorage.getItem('mb7_data')||'{}'); }catch(e){ return []; }
+  var schedule = [];
+  (data.reminders||[]).forEach(function(r){
+    if(r.done) return;
+    var raw = r.time||r.startTime||''; if(!raw) return;
+    var t24 = timeTo24(raw); if(!t24) return;
+    var isToday = r.date===today||r.date==='everyday'||r.date==='everyweek';
+    if(!isToday) return;
+    var key = 'r'+r.id;
+    schedule.push({
+      tag: key,
+      time: t24,
+      title: (r.emoji||'🔔')+' '+r.text,
+      body: r.date==='everyday'?'Daily reminder':'Tap to open FlowNotes',
+      fired: !!firedToday[key]
+    });
+  });
+  return schedule;
+}
+
+function syncScheduleToSW(){
+  var schedule = buildNotifSchedule();
+  nlog('syncSW: '+schedule.length+' items');
+  // Try active controller first (fastest)
+  if(navigator.serviceWorker && navigator.serviceWorker.controller){
+    navigator.serviceWorker.controller.postMessage({ type:'SCHEDULE', schedule:schedule });
+    return;
+  }
+  // Fall back to registration
+  if(_swReg && _swReg.active){
+    _swReg.active.postMessage({ type:'SCHEDULE', schedule:schedule });
+  }
+}
+
+function startSWPing(){
+  // Ping SW every 25s to keep it alive and recheck schedule
+  setInterval(function(){
+    if(navigator.serviceWorker && navigator.serviceWorker.controller){
+      navigator.serviceWorker.controller.postMessage({ type:'PING' });
+    }
+  }, 15000);
+}
+
 
 // ══════════════════════════════════════════════════════
 // NOTIFICATION ENGINE v3 — simple, reliable, debuggable
@@ -4626,6 +4697,8 @@ function checkAndFireReminders(){
     }
   });
   if(changed){ fired[today]=firedToday; localStorage.setItem('fn_fired',JSON.stringify(fired)); }
+  // Keep SW schedule in sync with latest fired state
+  syncScheduleToSW();
 }
 
 function debugFireAll(){
@@ -4646,9 +4719,9 @@ function startNotifPoller(){
   if(_notifPollerStarted) return;
   _notifPollerStarted=true;
   nlog('poller start');
-  setInterval(function(){ nlog('tick'); checkAndFireReminders(); refreshDebug(); }, 30000);
+  setInterval(function(){ nlog('tick'); checkAndFireReminders(); if(typeof renderAll==='function') renderAll(); refreshDebug(); }, 15000);
   document.addEventListener('visibilitychange',function(){
-    if(document.visibilityState==='visible'){ nlog('visible'); checkAndFireReminders(); }
+    if(document.visibilityState==='visible'){ nlog('visible'); checkAndFireReminders(); if(typeof renderAll==='function') renderAll(); }
   });
 }
 
@@ -4818,8 +4891,15 @@ function updateNotifStatus(){
 }
 
 document.addEventListener('DOMContentLoaded', function(){
-  registerSW();
+  registerSW().then(function(){
+    // Once SW is ready, sync the schedule and start keepalive ping
+    setTimeout(function(){
+      syncScheduleToSW();
+      startSWPing();
+    }, 1000); // small delay to let SW activate
+  });
   scheduleAllReminders();
+  startNotifPoller();
   if(typeof updateNotifBtn==='function') updateNotifBtn();
 });
 
