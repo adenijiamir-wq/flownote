@@ -4575,65 +4575,85 @@ function scheduleReminder(r, today){
   // Clear any existing timer for this reminder
   if(_scheduledTimers[r.id]) clearTimeout(_scheduledTimers[r.id]);
 
+// ── Unified notification fire function — works on Android + desktop ──
+function fireNotif(title, body, tag){
+  // Always show in-app banner
+  showInAppNotif(title, body, 'reminder');
+  if(typeof playNotifSound==='function') playNotifSound('reminder');
+
+  // Native notification — Android Chrome requires SW, desktop accepts new Notification()
+  if(typeof Notification==='undefined' || Notification.permission!=='granted') return;
+  var icon = "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='22' fill='%231a6b3c'/><text y='.9em' font-size='72' x='12'>📚</text></svg>";
+  // Try SW first (required on Android Chrome)
+  if(navigator.serviceWorker && navigator.serviceWorker.controller){
+    navigator.serviceWorker.ready.then(function(reg){
+      reg.showNotification(title, { body:body, tag:tag, icon:icon, vibrate:[200,100,200] });
+    }).catch(function(){
+      // SW failed — fall back to direct Notification
+      try{ new Notification(title, {body:body, tag:tag, icon:icon}); }catch(e){}
+    });
+  } else {
+    // No SW — desktop fallback
+    try{ new Notification(title, {body:body, tag:tag, icon:icon}); }catch(e){}
+  }
+}
+
   _scheduledTimers[r.id] = setTimeout(function(){
-    // Mark as fired
     var fired2={}; try{ fired2=JSON.parse(localStorage.getItem('fn_fired')||'{}'); }catch(e){}
     var tf = fired2[today]||{};
     if(tf[key]) return;
     tf[key]=true; fired2[today]=tf;
     localStorage.setItem('fn_fired', JSON.stringify(fired2));
-
-    // Show in-app banner (always, no permission needed)
-    showInAppNotif((r.emoji||'🔔')+' '+r.text, r.date==='everyday'?'Daily reminder':'Tap to open FlowNotes', 'reminder');
-    if(typeof playNotifSound==='function') playNotifSound('reminder');
-
-    // Native push if permitted
-    if(typeof Notification!=='undefined' && Notification.permission==='granted'){
-      try{ new Notification((r.emoji||'🔔')+' '+r.text, {
-        body: 'Tap to open FlowNotes', tag: key,
-        icon:"data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='22' fill='%231a6b3c'/><text y='.9em' font-size='72' x='12'>📚</text></svg>"
-      }); }catch(e){}
-    }
-
-    // Reschedule for next day if recurring
+    fireNotif((r.emoji||'🔔')+' '+r.text, r.date==='everyday'?'Daily reminder':'Tap to open FlowNotes', key);
     if(r.date==='everyday'||r.date==='everyweek'){
       setTimeout(function(){ scheduleAllReminders(); }, 65000);
     }
   }, delay);
 }
 
-// FIX 2: Minute-by-minute safety net — catches anything setTimeout missed
+// Safety net poller — runs every 30s AND when tab becomes visible again after being hidden
+// This is the key mobile fix: phone switches app → timers freeze → come back → catch-up runs
+function _checkMissedReminders(){
+  var today = todayStr();
+  var now = new Date();
+  var nowStr = String(now.getHours()).padStart(2,'0')+':'+String(now.getMinutes()).padStart(2,'0');
+  var fired = {}; try{ fired=JSON.parse(localStorage.getItem('fn_fired')||'{}'); }catch(e){}
+  var todayFired = fired[today]||{};
+  var data; try{ data=JSON.parse(localStorage.getItem('mb7_data')||'{}'); }catch(e){ return; }
+  var rems = data.reminders||[];
+  var changed = false;
+  rems.forEach(function(r){
+    if(r.done) return;
+    var raw = r.time||r.startTime||''; if(!raw) return;
+    var t24 = timeTo24(raw); if(!t24) return;
+    var isToday = r.date===today||r.date==='everyday'||r.date==='everyweek';
+    if(!isToday) return;
+    var key='r'+r.id;
+    if(todayFired[key]) return;
+    // Fire if it's the current minute OR up to 5 mins late (catches frozen timers)
+    var tParts=t24.split(':'), rH=parseInt(tParts[0]), rM=parseInt(tParts[1]);
+    var rMinutes=rH*60+rM, nowMinutes=now.getHours()*60+now.getMinutes();
+    if(nowMinutes >= rMinutes && nowMinutes - rMinutes <= 5){
+      todayFired[key]=true; changed=true;
+      fireNotif((r.emoji||'🔔')+' '+r.text, r.date==='everyday'?'Daily reminder':'Tap to open FlowNotes', key);
+    }
+  });
+  if(changed){ fired[today]=todayFired; localStorage.setItem('fn_fired',JSON.stringify(fired)); }
+}
+
 var _notifPollInterval = null;
 function startNotifPoller(){
   if(_notifPollInterval) clearInterval(_notifPollInterval);
-  _notifPollInterval = setInterval(function(){
-    var today = todayStr();
-    var nowH = new Date().getHours(), nowM = new Date().getMinutes();
-    var nowStr = String(nowH).padStart(2,'0')+':'+String(nowM).padStart(2,'0');
-    var fired = {}; try{ fired=JSON.parse(localStorage.getItem('fn_fired')||'{}'); }catch(e){}
-    var todayFired = fired[today]||{};
-    var data; try{ data=JSON.parse(localStorage.getItem('mb7_data')||'{}'); }catch(e){ return; }
-    var rems = data.reminders||[];
-    var changed = false;
-    rems.forEach(function(r){
-      if(r.done) return;
-      var raw = r.time||r.startTime||''; if(!raw) return;
-      var t24 = timeTo24(raw); if(!t24) return;
-      var isToday = r.date===today||r.date==='everyday'||r.date==='everyweek';
-      if(!isToday) return;
-      var key='r'+r.id;
-      if(todayFired[key]) return;
-      if(t24===nowStr){
-        todayFired[key]=true; changed=true;
-        showInAppNotif((r.emoji||'🔔')+' '+r.text, r.date==='everyday'?'Daily reminder':'Tap to open FlowNotes','reminder');
-        if(typeof playNotifSound==='function') playNotifSound('reminder');
-        if(typeof Notification!=='undefined'&&Notification.permission==='granted'){
-          try{ new Notification((r.emoji||'🔔')+' '+r.text,{body:'Tap to open FlowNotes',tag:key}); }catch(e){}
-        }
-      }
-    });
-    if(changed){ fired[today]=todayFired; localStorage.setItem('fn_fired',JSON.stringify(fired)); }
-  }, 30000); // check every 30 seconds
+  _notifPollInterval = setInterval(_checkMissedReminders, 30000);
+
+  // KEY MOBILE FIX: when user comes back to the tab, immediately check for missed reminders
+  document.addEventListener('visibilitychange', function(){
+    if(document.visibilityState === 'visible'){
+      _checkMissedReminders();
+      // Also re-register timers in case they were killed
+      scheduleAllReminders();
+    }
+  });
 }
 
 function timeTo24(timeStr){
