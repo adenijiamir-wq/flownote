@@ -646,6 +646,8 @@ html,body{height:100%;overflow:hidden;font-family:'DM Sans',-apple-system,BlinkM
 .overdue-badge{font-size:.58rem;font-weight:700;background:var(--red);color:white;border-radius:4px;padding:.1rem .35rem;margin-left:.3rem;vertical-align:middle;}
 [data-theme="dark"] .rb.overdue{border-color:#7f1d1d;background:#2d1212;}
 [data-theme="dark"] .rb.overdue .rb-title{color:var(--red);}
+.rb.missed-time{border-color:#fca5a5;border-left:3px solid #ef4444;}
+[data-theme="dark"] .rb.missed-time{border-color:#7f1d1d;}
 .r-group-missing{font-size:.62rem;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--red);margin-bottom:.5rem;margin-top:1rem;display:flex;align-items:center;gap:.35rem;}
 .r-group-missing:first-child{margin-top:0;}
 .r-group-lbl{font-size:.6rem;font-weight:700;text-transform:uppercase;letter-spacing:.12em;color:var(--muted);margin-bottom:.5rem;margin-top:1rem;padding-left:.1rem;}
@@ -3258,27 +3260,55 @@ function clearAllReminders(){
 }
 function renderAll(){
   const today=todayStr();
-  // REMINDERS PAGE: show overdue at top, then groups
+  const now=new Date();
+  const nowMin=now.getHours()*60+now.getMinutes();
+
+  // Overdue = past date, not done
   const isOverdue=r=>r.date&&r.date!=='everyday'&&r.date!=='everyweek'&&r.date<today&&!r.done;
+
+  // Missed time = today's task with a set time that has passed, not done
+  const isMissedTime=r=>{
+    if(r.done||isOverdue(r)) return false;
+    if(r.date!==today&&r.date!=='everyday'&&r.date!=='everyweek') return false;
+    const raw=r.time||r.startTime||''; if(!raw) return false;
+    const t24=timeTo24(raw); if(!t24) return false;
+    const p=t24.split(':'), rMin=parseInt(p[0])*60+parseInt(p[1]);
+    return nowMin > rMin+1; // more than 1 min past
+  };
+
+  // Helper: get sort minute for a reminder (9999 = no time)
+  const sortMin=r=>{
+    const raw=r.time||r.startTime||''; if(!raw) return 9999;
+    const t24=timeTo24(raw); if(!t24) return 9999;
+    const p=t24.split(':'); return parseInt(p[0])*60+parseInt(p[1]);
+  };
+
   const overdueR=reminders.filter(isOverdue);
-  // Filter done based on toggle
   const visibleReminders=reminders.filter(r=>showDoneReminders?true:!r.done||isOverdue(r));
   const notOverdue=visibleReminders.filter(r=>!isOverdue(r));
+
   const sorted=[...notOverdue].sort((a,b)=>{
-    const aR=a.date==='everyday'||a.date==='everyweek',bR=b.date==='everyday'||b.date==='everyweek';
-    if(aR&&!bR)return-1;if(!aR&&bR)return 1;
-    if(a.done&&!b.done)return 1;if(!a.done&&b.done)return-1;
-    return(a.date||'').localeCompare(b.date||'');
+    // Done always sinks to bottom
+    if(a.done&&!b.done) return 1;
+    if(!a.done&&b.done) return -1;
+    // Recurring floats above one-off within same done-state
+    const aR=a.date==='everyday'||a.date==='everyweek';
+    const bR=b.date==='everyday'||b.date==='everyweek';
+    // Sort by date first, then by time within the same date
+    const dateCmp=(a.date||'').localeCompare(b.date||'');
+    if(dateCmp!==0) return dateCmp;
+    // Same date — sort by time ascending
+    return sortMin(a)-sortMin(b);
   });
+
   const groups={};
   sorted.forEach(r=>{const l=dLbl(r.date);if(!groups[l])groups[l]=[];groups[l].push(r);});
+
   const bl=document.getElementById('big-r-list');
-  // Update count label
   const doneCount=reminders.filter(r=>r.done).length;
   const pendingCount=reminders.filter(r=>!r.done).length;
   const countLabel=document.getElementById('rem-count-label');
   if(countLabel) countLabel.textContent=pendingCount>0?`${pendingCount} pending`:'';
-  // Only show the show-done button if there are completed items
   const doneBtnEl=document.getElementById('show-done-btn');
   if(doneBtnEl){
     doneBtnEl.style.display=doneCount>0?'':'none';
@@ -3287,14 +3317,19 @@ function renderAll(){
   if(!reminders.length){bl.innerHTML='<div style="text-align:center;padding:.9rem .5rem;color:var(--muted);font-size:.75rem;">No tasks yet — tap <strong>+ Add task</strong> above to get started.</div>';return;}
 
   let html='';
-  // Overdue section first
+
+  // Overdue (past date) section
   if(overdueR.length){
-    html+=`<div class="r-group-missing">⚠️ Missing Work (${overdueR.length})</div>`;
-    html+=overdueR.map(r=>`<div class="rb overdue" onclick="toggleR(${r.id})">
+    const overdSorted=[...overdueR].sort((a,b)=>{
+      const dateCmp=(a.date||'').localeCompare(b.date||'');
+      return dateCmp!==0?dateCmp:sortMin(a)-sortMin(b);
+    });
+    html+=`<div class="r-group-missing">⚠️ Missing Work (${overdSorted.length})</div>`;
+    html+=overdSorted.map(r=>`<div class="rb overdue" onclick="toggleR(${r.id})">
       <div class="rb-icon">${r.emoji}</div>
       <div style="flex:1">
         <div class="rb-title">${r.text}<span class="overdue-badge">MISSING</span></div>
-        <div class="rb-time">Was due: ${dLbl(r.date)}</div>
+        <div class="rb-time">Was due: ${dLbl(r.date)}${r.time?' at ⏰ '+r.time:''}</div>
       </div>
       <div class="rb-check">${r.done?'✓':''}</div>
       <button class="rb-edit" onclick="event.stopPropagation();openEditR(${r.id})">✏️</button>
@@ -3305,17 +3340,28 @@ function renderAll(){
   // Regular groups
   html+=Object.entries(groups).map(([lbl,items])=>`
     <div class="r-group-lbl">${lbl}</div>
-    ${items.map(r=>`<div class="rb ${r.done?'done':''}" onclick="toggleR(${r.id})">
-      <div class="rb-icon">${r.emoji}</div>
-      <div style="flex:1"><div class="rb-title">${r.text}</div><div class="rb-time">${r.done?'Completed — tap to undo':r.startTime&&r.dueTime?'⏰ '+r.startTime+'–'+r.dueTime:r.startTime?'⏰ '+r.startTime:r.dueTime?'⏰ Due '+r.dueTime:r.time?'⏰ '+r.time:'No time set'}</div></div>
-      <div class="rb-check">${r.done?'✓':''}</div>
-      <button class="rb-edit" onclick="event.stopPropagation();openEditR(${r.id})">✏️</button>
-      <button class="rb-del" onclick="event.stopPropagation();deleteR(${r.id})">✕</button>
-    </div>`).join('')}`).join('');
+    ${items.map(r=>{
+      const missed=isMissedTime(r);
+      let timeStr;
+      if(r.done) timeStr='Completed — tap to undo';
+      else if(missed) timeStr='<span style="color:var(--red);font-weight:600;">⏰ Missed — '+( r.startTime&&r.dueTime?r.startTime+'–'+r.dueTime:r.time||r.startTime)+'</span>';
+      else if(r.startTime&&r.dueTime) timeStr='⏰ '+r.startTime+'–'+r.dueTime;
+      else if(r.startTime) timeStr='⏰ '+r.startTime;
+      else if(r.dueTime) timeStr='⏰ Due '+r.dueTime;
+      else if(r.time) timeStr='⏰ '+r.time;
+      else timeStr='No time set';
+      return `<div class="rb ${r.done?'done':''} ${missed&&!r.done?'missed-time':''}" onclick="toggleR(${r.id})">
+        <div class="rb-icon">${r.emoji}</div>
+        <div style="flex:1"><div class="rb-title">${r.text}${missed&&!r.done?'<span class="overdue-badge" style="background:#ef4444;">MISSED</span>':''}</div><div class="rb-time">${timeStr}</div></div>
+        <div class="rb-check">${r.done?'✓':''}</div>
+        <button class="rb-edit" onclick="event.stopPropagation();openEditR(${r.id})">✏️</button>
+        <button class="rb-del" onclick="event.stopPropagation();deleteR(${r.id})">✕</button>
+      </div>`;
+    }).join('')}`).join('');
 
   bl.innerHTML=html;
-  const clearRow = document.getElementById('rem-clear-row');
-  if(clearRow) clearRow.style.display = reminders.filter(r=>!r.done).length > 1 ? 'block' : 'none';
+  const clearRow=document.getElementById('rem-clear-row');
+  if(clearRow) clearRow.style.display=reminders.filter(r=>!r.done).length>1?'block':'none';
   const sDone=document.getElementById('s-done'); if(sDone) sDone.textContent=reminders.filter(r=>r.done).length;
   const sNotes=document.getElementById('s-notes'); if(sNotes) sNotes.textContent=notes.length;
   const sCards=document.getElementById('s-cards'); if(sCards) sCards.textContent=studyCards.length;
