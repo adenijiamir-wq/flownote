@@ -3,17 +3,61 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, viewport-fit=cover, user-scalable=no">
-<title>FlowNotes</title>
+<title>Menmory</title>
+<!-- Firebase -->
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signInWithPopup, GoogleAuthProvider, signOut as fbSignOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+import { getFirestore, doc, setDoc, getDoc, collection, getCountFromServer } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyAmreqeMafYfB38tQoe24QboOFCh4BzReA",
+  authDomain: "flow-note-dc460.firebaseapp.com",
+  projectId: "flow-note-dc460",
+  storageBucket: "flow-note-dc460.firebasestorage.app",
+  messagingSenderId: "952497380530",
+  appId: "1:952497380530:web:ba126716f67db5a30ffdab"
+};
+
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+const googleProvider = new GoogleAuthProvider();
+
+// Expose to global scope for use in non-module scripts
+window._fbAuth = auth;
+window._fbDb = db;
+window._fbGoogleProvider = googleProvider;
+window._fbFns = {
+  createUserWithEmailAndPassword,
+  signInWithEmailAndPassword,
+  signInWithPopup,
+  fbSignOut,
+  onAuthStateChanged,
+  doc, setDoc, getDoc, collection, getCountFromServer
+};
+
+// Listen for auth state changes
+onAuthStateChanged(auth, (user) => {
+  if (user) {
+    window._fbCurrentUser = user;
+    window._fbUserReady && window._fbUserReady(user);
+  } else {
+    window._fbCurrentUser = null;
+    window._fbUserReady && window._fbUserReady(null);
+  }
+});
+</script>
 
 <!-- PWA / Mobile Web App -->
-<meta name="application-name" content="FlowNotes">
+<meta name="application-name" content="Menmory">
 <meta name="description" content="Your personal study OS — notes, flashcards, reminders & AI coach.">
 <meta name="theme-color" content="#1a6b3c" media="(prefers-color-scheme: light)">
 <meta name="theme-color" content="#0e2a1a" media="(prefers-color-scheme: dark)">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="FlowNotes">
+<meta name="apple-mobile-web-app-title" content="Menmory">
 <link rel="manifest" href="/manifest.json">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='22' fill='%231a6b3c'/><text y='.9em' font-size='72' x='12'>📚</text></svg>">
 <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='22' fill='%231a6b3c'/><text y='.9em' font-size='72' x='12'>📚</text></svg>">
@@ -216,7 +260,9 @@
 .auth-divider{display:flex;align-items:center;gap:.7rem;margin:.5rem 0 .8rem;}
 .auth-divider span{font-size:.72rem;color:var(--muted);white-space:nowrap;}
 .auth-divider::before,.auth-divider::after{content:'';flex:1;height:1px;background:var(--line);}
-.auth-ghost{width:100%;background:none;color:var(--ink);border:1.5px solid var(--line);border-radius:10px;padding:.78rem;font-family:'DM Sans',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:.88rem;font-weight:500;cursor:pointer;transition:all .15s;}
+.auth-google-btn{width:100%;display:flex;align-items:center;justify-content:center;gap:.6rem;background:#fff;color:#333;border:1.5px solid #dadce0;border-radius:10px;padding:.72rem 1rem;font-family:'DM Sans',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:.88rem;font-weight:600;cursor:pointer;margin-bottom:.6rem;transition:box-shadow .15s;}
+.auth-google-btn:hover{box-shadow:0 2px 8px rgba(0,0,0,.12);}
+[data-theme="dark"] .auth-google-btn{background:#2a2a2a;color:#f0ede8;border-color:#444;}width:100%;background:none;color:var(--ink);border:1.5px solid var(--line);border-radius:10px;padding:.78rem;font-family:'DM Sans',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:.88rem;font-weight:500;cursor:pointer;transition:all .15s;}
 .auth-ghost:hover{border-color:var(--ink);}
 .auth-switch{text-align:center;margin-top:1.2rem;font-size:.82rem;color:var(--muted);}
 .auth-switch button{background:none;border:none;color:var(--ink);font-weight:600;cursor:pointer;font-family:inherit;font-size:.82rem;text-decoration:underline;padding:0;}
@@ -1225,7 +1271,7 @@ html, body, #app {
 <!-- ════ AUTH SCREEN ════ -->
 <div id="auth-screen" style="display:none;">
   <div class="auth-card">
-    <div class="auth-logo">Flow<span>Notes</span> 📚
+    <div class="auth-logo">Mem<span>mory</span> 📚
       <div class="auth-tagline">Your AI-powered study brain</div>
     </div>
 
@@ -1243,6 +1289,10 @@ html, body, #app {
       <input class="auth-input" id="signup-confirm" type="password" placeholder="Same password again" autocomplete="new-password" onkeydown="if(event.key==='Enter')doSignUp()"/>
       <button class="auth-btn" id="signup-btn" onclick="doSignUp()">Create account →</button>
       <div class="auth-divider"><span>or</span></div>
+      <button class="auth-google-btn" onclick="doGoogleSignIn()">
+        <svg viewBox="0 0 24 24" style="width:18px;height:18px;flex-shrink:0;"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
+        Continue with Google
+      </button>
       <button class="auth-ghost" onclick="doGuest()">Continue as guest</button>
       <div class="auth-switch">Already have an account? <button onclick="showLogin()">Log in</button></div>
     </div>
@@ -1258,6 +1308,10 @@ html, body, #app {
       <input class="auth-input" id="login-password" type="password" placeholder="Your password" autocomplete="current-password" onkeydown="if(event.key==='Enter')doLogIn()"/>
       <button class="auth-btn" id="login-btn" onclick="doLogIn()">Log in →</button>
       <div class="auth-divider"><span>or</span></div>
+      <button class="auth-google-btn" onclick="doGoogleSignIn()">
+        <svg viewBox="0 0 24 24" style="width:18px;height:18px;flex-shrink:0;"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
+        Continue with Google
+      </button>
       <button class="auth-ghost" onclick="doGuest()">Continue as guest</button>
       <div class="auth-switch">Don't have an account? <button onclick="showSignup()">Sign up</button></div>
     </div>
@@ -1267,7 +1321,7 @@ html, body, #app {
 <!-- ════ ONBOARDING ════ -->
 <div id="ob">
 <div class="ob-card">
-  <div class="ob-logo">Flow<span>Notes</span> <span class="ob-logo-icon">📚</span></div>
+  <div class="ob-logo">Mem<span>mory</span> <span class="ob-logo-icon">📚</span></div>
 
   <!-- Step 1: Name -->
   <div class="ob-screen show" id="ob1">
@@ -1371,7 +1425,7 @@ html, body, #app {
     <!-- SIDEBAR -->
     <aside class="sidebar" id="sidebar">
       <div class="sb-logo">
-        <span class="sb-logo-text" id="sb-logo-tap" onclick="secretTap()">Flow<span>Notes</span></span>
+        <span class="sb-logo-text" id="sb-logo-tap" onclick="secretTap()">Mem<span>mory</span></span>
         <button class="sb-close" onclick="closeSidebar()">✕</button>
       </div>
       <div class="sb-nav">
@@ -1754,7 +1808,7 @@ html, body, #app {
 
             <!-- Install banner (shown when app can be installed) -->
             <div id="install-banner" style="display:none;background:linear-gradient(135deg,var(--green),#15803d);border-radius:12px;padding:.85rem 1rem;margin-bottom:1rem;color:white;">
-              <div style="font-size:.82rem;font-weight:700;margin-bottom:.2rem;">📲 Install FlowNotes</div>
+              <div style="font-size:.82rem;font-weight:700;margin-bottom:.2rem;">📲 Install Menmory</div>
               <div style="font-size:.68rem;opacity:.9;line-height:1.5;margin-bottom:.6rem;">Install the app for the best notification experience — works even when your browser is closed.</div>
               <button onclick="installPWA()" style="background:white;color:var(--green);border:none;border-radius:8px;padding:.4rem .9rem;font-family:inherit;font-size:.75rem;font-weight:700;cursor:pointer;">Install now</button>
             </div>
@@ -1762,7 +1816,7 @@ html, body, #app {
             <!-- iOS add-to-homescreen hint -->
             <div id="ios-banner" style="display:none;background:var(--paper2);border:1.5px solid var(--line);border-radius:12px;padding:.85rem 1rem;margin-bottom:1rem;">
               <div style="font-size:.82rem;font-weight:700;margin-bottom:.3rem;">🍎 iPhone / iPad</div>
-              <div style="font-size:.68rem;color:var(--muted);line-height:1.65;">To get notifications on iOS, add FlowNotes to your Home Screen:<br/>
+              <div style="font-size:.68rem;color:var(--muted);line-height:1.65;">To get notifications on iOS, add Menmory to your Home Screen:<br/>
               <strong style="color:var(--ink);">Safari → Share button → Add to Home Screen</strong><br/>
               Then open it from your home screen and enable notifications here.</div>
             </div>
@@ -2206,10 +2260,12 @@ function save(){
     userName,userStruggles,userSubjects,currentChar,
     reminders,notes,studyCards,streakDays,onboarded:true
   }));
-  // Defer reschedule so it always runs after all functions are defined
   setTimeout(function(){
     if(typeof scheduleAllReminders==='function') scheduleAllReminders();
     if(typeof syncScheduleToSW==='function') syncScheduleToSW();
+    // Sync to Firestore (debounced)
+    clearTimeout(window._fbSyncTimer);
+    window._fbSyncTimer = setTimeout(fbSyncData, 2000);
   }, 0);
 }
 function load(){
@@ -2304,7 +2360,10 @@ function getMemoryGaps(){
 // AUTH — localStorage now, swap for Supabase later
 // ══════════════════════════════════════════════════════
 function signOut(){
-  showConfirm('Sign out?','Your data stays saved on this device.',function(){
+  showConfirm('Sign out?','You can log back in anytime.',async function(){
+    if(window._fbAuth){
+      try{ await window._fbFns.fbSignOut(window._fbAuth); }catch(e){}
+    }
     localStorage.removeItem('fn_current_user');
     location.reload();
   },'Sign out');
@@ -2331,7 +2390,7 @@ function authClearErrors(){
 }
 function validateEmail(e){return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e);}
 
-function doSignUp(){
+async function doSignUp(){
   authClearErrors();
   const email=document.getElementById('signup-email').value.trim();
   const pass=document.getElementById('signup-password').value;
@@ -2339,32 +2398,122 @@ function doSignUp(){
   if(!email||!validateEmail(email)){authError('signup-error','Please enter a valid email address.');return;}
   if(pass.length<8){authError('signup-error','Password must be at least 8 characters.');return;}
   if(pass!==confirm){authError('signup-error','Passwords don\'t match. Try again.');return;}
-  // Check if email already registered
-  const existing=JSON.parse(localStorage.getItem('fn_accounts')||'{}');
-  if(existing[email]){authError('signup-error','An account with that email already exists. Log in instead.');return;}
-  // Save account locally (replace with Supabase auth.signUp later)
-  existing[email]={passwordHash:btoa(pass),created:new Date().toISOString()};
-  localStorage.setItem('fn_accounts',JSON.stringify(existing));
-  localStorage.setItem('fn_current_user',email);
-  // Proceed — show onboarding for new users
-  document.getElementById('auth-screen').style.display='none';
-  afterAuth(false);
+  const btn=document.getElementById('signup-btn');
+  btn.textContent='Creating account…';btn.disabled=true;
+  try{
+    const cred = await window._fbFns.createUserWithEmailAndPassword(window._fbAuth, email, pass);
+    await _fbSaveUser(cred.user);
+    localStorage.setItem('fn_current_user', cred.user.uid);
+    userEmail = email;
+    document.getElementById('auth-screen').style.display='none';
+    afterAuth(false);
+  }catch(e){
+    authError('signup-error', _fbErrMsg(e));
+    btn.textContent='Create account →';btn.disabled=false;
+  }
 }
 
-function doLogIn(){
+async function doLogIn(){
   authClearErrors();
   const email=document.getElementById('login-email').value.trim();
   const pass=document.getElementById('login-password').value;
   if(!email||!validateEmail(email)){authError('login-error','Please enter your email address.');return;}
   if(!pass){authError('login-error','Please enter your password.');return;}
-  // Check credentials (replace with Supabase auth.signInWithPassword later)
-  const existing=JSON.parse(localStorage.getItem('fn_accounts')||'{}');
-  if(!existing[email]||existing[email].passwordHash!==btoa(pass)){
-    authError('login-error','Email or password is incorrect.');return;
+  const btn=document.getElementById('login-btn');
+  btn.textContent='Logging in…';btn.disabled=true;
+  try{
+    const cred = await window._fbFns.signInWithEmailAndPassword(window._fbAuth, email, pass);
+    localStorage.setItem('fn_current_user', cred.user.uid);
+    userEmail = cred.user.email||'';
+    await _fbLoadUserData(cred.user.uid);
+    document.getElementById('auth-screen').style.display='none';
+    afterAuth(true);
+  }catch(e){
+    authError('login-error', _fbErrMsg(e));
+    btn.textContent='Log in →';btn.disabled=false;
   }
-  localStorage.setItem('fn_current_user',email);
-  document.getElementById('auth-screen').style.display='none';
-  afterAuth(true);
+}
+
+async function doGoogleSignIn(){
+  authClearErrors();
+  try{
+    const cred = await window._fbFns.signInWithPopup(window._fbAuth, window._fbGoogleProvider);
+    const user = cred.user;
+    localStorage.setItem('fn_current_user', user.uid);
+    userEmail = user.email||'';
+    // Check if returning user
+    const snap = await window._fbFns.getDoc(window._fbFns.doc(window._fbDb,'users',user.uid));
+    if(snap.exists()){
+      const d = snap.data();
+      if(d.appData) _fbApplyData(d.appData);
+      document.getElementById('auth-screen').style.display='none';
+      afterAuth(true);
+    } else {
+      await _fbSaveUser(user);
+      document.getElementById('auth-screen').style.display='none';
+      afterAuth(false);
+    }
+  }catch(e){
+    if(e.code!=='auth/popup-closed-by-user'){
+      authError('login-error', _fbErrMsg(e));
+      authError('signup-error', _fbErrMsg(e));
+    }
+  }
+}
+
+async function _fbSaveUser(user){
+  try{
+    await window._fbFns.setDoc(window._fbFns.doc(window._fbDb,'users',user.uid),{
+      email: user.email||'',
+      displayName: user.displayName||'',
+      createdAt: new Date().toISOString(),
+      appData: null
+    },{merge:true});
+  }catch(e){ console.warn('Firestore save failed',e); }
+}
+
+async function _fbLoadUserData(uid){
+  try{
+    const snap = await window._fbFns.getDoc(window._fbFns.doc(window._fbDb,'users',uid));
+    if(snap.exists()&&snap.data().appData){
+      _fbApplyData(snap.data().appData);
+    }
+  }catch(e){ console.warn('Firestore load failed',e); }
+}
+
+function _fbApplyData(appData){
+  try{
+    if(appData) localStorage.setItem('mb7_data', typeof appData==='string'?appData:JSON.stringify(appData));
+  }catch(e){}
+}
+
+async function fbSyncData(){
+  const uid = localStorage.getItem('fn_current_user');
+  if(!uid||uid==='guest'||!window._fbDb) return;
+  try{
+    const raw = localStorage.getItem('mb7_data');
+    if(raw){
+      await window._fbFns.setDoc(window._fbFns.doc(window._fbDb,'users',uid),{
+        appData: raw,
+        lastSync: new Date().toISOString()
+      },{merge:true});
+    }
+  }catch(e){ console.warn('Sync failed',e); }
+}
+
+function _fbErrMsg(e){
+  const map={
+    'auth/email-already-in-use':'An account with that email already exists. Log in instead.',
+    'auth/invalid-email':'Please enter a valid email address.',
+    'auth/weak-password':'Password must be at least 8 characters.',
+    'auth/user-not-found':'No account found with that email.',
+    'auth/wrong-password':'Incorrect password. Try again.',
+    'auth/invalid-credential':'Email or password is incorrect.',
+    'auth/too-many-requests':'Too many attempts. Please wait a moment.',
+    'auth/network-request-failed':'Network error. Check your connection.',
+    'auth/popup-blocked':'Popup blocked. Please allow popups for this site.',
+  };
+  return map[e.code]||e.message||'Something went wrong. Try again.';
 }
 
 function doGuest(){
@@ -2395,21 +2544,38 @@ function afterAuth(isReturning){
 // INIT
 // ══════════════════════════════════════════════════════
 window.addEventListener('DOMContentLoaded',()=>{
-  // Apply saved personalisation (accent + theme) before anything renders
   loadPersonalisation();
-
   document.getElementById('topbar-date').textContent=
     new Date().toLocaleDateString('en-GB',{weekday:'long',day:'numeric',month:'long'});
 
-  // Check if user is already logged in this session
-  const currentUser = localStorage.getItem('fn_current_user');
-  if(currentUser){
-    // Already authenticated — go straight to app or onboarding
-    afterAuth(true);
-  } else {
-    // Show auth screen
-    document.getElementById('auth-screen').style.display='flex';
-  }
+  // Wait for Firebase auth to initialise
+  window._fbUserReady = async (user) => {
+    window._fbUserReady = null; // only fire once
+    if(user){
+      localStorage.setItem('fn_current_user', user.uid);
+      userEmail = user.email||'';
+      await _fbLoadUserData(user.uid);
+      document.getElementById('auth-screen').style.display='none';
+      afterAuth(true);
+    } else {
+      const local = localStorage.getItem('fn_current_user');
+      if(local==='guest'){
+        document.getElementById('auth-screen').style.display='none';
+        afterAuth(false);
+      } else {
+        document.getElementById('auth-screen').style.display='flex';
+      }
+    }
+  };
+  // Fallback if Firebase doesn't respond in 3s
+  setTimeout(()=>{
+    if(window._fbUserReady){
+      window._fbUserReady = null;
+      const local = localStorage.getItem('fn_current_user');
+      if(local){ afterAuth(true); }
+      else { document.getElementById('auth-screen').style.display='flex'; }
+    }
+  },3000);
 });
 
 function updateBadge(){
@@ -3847,7 +4013,7 @@ function renderAccountTab(){
   const nameEl = document.getElementById('acct-name');
   const emailEl = document.getElementById('acct-email');
   const avatarEl = document.getElementById('acct-avatar-sm');
-  if(nameEl) nameEl.textContent = userName || 'FlowNotes User';
+  if(nameEl) nameEl.textContent = userName || 'Menmory User';
   if(emailEl) emailEl.textContent = userEmail || 'No email set';
   if(avatarEl){
     const img = localStorage.getItem('fn_avatar_img');
@@ -3863,7 +4029,7 @@ function renderAccountTab(){
 // ── Report a problem ──
 function reportProblem(){
   const body = encodeURIComponent(
-    'Hi FlowNotes team,\n\nI found an issue:\n\n[Describe the problem here]\n\n---\nApp info: FlowNotes PWA\nDate: '+new Date().toLocaleDateString()
+    'Hi Menmory team,\n\nI found an issue:\n\n[Describe the problem here]\n\n---\nApp info: Menmory PWA\nDate: '+new Date().toLocaleDateString()
   );
   window.open('mailto:relay.your.problem@gmail.com?subject=Problem+Report&body='+body, '_blank');
   toast('Opening email to report problem…');
@@ -4565,7 +4731,7 @@ window.addEventListener('appinstalled', () => {
     const b = document.getElementById('install-banner');
     if(b) b.classList.remove('show');
     deferredInstallPrompt = null;
-    toast('🎉 FlowNotes installed!');
+    toast('🎉 Menmory installed!');
 });
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -4576,7 +4742,7 @@ document.addEventListener('DOMContentLoaded', () => {
     deferredInstallPrompt.prompt();
     const { outcome } = await deferredInstallPrompt.userChoice;
     deferredInstallPrompt = null;
-    if (outcome === 'accepted') toast('🎉 FlowNotes installed!');
+    if (outcome === 'accepted') toast('🎉 Menmory installed!');
   });
 
   // iOS Safari: show tip if in Safari but not standalone
@@ -4775,7 +4941,7 @@ window.addEventListener('appinstalled', ()=>{
   _deferredInstall=null;
   const b=document.getElementById('install-banner');
   if(b) b.style.display='none';
-  toast('✅ FlowNotes installed!');
+  toast('✅ Menmory installed!');
 });
 async function installPWA(){
   if(!_deferredInstall){ toast('Open in Chrome/Edge to install'); return; }
@@ -4836,7 +5002,7 @@ function buildNotifSchedule(){
       tag: key,
       time: t24,
       title: (r.emoji||'🔔')+' '+r.text,
-      body: r.date==='everyday'?'Daily reminder':'Tap to open FlowNotes',
+      body: r.date==='everyday'?'Daily reminder':'Tap to open Menmory',
       fired: !!firedToday[key]
     });
   });
@@ -5106,7 +5272,7 @@ async function enableNotifications(){
       showInAppNotif('✅ Notifications on!','Your reminders will pop up at their set times','reminder');
       if(typeof playNotifSound==='function') playNotifSound('reminder');
       try{
-        new Notification('✅ FlowNotes', { body:'Notifications on! Reminders will fire at their set times.', tag:'setup' });
+        new Notification('✅ Menmory', { body:'Notifications on! Reminders will fire at their set times.', tag:'setup' });
       }catch(e){}
     }, 500);
   } else {
