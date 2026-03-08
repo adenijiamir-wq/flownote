@@ -28,6 +28,13 @@
 .ian-prog{position:absolute;bottom:0;left:0;height:3px;background:rgba(255,255,255,.25);animation:ianProg 8s linear forwards;}
 @keyframes ianProg{from{width:100%;}to{width:0;}}
 @media(min-width:600px){#inapp-notif-stack{left:auto;min-width:320px;}}
+
+#inapp-notif-stack{position:fixed;bottom:calc(72px + env(safe-area-inset-bottom,0px));right:12px;left:12px;z-index:9999;display:flex;flex-direction:column;gap:.45rem;pointer-events:none;align-items:flex-end;}
+.ian{background:var(--ink);color:var(--paper);border-radius:14px;padding:.8rem 1rem;display:flex;align-items:center;gap:.7rem;box-shadow:0 6px 24px rgba(0,0,0,.3);pointer-events:all;cursor:pointer;max-width:360px;width:100%;position:relative;overflow:hidden;animation:ianIn .3s cubic-bezier(.34,1.3,.64,1);}
+@keyframes ianIn{from{opacity:0;transform:translateY(16px) scale(.95);}to{opacity:1;transform:translateY(0) scale(1);}}
+.ian-prog{position:absolute;bottom:0;left:0;height:3px;background:rgba(255,255,255,.25);animation:ianProg 8s linear forwards;}
+@keyframes ianProg{from{width:100%;}to{width:0;}}
+@media(min-width:600px){#inapp-notif-stack{left:auto;min-width:320px;}}
 </style></noscript>
 <style>
 /* ═══════════════════════════════════════
@@ -2137,6 +2144,8 @@ function save(){
     userName,userStruggles,userSubjects,currentChar,
     reminders,notes,studyCards,streakDays,onboarded:true
   }));
+  // Re-schedule reminders whenever data is saved
+  if(typeof scheduleAllReminders==='function') scheduleAllReminders();
   // Keep SW notification schedule up to date
   if(typeof syncScheduleToSW==='function') syncScheduleToSW();
 }
@@ -3817,14 +3826,13 @@ function handleAvatarUpload(input){
   reader.readAsDataURL(file);
 }
 
-function _updateAvatarDisplay(emoji, imgUrl){
+function _updateAvatarDisplay(emoji,imgUrl){
   const prof=document.getElementById('prof-avatar');
-  if(prof){ if(imgUrl) prof.innerHTML='<img src="'+imgUrl+'" alt="avatar"/>'; else{ prof.innerHTML=''; prof.textContent=emoji||'🙂'; } }
+  if(prof){if(imgUrl)prof.innerHTML='<img src="'+imgUrl+'" alt="avatar"/>';else{prof.innerHTML='';prof.textContent=emoji||'🙂';}}
   const prev=document.getElementById('avatar-preview-large');
-  if(prev){ if(imgUrl) prev.innerHTML='<img src="'+imgUrl+'" alt="avatar"/>'; else{ prev.innerHTML=''; prev.textContent=emoji||'🙂'; } }
-  // HOME SCREEN — show user's own avatar, not the coach
+  if(prev){if(imgUrl)prev.innerHTML='<img src="'+imgUrl+'" alt="avatar"/>';else{prev.innerHTML='';prev.textContent=emoji||'🙂';}}
   const ha=document.getElementById('home-avi');
-  if(ha){ if(imgUrl) ha.innerHTML='<img src="'+imgUrl+'" style="width:100%;height:100%;object-fit:cover;border-radius:50%" alt=""/>'; else ha.textContent=emoji||'🙂'; }
+  if(ha){if(imgUrl)ha.innerHTML='<img src="'+imgUrl+'" style="width:100%;height:100%;object-fit:cover;border-radius:50%" alt=""/>';else ha.textContent=emoji||'🙂';}
 }
 
 function updateAccentUI(){
@@ -4516,6 +4524,76 @@ function startSWPing(){
 }
 
 // ── Fallback in-tab polling (for when SW isn't available) ──
+// ── Notification system — setTimeout based (reliable) ──
+var _scheduledTimers = {}; // track active timers by reminder id
+
+function scheduleAllReminders(){
+  // Clear old timers
+  Object.values(_scheduledTimers).forEach(function(t){ clearTimeout(t); });
+  _scheduledTimers = {};
+  // Load fresh from storage
+  var data; try{ data=JSON.parse(localStorage.getItem('mb7_data')||'{}'); }catch(e){ return; }
+  var rems = data.reminders || [];
+  var today = todayStr();
+  rems.forEach(function(r){ scheduleReminder(r, today); });
+}
+
+function scheduleReminder(r, today){
+  if(r.done) return;
+  var raw = r.time || r.startTime || '';
+  if(!raw) return;
+  var t24 = timeTo24(raw);
+  if(!t24) return;
+
+  var isToday = r.date===today || r.date==='everyday' || r.date==='everyweek';
+  if(!isToday) return;
+
+  // Check if already fired today
+  var fired = {}; try{ fired=JSON.parse(localStorage.getItem('fn_fired')||'{}'); }catch(e){}
+  var todayFired = fired[today]||{};
+  var key = 'r'+r.id;
+  if(todayFired[key]) return;
+
+  // Calculate ms until reminder time
+  var parts = t24.split(':');
+  var target = new Date();
+  target.setHours(parseInt(parts[0]), parseInt(parts[1]), 0, 0);
+  var now = new Date();
+  var delay = target - now;
+
+  // If time already passed today, skip (don't reschedule for tomorrow for one-off)
+  if(delay < 0) return;
+
+  // Clear any existing timer for this reminder
+  if(_scheduledTimers[r.id]) clearTimeout(_scheduledTimers[r.id]);
+
+  _scheduledTimers[r.id] = setTimeout(function(){
+    // Mark as fired
+    var fired2={}; try{ fired2=JSON.parse(localStorage.getItem('fn_fired')||'{}'); }catch(e){}
+    var tf = fired2[today]||{};
+    if(tf[key]) return; // already fired (tab reopened etc)
+    tf[key]=true; fired2[today]=tf;
+    localStorage.setItem('fn_fired', JSON.stringify(fired2));
+
+    // Show banner
+    showInAppNotif((r.emoji||'🔔')+' '+r.text, 'Tap to open FlowNotes', 'reminder');
+    if(typeof playNotifSound==='function') playNotifSound('reminder');
+
+    // Native push if permitted
+    if(typeof Notification!=='undefined' && Notification.permission==='granted'){
+      try{ new Notification((r.emoji||'🔔')+' '+r.text, {
+        body: 'Tap to open FlowNotes', tag: key,
+        icon:"data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='22' fill='%231a6b3c'/><text y='.9em' font-size='72' x='12'>📚</text></svg>"
+      }); }catch(e){}
+    }
+
+    // Reschedule for tomorrow if recurring
+    if(r.date==='everyday'||r.date==='everyweek'){
+      setTimeout(function(){ scheduleAllReminders(); }, 60000);
+    }
+  }, delay);
+}
+
 function timeTo24(timeStr){
   if(!timeStr) return null;
   var m=timeStr.match(/^(\d{1,2}):(\d{2})$/);
@@ -4527,94 +4605,49 @@ function timeTo24(timeStr){
   if(ap==='AM'&&h===12)h=0;
   return String(h).padStart(2,'0')+':'+min;
 }
-function getNowHHMM(){
-  var n=new Date();
-  return String(n.getHours()).padStart(2,'0')+':'+String(n.getMinutes()).padStart(2,'0');
-}
-function timeToMins(hhmm){
-  if(!hhmm) return 0;
-  var p=hhmm.split(':');
-  return parseInt(p[0])*60+parseInt(p[1]);
-}
-function checkAndSendNotifs(){
-  var now=getNowHHMM(), today=todayStr();
-  var data; try{data=JSON.parse(localStorage.getItem('mb7_data')||'{}');}catch(e){return;}
-  var rems=data.reminders||[];
-  var fired={}; try{fired=JSON.parse(localStorage.getItem('fn_fired')||'{}');}catch(e){}
-  var todayFired=fired[today]||{};
-  var changed=false;
-  rems.forEach(function(r){
-    if(r.done) return;
-    var raw=r.time||r.startTime||'';
-    if(!raw) return;
-    var t24=timeTo24(raw);
-    if(!t24) return;
-    var isToday=r.date===today||r.date==='everyday'||r.date==='everyweek';
-    if(!isToday) return;
-    var diff=timeToMins(now)-timeToMins(t24);
-    var key='r'+r.id;
-    if(diff>=0&&diff<=2&&!todayFired[key]){
-      todayFired[key]=true; changed=true;
-      showInAppNotif((r.emoji||'🔔')+' '+r.text,'Tap to open FlowNotes','reminder');
-      if(typeof playNotifSound==='function') playNotifSound('reminder');
-      if(typeof Notification!=='undefined'&&Notification.permission==='granted'){
-        try{new Notification((r.emoji||'🔔')+' '+r.text,{body:'Tap to open FlowNotes',tag:key});}catch(e){}
-      }
-    }
-  });
-  if(changed){var nf={};nf[today]=todayFired;localStorage.setItem('fn_fired',JSON.stringify(nf));}
-}
 
 function showInAppNotif(title,body,type){
   var s=document.getElementById('inapp-notif-stack');
-  if(!s){s=document.createElement('div');s.id='inapp-notif-stack';document.body.appendChild(s);}
-  var el=document.createElement('div');el.className='ian';
-  el.innerHTML='<div style="font-size:1.4rem;flex-shrink:0">🔔</div>'+
+  if(!s){ s=document.createElement('div'); s.id='inapp-notif-stack'; document.body.appendChild(s); }
+  var el=document.createElement('div'); el.className='ian';
+  el.innerHTML=
+    '<div style="font-size:1.4rem;flex-shrink:0">🔔</div>'+
     '<div style="flex:1;min-width:0">'+
       '<div style="font-size:.85rem;font-weight:700;line-height:1.3">'+title+'</div>'+
       '<div style="font-size:.7rem;opacity:.7;margin-top:.1rem">'+body+'</div>'+
     '</div>'+
     '<button onclick="event.stopPropagation();this.parentElement.remove()" style="background:none;border:none;color:inherit;opacity:.5;font-size:1.1rem;cursor:pointer;padding:0 .3rem">✕</button>'+
     '<div class="ian-prog"></div>';
-  el.onclick=function(e){if(e.target.tagName==='BUTTON')return;navTo('home',document.getElementById('nav-home'));el.remove();};
+  el.onclick=function(e){ if(e.target.tagName==='BUTTON')return; navTo('home',document.getElementById('nav-home')); el.remove(); };
   s.appendChild(el);
-  setTimeout(function(){if(el.parentElement)el.remove();},8000);
-  var all=s.querySelectorAll('.ian');if(all.length>4)all[0].remove();
+  setTimeout(function(){ if(el.parentElement) el.remove(); }, 8000);
+  var all=s.querySelectorAll('.ian'); if(all.length>4) all[0].remove();
 }
 
 function testInAppNotif(){
-  showInAppNotif('🔔 Test — notifications work!','Your reminders will appear like this','reminder');
+  showInAppNotif('🔔 Test — notifications work!','Your reminders will look like this','reminder');
   if(typeof playNotifSound==='function') playNotifSound('reminder');
   toast('✅ Banner works!');
 }
 
-function startNotifScheduler(){
-  if(notifInterval) clearInterval(notifInterval);
-  notifInterval=setInterval(checkAndSendNotifs,5000);
-  checkAndSendNotifs();
-  if(typeof syncScheduleToSW==='function') syncScheduleToSW();
-  if(typeof startSWPing==='function') startSWPing();
-}
+// Re-schedule whenever reminders are saved
+var _origSave = typeof save === 'function' ? save : null;
 
-document.addEventListener('DOMContentLoaded',function(){
+document.addEventListener('DOMContentLoaded', function(){
   if(typeof registerSW==='function') registerSW().then(function(reg){
     if(reg&&localStorage.getItem('fn_notifs')&&typeof Notification!=='undefined'&&Notification.permission==='granted'){
       if(typeof syncScheduleToSW==='function') syncScheduleToSW();
       if(typeof startSWPing==='function') startSWPing();
     }
   });
-  startNotifScheduler();
+  // Schedule all existing reminders
+  scheduleAllReminders();
   if(typeof updateNotifBtn==='function') updateNotifBtn();
 });
 
-// Init home avatar from user profile on load
-(function initHomeAvi(){
-  var ha=document.getElementById('home-avi'); if(!ha) return;
-  var imgUrl=localStorage.getItem('fn_avatar_img');
-  var emoji=localStorage.getItem('fn_avatar')||'🙂';
-  if(imgUrl) ha.innerHTML='<img src="'+imgUrl+'" style="width:100%;height:100%;object-fit:cover;border-radius:50%" alt=""/>';
-  else ha.textContent=emoji;
-})();
+(function(){var ha=document.getElementById('home-avi');if(!ha)return;var img=localStorage.getItem('fn_avatar_img');var em=localStorage.getItem('fn_avatar')||'🙂';if(img)ha.innerHTML='<img src="'+img+'" style="width:100%;height:100%;object-fit:cover;border-radius:50%" alt=""/>';else ha.textContent=em;})();
+
+(function(){var ha=document.getElementById('home-avi');if(!ha)return;var img=localStorage.getItem('fn_avatar_img');var em=localStorage.getItem('fn_avatar')||'🙂';if(img)ha.innerHTML='<img src="'+img+'" style="width:100%;height:100%;object-fit:cover;border-radius:50%" alt=""/>';else ha.textContent=em;})();
 </script>
 </body>
 </html>
