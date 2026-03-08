@@ -1192,57 +1192,23 @@ html, body, #app {
 }
 [data-theme="dark"] .toast.milestone{background:linear-gradient(135deg,#52d98a,#1a6b3c);color:#0a1a10;}
 
-/* ═══════════════════════════════════════
-   IN-APP NOTIFICATION BANNERS
-═══════════════════════════════════════ */
-#inapp-notif-stack{
-  position:fixed;top:14px;right:14px;
-  z-index:9998;
-  display:flex;flex-direction:column;gap:.5rem;
-  max-width:320px;
-  pointer-events:none;
-}
-.ian{
-  background:var(--ink);color:var(--paper);
-  border-radius:14px;
-  padding:.75rem 1rem;
-  display:flex;align-items:flex-start;gap:.7rem;
-  box-shadow:0 8px 28px rgba(0,0,0,.22);
-  pointer-events:all;
-  cursor:pointer;
-  animation:ianIn .35s cubic-bezier(.34,1.3,.64,1);
-  position:relative;
-  min-width:240px;
-}
-@keyframes ianIn{
-  from{opacity:0;transform:translateX(60px) scale(.92);}
-  to{opacity:1;transform:translateX(0) scale(1);}
-}
-.ian.out{
-  animation:ianOut .3s ease forwards;
-}
-@keyframes ianOut{
-  to{opacity:0;transform:translateX(60px) scale(.9);}
-}
+/* ── In-app notification banners ── */
+#inapp-notif-stack{position:fixed;top:14px;right:14px;z-index:9998;display:flex;flex-direction:column;gap:.5rem;max-width:320px;pointer-events:none;}
+.ian{background:var(--ink);color:var(--paper);border-radius:14px;padding:.75rem 1rem;display:flex;align-items:flex-start;gap:.7rem;box-shadow:0 8px 28px rgba(0,0,0,.22);pointer-events:all;cursor:pointer;animation:ianIn .35s cubic-bezier(.34,1.3,.64,1);position:relative;min-width:240px;}
+@keyframes ianIn{from{opacity:0;transform:translateX(60px) scale(.92);}to{opacity:1;transform:translateX(0) scale(1);}}
+.ian.out{animation:ianOut .3s ease forwards;}
+@keyframes ianOut{to{opacity:0;transform:translateX(60px) scale(.9);}}
 .ian-icon{font-size:1.3rem;flex-shrink:0;margin-top:.05rem;}
 .ian-body{flex:1;min-width:0;}
 .ian-title{font-size:.82rem;font-weight:700;line-height:1.3;margin-bottom:.1rem;}
 .ian-sub{font-size:.7rem;opacity:.72;line-height:1.4;}
 .ian-time{font-size:.6rem;opacity:.55;margin-top:.2rem;}
-.ian-close{background:none;border:none;color:rgba(255,255,255,.55);font-size:.85rem;cursor:pointer;padding:.1rem .15rem;flex-shrink:0;line-height:1;}
+.ian-close{background:none;border:none;color:rgba(255,255,255,.55);font-size:.85rem;cursor:pointer;padding:.1rem .3rem;flex-shrink:0;line-height:1;}
 .ian-close:hover{color:#fff;}
-.ian-prog{
-  position:absolute;bottom:0;left:0;
-  height:3px;background:rgba(255,255,255,.3);
-  border-radius:0 0 14px 14px;
-  animation:ianProg 7s linear forwards;
-}
+.ian-prog{position:absolute;bottom:0;left:0;height:3px;background:rgba(255,255,255,.3);border-radius:0 0 14px 14px;animation:ianProg 7s linear forwards;}
 @keyframes ianProg{from{width:100%;}to{width:0%;}}
 [data-theme="dark"] .ian{background:#2a2a2a;border:1px solid var(--line);}
-[data-theme="dark"] .ian-close{color:rgba(255,255,255,.4);}
-@media(max-width:640px){
-  #inapp-notif-stack{top:auto;bottom:calc(70px + env(safe-area-inset-bottom,0px));right:10px;left:10px;max-width:100%;}
-}
+@media(max-width:640px){#inapp-notif-stack{top:auto;bottom:calc(70px + env(safe-area-inset-bottom,0px));right:10px;left:10px;max-width:100%;}}
 
 /* ═══════════════════════════════════════
    CHANGE 6: NEXT ACTION CARD
@@ -1820,7 +1786,7 @@ html, body, #app {
             <div class="prof-section-label">Push Notifications</div>
             <button id="notif-toggle-btn" onclick="toggleNotifications()" style="width:100%;border:1.5px solid var(--line);background:var(--paper2);color:var(--muted);border-radius:10px;padding:.65rem .9rem;font-family:'DM Sans',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:.82rem;font-weight:600;cursor:pointer;margin-bottom:.55rem;transition:all .2s;">🔕 Enable notifications</button>
             <div style="font-size:.66rem;color:var(--muted);line-height:1.65;margin-bottom:.6rem;">Reminders fire at their set time, cards due at 9am, overdue tasks at 8am.</div>
-            <button onclick="testInAppNotif()" style="width:100%;border:1.5px dashed var(--line);background:none;color:var(--muted);border-radius:10px;padding:.55rem .9rem;font-family:inherit;font-size:.78rem;font-weight:600;cursor:pointer;margin-bottom:1rem;transition:all .2s;" onmouseover="this.style.borderColor='var(--ink)';this.style.color='var(--ink)'" onmouseout="this.style.borderColor='var(--line)';this.style.color='var(--muted)'">🧪 Send a test notification now</button>
+            <button onclick="testInAppNotif()" style="width:100%;border:1.5px dashed var(--line);background:none;color:var(--muted);border-radius:10px;padding:.55rem .9rem;font-family:inherit;font-size:.78rem;font-weight:600;cursor:pointer;margin-bottom:1rem;transition:all .2s;">🧪 Send a test notification now</button>
 
             <!-- Status row -->
             <div id="notif-status-row" style="display:none;background:var(--paper2);border:1px solid var(--line);border-radius:10px;padding:.7rem .9rem;">
@@ -2052,7 +2018,7 @@ html, body, #app {
 </div>
 
 <div class="toast" id="toast"></div>
-<!-- In-app notification banner -->
+<!-- In-app notification banners -->
 <div id="inapp-notif-stack"></div>
 <div id="voice-pill">
   <div class="voice-waves"><div class="voice-wave"></div><div class="voice-wave"></div><div class="voice-wave"></div><div class="voice-wave"></div><div class="voice-wave"></div></div>
@@ -4576,21 +4542,22 @@ function checkAndSendNotifs(){
   const now=getNowHHMM();
   if(now===_lastCheckedMinute) return;
   _lastCheckedMinute=now;
-  if(!notifSupported()||Notification.permission!=='granted') return;
+  // NOTE: no permission check here — in-app banners always work
   const today=todayStr();
   const fired=JSON.parse(localStorage.getItem('fn_notif_fired')||'{}');
   const todayFired=fired[today]||{};
 
   reminders.filter(r=>!r.done).forEach(r=>{
-    const timeToCheck=r.time||(r.startTime?r.startTime:null);
+    const timeToCheck=r.time||(r.startTime||'');
     if(!timeToCheck) return;
     const t24=timeTo24(timeToCheck);
     if(!t24) return;
     const isToday=r.date===today||r.date==='everyday'||r.date==='everyweek';
     if(!isToday) return;
-    if(t24===now&&!todayFired['rem-'+r.id]){
-      sendNotif((r.emoji||'🔔')+' '+r.text,'Tap to open FlowNotes','rem-'+r.id,'reminder');
-      todayFired['rem-'+r.id]=true;
+    const key='rem-'+r.id;
+    if(t24===now&&!todayFired[key]){
+      sendNotif((r.emoji||'🔔')+' '+r.text,'Tap to open FlowNotes',key,'reminder');
+      todayFired[key]=true;
     }
   });
   if(now==='09:00'&&!todayFired['due-cards']){
@@ -4607,7 +4574,8 @@ function checkAndSendNotifs(){
 
 function startNotifScheduler(){
   if(notifInterval) clearInterval(notifInterval);
-  notifInterval=setInterval(checkAndSendNotifs,10000);
+  // Check every 5 seconds so we never miss a minute tick
+  notifInterval=setInterval(checkAndSendNotifs,5000);
   checkAndSendNotifs();
   syncScheduleToSW();
   startSWPing();
@@ -4721,78 +4689,63 @@ async function requestNotifPermission(){
 
 function sendNotif(title, body, tag, soundType){
   playNotifSound(soundType||'reminder');
-  // ALWAYS show in-app banner — works even without phone permission
+  // ALWAYS show in-app banner — works without phone permission
   showInAppNotif(title, body, soundType);
-  // Also try native OS notification if permission granted
-  if(notifSupported() && Notification.permission === 'granted'){
-    try {
-      const n = new Notification(title, {
+  // Also fire native OS notification if permitted
+  if(notifSupported() && Notification.permission==='granted'){
+    try{
+      const n=new Notification(title,{
         body,
         icon:"data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='22' fill='%231a6b3c'/><text y='.9em' font-size='72' x='12'>📚</text></svg>",
-        tag: tag || 'flownotes',
-        requireInteraction: false
+        tag:tag||'flownotes',requireInteraction:false
       });
-      n.onclick = () => { window.focus(); n.close(); };
-    } catch(e) { console.warn('Native notification failed:', e); }
+      n.onclick=()=>{window.focus();n.close();};
+    }catch(e){console.warn('Native notif failed:',e);}
   }
 }
 
-// ── In-app notification banner ──
-// Shows a floating card inside the app at reminder time
-// Works regardless of phone/browser notification permission
-function showInAppNotif(title, body, type){
-  const stack = document.getElementById('inapp-notif-stack');
-  if(!stack) return;
-  const icons = {reminder:'🔔', cards:'🃏', warning:'⚠️'};
-  const icon = icons[type] || '🔔';
-  const el = document.createElement('div');
-  el.className = 'ian';
-  el.innerHTML =
-    '<div class="ian-icon">'+icon+'</div>'+
+function showInAppNotif(title,body,type){
+  const stack=document.getElementById('inapp-notif-stack');
+  if(!stack)return;
+  const icons={reminder:'🔔',cards:'🃏',warning:'⚠️'};
+  const icon=icons[type]||'🔔';
+  const el=document.createElement('div');
+  el.className='ian';
+  el.innerHTML='<div class="ian-icon">'+icon+'</div>'+
     '<div class="ian-body">'+
       '<div class="ian-title">'+title+'</div>'+
       '<div class="ian-sub">'+body+'</div>'+
-      '<div class="ian-time">Just now · tap to dismiss</div>'+
+      '<div class="ian-time">Just now · tap to go to tasks</div>'+
     '</div>'+
-    '<button class="ian-close" onclick="dismissIAN(this.closest(\'.ian\'))">✕</button>'+
+    '<button class="ian-close" onclick="event.stopPropagation();dismissIAN(this.parentElement.parentElement)">✕</button>'+
     '<div class="ian-prog"></div>';
-  el.addEventListener('click', (e)=>{
-    if(e.target.classList.contains('ian-close')) return;
-    navTo('home', document.getElementById('nav-home'));
-    setTimeout(()=>document.getElementById('home-reminders-section')?.scrollIntoView({behavior:'smooth'}), 100);
+  el.addEventListener('click',()=>{
+    navTo('home',document.getElementById('nav-home'));
+    setTimeout(()=>document.getElementById('home-reminders-section')?.scrollIntoView({behavior:'smooth'}),100);
     dismissIAN(el);
   });
   stack.appendChild(el);
-  setTimeout(()=> dismissIAN(el), 7000);
-  const all = stack.querySelectorAll('.ian:not(.out)');
-  if(all.length > 4) dismissIAN(all[0]);
+  setTimeout(()=>dismissIAN(el),7000);
+  const all=stack.querySelectorAll('.ian:not(.out)');
+  if(all.length>4)dismissIAN(all[0]);
 }
 
 function dismissIAN(el){
-  if(!el || el.classList.contains('out')) return;
+  if(!el||el.classList.contains('out'))return;
   el.classList.add('out');
-  setTimeout(()=> el.remove(), 320);
+  setTimeout(()=>el.remove(),320);
 }
 
 function testInAppNotif(){
-  // Show an in-app banner immediately so you can see it working
-  showInAppNotif('🔔 Test reminder', 'This is what your reminders will look like!', 'reminder');
+  showInAppNotif('🔔 Test reminder','This is what your reminders will look like!','reminder');
   playNotifSound('reminder');
-  // Also test native if permitted
-  if(notifSupported() && Notification.permission === 'granted'){
+  if(notifSupported()&&Notification.permission==='granted'){
     setTimeout(()=>{
-      try{
-        const n = new Notification('🔔 FlowNotes test', {
-          body: 'Native notification is working too!',
-          icon:"data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='22' fill='%231a6b3c'/><text y='.9em' font-size='72' x='12'>📚</text></svg>",
-          tag: 'test'
-        });
-        n.onclick = () => { window.focus(); n.close(); };
-      } catch(e){}
-    }, 500);
+      try{new Notification('🔔 FlowNotes test',{body:'Native notification works too!',tag:'test'});}catch(e){}
+    },400);
     toast('✅ In-app + native notification sent!');
   } else {
-    toast('✅ In-app notification works! Enable push above for phone alerts.');
+    toast('✅ In-app banner works! Enable push above for phone alerts.');
   }
 }
 
@@ -4813,7 +4766,7 @@ function getNowHHMM(){
   return String(n.getHours()).padStart(2,'0')+':'+String(n.getMinutes()).padStart(2,'0');
 }
 
-// Auto-start if previously granted + register SW
+// Auto-start scheduler on page load
 document.addEventListener('DOMContentLoaded',()=>{
   // Register service worker
   registerSW().then(reg=>{
@@ -4822,10 +4775,8 @@ document.addEventListener('DOMContentLoaded',()=>{
       startSWPing();
     }
   });
-  // Start in-tab fallback scheduler
-  if(localStorage.getItem('fn_notifs')&&notifSupported()&&Notification.permission==='granted'){
-    startNotifScheduler();
-  }
+  // ALWAYS start the in-tab scheduler — in-app banners work without permission
+  startNotifScheduler();
   updateNotifBtn();
 });
 </script>
