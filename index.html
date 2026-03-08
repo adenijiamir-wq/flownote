@@ -172,7 +172,7 @@
 
 /* Bottom nav */
 [data-theme="dark"] #bottom-nav{background:#1e1e1e;border-color:var(--line);}
-[data-theme="dark"] .bn-btn{color:var(--muted);}
+[data-theme="dark"] .bn-btn{color:var(--muted);} .bn-btn.active{color:var(--green);}
 [data-theme="dark"] .bn-btn.active{color:var(--green);}
 
 /* Modals */
@@ -784,9 +784,9 @@ html,body{height:100%;overflow:hidden;font-family:'DM Sans',-apple-system,BlinkM
    BOTTOM NAV (mobile)
 ═══════════════════════════════════════ */
 #bottom-nav{display:none;background:var(--paper);border-top:1px solid var(--line);flex-shrink:0;padding-bottom:env(safe-area-inset-bottom,0);}
-.bn-inner{display:flex;}
+.bn-inner{display:flex;height:56px;}
 .bn-btn{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:.12rem;padding:.52rem .1rem;background:none;border:none;cursor:pointer;font-family:'DM Sans',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;color:var(--muted);font-size:.54rem;font-weight:600;text-transform:uppercase;letter-spacing:.04em;transition:color .15s;}
-.bn-icon{font-size:1.25rem;line-height:1;}
+.bn-icon{font-size:1.4rem;line-height:1;}
 .bn-btn.active{color:var(--green);}
 
 /* ═══════════════════════════════════════
@@ -890,7 +890,8 @@ html,body{height:100%;overflow:hidden;font-family:'DM Sans',-apple-system,BlinkM
   .sidebar.open{transform:translateX(0);}
   .sb-close{display:block;}
   #bottom-nav{display:block;}
-  .content{padding-bottom:0;}
+  .content{padding-bottom:calc(60px + env(safe-area-inset-bottom,0px)) !important;}
+  .hamburger{display:none !important;}
 
   /* ── Topbar ── */
   .topbar{padding:.65rem .9rem;}
@@ -1112,8 +1113,11 @@ html, body, #app {
     /* Bottom nav: account for safe area */
     #bottom-nav {
         padding-bottom: env(safe-area-inset-bottom, 0px);
-        position: sticky;
+        position: fixed;
         bottom: 0;
+        left: 0;
+        right: 0;
+        z-index: 100;
     }
 
     /* Swipe handle pill on bottom sheets */
@@ -4928,6 +4932,61 @@ document.addEventListener('DOMContentLoaded', function(){
 });
 
 (function(){var ha=document.getElementById('home-avi');if(!ha)return;var img=localStorage.getItem('fn_avatar_img');var em=localStorage.getItem('fn_avatar')||'🙂';if(img)ha.innerHTML='<img src="'+img+'" style="width:100%;height:100%;object-fit:cover;border-radius:50%" alt=""/>';else ha.textContent=em;})();
+
+// ── Swipe navigation (mobile) ──
+(function(){
+  var pages = ['home','notes','cards','reminders','chat','profile'];
+  var currentIdx = 0;
+  var startX = 0, startY = 0, isDragging = false;
+  var THRESHOLD = 60; // px to trigger page change
+
+  var bnMap = {home:'bn-home',notes:'bn-notes',cards:'bn-cards',reminders:'bn-reminders',chat:'bn-chat',profile:null};
+
+  function goToPage(idx){
+    if(idx < 0 || idx >= pages.length) return;
+    currentIdx = idx;
+    var id = pages[idx];
+    navTo(id, document.getElementById('nav-'+id));
+    // Sync bottom nav active state
+    document.querySelectorAll('.bn-btn').forEach(function(b){b.classList.remove('active');});
+    var bnId = bnMap[id];
+    if(bnId){ var el=document.getElementById(bnId); if(el) el.classList.add('active'); }
+  }
+
+  // Update currentIdx when navTo is called by buttons
+  var _origNavTo = navTo;
+  navTo = function(id, btn){
+    _origNavTo(id, btn);
+    var idx = pages.indexOf(id);
+    if(idx > -1) currentIdx = idx;
+    // Sync bottom nav
+    document.querySelectorAll('.bn-btn').forEach(function(b){b.classList.remove('active');});
+    var bnId = bnMap[id];
+    if(bnId){ var el=document.getElementById(bnId); if(el) el.classList.add('active'); }
+  };
+
+  var content = document.querySelector('.content');
+  if(!content) return;
+
+  content.addEventListener('touchstart', function(e){
+    if(e.touches.length !== 1) return;
+    startX = e.touches[0].clientX;
+    startY = e.touches[0].clientY;
+    isDragging = true;
+  }, {passive:true});
+
+  content.addEventListener('touchend', function(e){
+    if(!isDragging) return;
+    isDragging = false;
+    var dx = e.changedTouches[0].clientX - startX;
+    var dy = e.changedTouches[0].clientY - startY;
+    // Only swipe if horizontal movement dominates
+    if(Math.abs(dx) < THRESHOLD || Math.abs(dx) < Math.abs(dy)*1.5) return;
+    if(dx < 0) goToPage(currentIdx + 1); // swipe left → next
+    else        goToPage(currentIdx - 1); // swipe right → prev
+  }, {passive:true});
+})();
+
 </script>
 </body>
 </html>
