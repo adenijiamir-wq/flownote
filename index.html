@@ -14,6 +14,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="FlowNotes">
+<link rel="manifest" href="/manifest.json">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='22' fill='%231a6b3c'/><text y='.9em' font-size='72' x='12'>📚</text></svg>">
 <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='22' fill='%231a6b3c'/><text y='.9em' font-size='72' x='12'>📚</text></svg>">
 <!-- Fonts: try Google Fonts, fall back to system fonts gracefully -->
@@ -1748,9 +1749,32 @@ html, body, #app {
 
           <!-- Notifications tab -->
           <div class="prof-panel" id="prof-panel-notifs">
+
+            <!-- Install banner (shown when app can be installed) -->
+            <div id="install-banner" style="display:none;background:linear-gradient(135deg,var(--green),#15803d);border-radius:12px;padding:.85rem 1rem;margin-bottom:1rem;color:white;">
+              <div style="font-size:.82rem;font-weight:700;margin-bottom:.2rem;">📲 Install FlowNotes</div>
+              <div style="font-size:.68rem;opacity:.9;line-height:1.5;margin-bottom:.6rem;">Install the app for the best notification experience — works even when your browser is closed.</div>
+              <button onclick="installPWA()" style="background:white;color:var(--green);border:none;border-radius:8px;padding:.4rem .9rem;font-family:inherit;font-size:.75rem;font-weight:700;cursor:pointer;">Install now</button>
+            </div>
+
+            <!-- iOS add-to-homescreen hint -->
+            <div id="ios-banner" style="display:none;background:var(--paper2);border:1.5px solid var(--line);border-radius:12px;padding:.85rem 1rem;margin-bottom:1rem;">
+              <div style="font-size:.82rem;font-weight:700;margin-bottom:.3rem;">🍎 iPhone / iPad</div>
+              <div style="font-size:.68rem;color:var(--muted);line-height:1.65;">To get notifications on iOS, add FlowNotes to your Home Screen:<br/>
+              <strong style="color:var(--ink);">Safari → Share button → Add to Home Screen</strong><br/>
+              Then open it from your home screen and enable notifications here.</div>
+            </div>
+
             <div class="prof-section-label">Push Notifications</div>
-            <button id="notif-toggle-btn" style="width:100%;border:1.5px solid var(--line);background:var(--paper2);color:var(--muted);border-radius:10px;padding:.65rem .9rem;font-family:'DM Sans',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:.82rem;font-weight:600;cursor:pointer;margin-bottom:.55rem;transition:all .2s;">🔕 Enable notifications</button>
-            <div style="font-size:.66rem;color:var(--muted);line-height:1.55;">Get reminders at their set time, a daily nudge when cards are due, and alerts for overdue tasks. A chime sound plays when each fires.</div>
+            <button id="notif-toggle-btn" onclick="toggleNotifications()" style="width:100%;border:1.5px solid var(--line);background:var(--paper2);color:var(--muted);border-radius:10px;padding:.65rem .9rem;font-family:'DM Sans',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:.82rem;font-weight:600;cursor:pointer;margin-bottom:.55rem;transition:all .2s;">🔕 Enable notifications</button>
+            <div style="font-size:.66rem;color:var(--muted);line-height:1.65;margin-bottom:1rem;">Reminders fire at their set time, cards due at 9am, overdue tasks at 8am.</div>
+
+            <!-- Status row -->
+            <div id="notif-status-row" style="display:none;background:var(--paper2);border:1px solid var(--line);border-radius:10px;padding:.7rem .9rem;">
+              <div style="font-size:.72rem;font-weight:600;color:var(--ink);margin-bottom:.3rem;">Notification coverage</div>
+              <div id="notif-sw-status" style="font-size:.65rem;color:var(--muted);line-height:1.8;"></div>
+            </div>
+
           </div>
 
           <!-- Data tab -->
@@ -2109,6 +2133,8 @@ function save(){
     userName,userStruggles,userSubjects,currentChar,
     reminders,notes,studyCards,streakDays,onboarded:true
   }));
+  // Keep SW notification schedule up to date
+  if(typeof syncScheduleToSW==='function') syncScheduleToSW();
 }
 function load(){
   try{
@@ -3539,6 +3565,7 @@ function switchProfTab(id, btn){
   btn.classList.add('active');
   document.getElementById('prof-panel-'+id).classList.add('show');
   if(id==='data') renderTrash();
+  if(id==='notifs'){ updateNotifBtn(); updateNotifStatus(); }
   if(id==='style'){ updateAccentUI(); updateThemeUI(); updateAvatarUI(); }
 }
 
@@ -4382,11 +4409,232 @@ function renderNextAction(){
 }
 
 // ══════════════════════════════════════════════════════
-// NOTIFICATIONS — reliable polling system
+// NOTIFICATIONS — Service Worker backed
 // ══════════════════════════════════════════════════════
-let notifInterval = null;
+let notifInterval=null;
+let _swReg=null;
+let _deferredInstall=null; // PWA install prompt
 
-// ── Sound (Web Audio API — no files needed) ──
+// ── PWA install prompt capture ──
+window.addEventListener('beforeinstallprompt', e => {
+  e.preventDefault();
+  _deferredInstall=e;
+  // Show install banner in notifs tab if it's open
+  const b=document.getElementById('install-banner');
+  if(b) b.style.display='block';
+});
+window.addEventListener('appinstalled', ()=>{
+  _deferredInstall=null;
+  const b=document.getElementById('install-banner');
+  if(b) b.style.display='none';
+  toast('✅ FlowNotes installed!');
+});
+
+async function installPWA(){
+  if(!_deferredInstall){ toast('Open in Chrome/Edge to install'); return; }
+  _deferredInstall.prompt();
+  const { outcome }=await _deferredInstall.userChoice;
+  if(outcome==='accepted'){ _deferredInstall=null; }
+}
+
+// ── Service Worker registration ──
+async function registerSW(){
+  if(!('serviceWorker' in navigator)) return null;
+  try{
+    const reg=await navigator.serviceWorker.register('/sw.js');
+    _swReg=reg;
+    // Listen for SW firing a notification (so we can mark it fired in localStorage)
+    navigator.serviceWorker.addEventListener('message', e=>{
+      if(e.data&&e.data.type==='FIRED'){
+        const fired=JSON.parse(localStorage.getItem('fn_notif_fired')||'{}');
+        const today=todayStr();
+        if(!fired[today]) fired[today]={};
+        fired[today][e.data.tag]=true;
+        localStorage.setItem('fn_notif_fired',JSON.stringify(fired));
+      }
+    });
+    return reg;
+  }catch(err){ return null; }
+}
+
+// ── Build schedule and push to SW ──
+function buildNotifSchedule(){
+  const today=todayStr();
+  const fired=JSON.parse(localStorage.getItem('fn_notif_fired')||'{}');
+  const todayFired=fired[today]||{};
+  const schedule=[];
+
+  // Reminders
+  reminders.filter(r=>!r.done).forEach(r=>{
+    const timeToCheck=r.time||(r.startTime||null);
+    if(!timeToCheck) return;
+    const t24=timeTo24(timeToCheck);
+    if(!t24) return;
+    const isToday=r.date===today||r.date==='everyday'||r.date==='everyweek';
+    if(!isToday) return;
+    schedule.push({
+      tag:'rem-'+r.id, time:t24,
+      title:(r.emoji||'🔔')+' '+r.text,
+      body:'Tap to open FlowNotes',
+      firedDate: todayFired['rem-'+r.id] ? today : null
+    });
+  });
+
+  // 9am cards due
+  const due=getDueCards().length;
+  if(due>0) schedule.push({
+    tag:'due-cards', time:'09:00',
+    title:'📚 Cards due for review',
+    body:due+' card'+(due>1?'s':'')+' waiting. Keep your streak going!',
+    firedDate: todayFired['due-cards'] ? today : null
+  });
+
+  // 8am overdue tasks
+  const overdue=reminders.filter(r=>!r.done&&r.date&&r.date!=='everyday'&&r.date!=='everyweek'&&r.date<today);
+  if(overdue.length>0) schedule.push({
+    tag:'missing-work', time:'08:00',
+    title:'⚠️ Overdue tasks',
+    body:overdue.length+' task'+(overdue.length>1?'s':'')+' need your attention.',
+    firedDate: todayFired['missing'] ? today : null
+  });
+
+  return schedule;
+}
+
+function syncScheduleToSW(){
+  if(!_swReg||!_swReg.active) return;
+  const schedule=buildNotifSchedule();
+  _swReg.active.postMessage({ type:'SCHEDULE', schedule });
+}
+
+// ── Keepalive ping to SW every 25s ──
+let _swPingInterval=null;
+function startSWPing(){
+  if(_swPingInterval) clearInterval(_swPingInterval);
+  _swPingInterval=setInterval(()=>{
+    if(_swReg&&_swReg.active) _swReg.active.postMessage({ type:'PING' });
+  }, 25000);
+}
+
+// ── Fallback in-tab polling (for when SW isn't available) ──
+function checkAndSendNotifs(){
+  const now=getNowHHMM();
+  if(now===_lastCheckedMinute) return;
+  _lastCheckedMinute=now;
+  if(!notifSupported()||Notification.permission!=='granted') return;
+  const today=todayStr();
+  const fired=JSON.parse(localStorage.getItem('fn_notif_fired')||'{}');
+  const todayFired=fired[today]||{};
+
+  reminders.filter(r=>!r.done).forEach(r=>{
+    const timeToCheck=r.time||(r.startTime?r.startTime:null);
+    if(!timeToCheck) return;
+    const t24=timeTo24(timeToCheck);
+    if(!t24) return;
+    const isToday=r.date===today||r.date==='everyday'||r.date==='everyweek';
+    if(!isToday) return;
+    if(t24===now&&!todayFired['rem-'+r.id]){
+      sendNotif((r.emoji||'🔔')+' '+r.text,'Tap to open FlowNotes','rem-'+r.id,'reminder');
+      todayFired['rem-'+r.id]=true;
+    }
+  });
+  if(now==='09:00'&&!todayFired['due-cards']){
+    const due=getDueCards().length;
+    if(due>0){ sendNotif('📚 Cards due for review',due+' card'+(due>1?'s':'')+' waiting. Keep your streak going!','due-cards','cards'); todayFired['due-cards']=true; }
+  }
+  if(now==='08:00'&&!todayFired['missing']){
+    const overdue=reminders.filter(r=>!r.done&&r.date&&r.date!=='everyday'&&r.date!=='everyweek'&&r.date<today);
+    if(overdue.length>0){ sendNotif('⚠️ Overdue tasks',overdue.length+' task'+(overdue.length>1?'s':'')+' need attention.','missing-work','warning'); todayFired['missing']=true; }
+  }
+  const newFired={};newFired[today]=todayFired;
+  localStorage.setItem('fn_notif_fired',JSON.stringify(newFired));
+}
+
+function startNotifScheduler(){
+  if(notifInterval) clearInterval(notifInterval);
+  notifInterval=setInterval(checkAndSendNotifs,10000);
+  checkAndSendNotifs();
+  syncScheduleToSW();
+  startSWPing();
+}
+
+function toggleNotifications(){
+  const on=notifSupported()&&Notification.permission==='granted'&&localStorage.getItem('fn_notifs');
+  if(on) disableNotifications(); else enableNotifications();
+}
+
+async function enableNotifications(){
+  if(!notifSupported()){toast('❌ Your browser doesn\'t support notifications.');return;}
+  const granted=await requestNotifPermission();
+  if(granted){
+    startNotifScheduler();
+    localStorage.setItem('fn_notifs','1');
+    updateNotifBtn();
+    updateNotifStatus();
+    toast('🔔 Notifications enabled!');
+    setTimeout(()=>{
+      sendNotif('✅ FlowNotes','Notifications on! Reminders will fire at their set times.','test','reminder');
+    },600);
+  } else {
+    toast('Notifications blocked — enable them in your phone settings, then try again.');
+    updateNotifBtn();
+  }
+}
+
+function disableNotifications(){
+  if(notifInterval){clearInterval(notifInterval);notifInterval=null;}
+  if(_swPingInterval){clearInterval(_swPingInterval);_swPingInterval=null;}
+  localStorage.removeItem('fn_notifs');
+  toast('Notifications turned off.');
+  updateNotifBtn();
+  updateNotifStatus();
+}
+
+function updateNotifBtn(){
+  const btn=document.getElementById('notif-toggle-btn');
+  if(!btn) return;
+  const on=notifSupported()&&Notification.permission==='granted'&&localStorage.getItem('fn_notifs');
+  const blocked=notifSupported()&&Notification.permission==='denied';
+  if(blocked){
+    btn.textContent='🚫 Blocked — check phone Settings';
+    btn.style.cssText='width:100%;border:1.5px solid #fca5a5;background:var(--paper2);color:var(--red);border-radius:10px;padding:.65rem .9rem;font-family:inherit;font-size:.82rem;font-weight:600;cursor:default;margin-bottom:.55rem;';
+  } else if(on){
+    btn.textContent='🔔 Notifications: On — tap to turn off';
+    btn.style.cssText='width:100%;border:1.5px solid var(--green);background:rgba(22,163,74,.08);color:var(--green);border-radius:10px;padding:.65rem .9rem;font-family:inherit;font-size:.82rem;font-weight:600;cursor:pointer;margin-bottom:.55rem;transition:all .2s;';
+  } else {
+    btn.textContent='🔕 Enable notifications';
+    btn.style.cssText='width:100%;border:1.5px solid var(--line);background:var(--paper2);color:var(--muted);border-radius:10px;padding:.65rem .9rem;font-family:inherit;font-size:.82rem;font-weight:600;cursor:pointer;margin-bottom:.55rem;transition:all .2s;';
+  }
+}
+
+function updateNotifStatus(){
+  const row=document.getElementById('notif-status-row');
+  const txt=document.getElementById('notif-sw-status');
+  if(!row||!txt) return;
+  const on=localStorage.getItem('fn_notifs');
+  if(!on){ row.style.display='none'; return; }
+  row.style.display='block';
+  const swOk=!!_swReg;
+  const isStandalone=window.matchMedia('(display-mode: standalone)').matches||window.navigator.standalone;
+  let html='';
+  html+=`<span style="color:${swOk?'var(--green)':'var(--amber)'};">${swOk?'✅':'⚠️'} Background (tab closed): ${swOk?'Active via service worker':'Tab must stay open'}</span><br/>`;
+  html+=`<span style="color:${isStandalone?'var(--green)':'var(--muted)'};">${isStandalone?'✅':'📱'} Installed as app: ${isStandalone?'Yes — best coverage':'No — install for better coverage'}</span>`;
+  txt.innerHTML=html;
+
+  // Show install banner if not installed and prompt available
+  const banner=document.getElementById('install-banner');
+  if(banner) banner.style.display=(_deferredInstall&&!isStandalone)?'block':'none';
+
+  // Show iOS hint
+  const ios=document.getElementById('ios-banner');
+  if(ios){
+    const isIOS=/iphone|ipad|ipod/i.test(navigator.userAgent);
+    ios.style.display=(isIOS&&!isStandalone)?'block':'none';
+  }
+}
+
+let _lastCheckedMinute='';
+
 function playNotifSound(type){
   try{
     const ctx=new(window.AudioContext||window.webkitAudioContext)();
@@ -4447,100 +4695,16 @@ function getNowHHMM(){
   return String(n.getHours()).padStart(2,'0')+':'+String(n.getMinutes()).padStart(2,'0');
 }
 
-let _lastCheckedMinute='';
-function checkAndSendNotifs(){
-  const now=getNowHHMM();
-  if(now===_lastCheckedMinute) return; // run once per minute
-  _lastCheckedMinute=now;
-  if(!notifSupported()||Notification.permission!=='granted') return;
-  const today=todayStr();
-  const fired=JSON.parse(localStorage.getItem('fn_notif_fired')||'{}');
-  const todayFired=fired[today]||{};
-
-  // ── 1. Reminder time notifications (checks r.time AND r.startTime) ──
-  reminders.filter(r=>!r.done).forEach(r=>{
-    const timeToCheck=r.time||(r.startTime?r.startTime:null);
-    if(!timeToCheck) return;
-    const t24=timeTo24(timeToCheck);
-    if(!t24) return;
-    const isToday=r.date===today||r.date==='everyday'||r.date==='everyweek';
-    if(!isToday) return;
-    if(t24===now&&!todayFired['rem-'+r.id]){
-      sendNotif((r.emoji||'🔔')+' '+r.text,'Tap to open FlowNotes','rem-'+r.id,'reminder');
-      todayFired['rem-'+r.id]=true;
+// Auto-start if previously granted + register SW
+document.addEventListener('DOMContentLoaded',()=>{
+  // Register service worker
+  registerSW().then(reg=>{
+    if(reg && localStorage.getItem('fn_notifs') && Notification.permission==='granted'){
+      syncScheduleToSW();
+      startSWPing();
     }
   });
-
-  // ── 2. Daily 9am — cards due ──
-  if(now==='09:00'&&!todayFired['due-cards']){
-    const due=getDueCards().length;
-    if(due>0){
-      sendNotif('📚 Cards due for review',due+' card'+(due>1?'s':'')+' waiting. Keep your streak going!','due-cards','cards');
-      todayFired['due-cards']=true;
-    }
-  }
-
-  // ── 3. Daily 8am — overdue tasks ──
-  if(now==='08:00'&&!todayFired['missing']){
-    const overdue=reminders.filter(r=>!r.done&&r.date&&r.date!=='everyday'&&r.date!=='everyweek'&&r.date<today);
-    if(overdue.length>0){
-      sendNotif('⚠️ Overdue tasks',overdue.length+' task'+(overdue.length>1?'s':'')+' need your attention.','missing-work','warning');
-      todayFired['missing']=true;
-    }
-  }
-
-  const newFired={};newFired[today]=todayFired;
-  localStorage.setItem('fn_notif_fired',JSON.stringify(newFired));
-}
-
-function startNotifScheduler(){
-  if(notifInterval) clearInterval(notifInterval);
-  notifInterval=setInterval(checkAndSendNotifs,10000); // every 10s — never misses a minute
-  checkAndSendNotifs();
-}
-
-async function enableNotifications(){
-  if(!notifSupported()){toast('❌ Your browser doesn\'t support notifications.');return;}
-  const granted=await requestNotifPermission();
-  if(granted){
-    startNotifScheduler();
-    localStorage.setItem('fn_notifs','1');
-    updateNotifBtn();
-    toast('🔔 Notifications enabled!');
-    setTimeout(()=>{
-      sendNotif('✅ FlowNotes','Notifications on! Reminders will pop up at their set times.','test','reminder');
-    },600);
-  } else {
-    toast('Notifications blocked — enable them in your browser/system settings, then try again.');
-    updateNotifBtn();
-  }
-}
-
-function disableNotifications(){
-  if(notifInterval){clearInterval(notifInterval);notifInterval=null;}
-  localStorage.removeItem('fn_notifs');
-  toast('Notifications turned off.');
-  updateNotifBtn();
-}
-
-function updateNotifBtn(){
-  const btn=document.getElementById('notif-toggle-btn');
-  if(!btn) return;
-  const on=notifSupported()&&Notification.permission==='granted'&&localStorage.getItem('fn_notifs');
-  const blocked=notifSupported()&&Notification.permission==='denied';
-  if(blocked){
-    btn.textContent='🚫 Notifications blocked in browser';
-    btn.style.cssText='width:100%;border:1.5px solid var(--line);background:var(--paper2);color:var(--muted);border-radius:10px;padding:.6rem .9rem;font-family:inherit;font-size:.78rem;font-weight:600;cursor:default;';
-    btn.onclick=()=>toast('Go to your browser settings and allow notifications for this site.');
-    return;
-  }
-  btn.style.cssText='width:100%;border:1.5px solid '+(on?'var(--green)':'var(--line)')+';background:'+(on?'var(--green-light)':'var(--paper2)')+';color:'+(on?'var(--green)':'var(--muted)')+';border-radius:10px;padding:.6rem .9rem;font-family:inherit;font-size:.82rem;font-weight:600;cursor:pointer;transition:all .2s;';
-  btn.textContent=on?'🔔 Notifications on — tap to turn off':'🔕 Enable notifications';
-  btn.onclick=on?disableNotifications:enableNotifications;
-}
-
-// Auto-start if previously granted
-document.addEventListener('DOMContentLoaded',()=>{
+  // Start in-tab fallback scheduler
   if(localStorage.getItem('fn_notifs')&&notifSupported()&&Notification.permission==='granted'){
     startNotifScheduler();
   }
