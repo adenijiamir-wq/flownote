@@ -641,38 +641,36 @@ html,body{height:100%;overflow:hidden;font-family:'DM Sans',-apple-system,BlinkM
 .rem-opt-row{display:flex;align-items:center;gap:.5rem;}
 .rem-opt-label{font-size:.7rem;font-weight:600;color:var(--muted);white-space:nowrap;flex:1;}
 .rem-opt-label span{font-weight:400;font-style:italic;}
-.rb.overdue{border-color:#fca5a5;background:var(--red-light);}
-.rb.overdue .rb-title{color:var(--red);}
-.overdue-badge{font-size:.58rem;font-weight:700;background:var(--red);color:white;border-radius:4px;padding:.1rem .35rem;margin-left:.3rem;vertical-align:middle;}
-[data-theme="dark"] .rb.overdue{border-color:#7f1d1d;background:#2d1212;}
-[data-theme="dark"] .rb.overdue .rb-title{color:var(--red);}
-.rb.missed-time{border-color:#fca5a5;border-left:3px solid #ef4444;}
-[data-theme="dark"] .rb.missed-time{border-color:#7f1d1d;}
-.r-group-missing{font-size:.62rem;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--red);margin-bottom:.5rem;margin-top:1rem;display:flex;align-items:center;gap:.35rem;}
+.overdue-badge{font-size:.55rem;font-weight:700;background:#ef4444;color:#fff;border-radius:4px;padding:.1rem .35rem;margin-left:.35rem;vertical-align:middle;letter-spacing:.03em;}
+.r-group-missing{font-size:.6rem;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:#ef4444;margin-bottom:.45rem;margin-top:1rem;display:flex;align-items:center;gap:.35rem;}
 .r-group-missing:first-child{margin-top:0;}
-.r-group-lbl{font-size:.6rem;font-weight:700;text-transform:uppercase;letter-spacing:.12em;color:var(--muted);margin-bottom:.5rem;margin-top:1rem;padding-left:.1rem;}
+.r-group-lbl{font-size:.58rem;font-weight:700;text-transform:uppercase;letter-spacing:.12em;color:var(--muted);margin-bottom:.45rem;margin-top:.9rem;padding-left:.1rem;}
 .r-group-lbl:first-child{margin-top:0;}
 
-/* Task rows — big, tappable, satisfying */
-.rb{background:var(--paper);border:1.5px solid var(--line);border-radius:12px;padding:.9rem 1rem;display:flex;align-items:center;gap:.75rem;cursor:pointer;margin-bottom:.5rem;transition:border-color .15s,opacity .25s,background .15s;}
-.rb:hover{border-color:var(--green);background:var(--paper2);}
-.rb:active{transform:scale(.99);}
-.rb.done{opacity:.45;}
+/* Task cards */
+.rb{background:var(--paper2);border:1px solid var(--line);border-radius:14px;padding:.85rem 1rem;display:flex;align-items:center;gap:.8rem;cursor:pointer;margin-bottom:.45rem;transition:all .15s;position:relative;}
+[data-theme="dark"] .rb{background:#1e1e1e;border-color:#2a2a2a;}
+.rb:hover{border-color:var(--green);transform:translateY(-1px);box-shadow:0 4px 14px rgba(0,0,0,.1);}
+.rb:active{transform:scale(.985);}
+.rb.done{opacity:.4;}
 .rb.done .rb-title{text-decoration:line-through;}
-.rb-icon{width:34px;height:34px;border-radius:9px;background:var(--paper2);display:flex;align-items:center;justify-content:center;font-size:.95rem;flex-shrink:0;}
-.rb-title{font-size:.88rem;font-weight:600;line-height:1.3;}
-.rb-time{font-size:.67rem;color:var(--muted);margin-top:.1rem;}
-/* Animated check circle */
-.rb-check{width:22px;height:22px;border-radius:50%;border:2px solid var(--line);display:flex;align-items:center;justify-content:center;font-size:.6rem;flex-shrink:0;transition:all .2s cubic-bezier(.34,1.56,.64,1);}
+/* Missed — just a left accent, no background fill */
+.rb.missed-time{border-left:3px solid #ef4444;}
+.rb.overdue{border-left:3px solid #ef4444;}
+.rb-icon{width:36px;height:36px;border-radius:10px;background:var(--paper);border:1px solid var(--line);display:flex;align-items:center;justify-content:center;font-size:1rem;flex-shrink:0;}
+[data-theme="dark"] .rb-icon{background:#2a2a2a;border-color:#333;}
+.rb-title{font-size:.9rem;font-weight:600;line-height:1.3;color:var(--ink);}
+.rb-time{font-size:.68rem;color:var(--muted);margin-top:.15rem;}
+/* Check circle */
+.rb-check{width:24px;height:24px;border-radius:50%;border:2px solid var(--line);display:flex;align-items:center;justify-content:center;font-size:.65rem;flex-shrink:0;transition:all .2s cubic-bezier(.34,1.56,.64,1);color:transparent;}
 .rb:hover .rb-check{border-color:var(--green);}
-.rb.done .rb-check{background:var(--green);border-color:var(--green);color:white;transform:scale(1.15);}
-.rb-del{background:none;border:none;color:transparent;cursor:pointer;font-size:.72rem;padding:.2rem .3rem;border-radius:5px;transition:all .15s;flex-shrink:0;}
-.rb:hover .rb-del{color:var(--muted);}
-.rb-del:hover{color:var(--red)!important;}
-.rb-edit{background:none;border:none;color:transparent;cursor:pointer;font-size:.72rem;padding:.2rem .3rem;border-radius:5px;transition:all .15s;flex-shrink:0;}
-.rb:hover .rb-edit{color:var(--muted);}
-.rb-edit:hover{color:var(--ink)!important;background:var(--paper2);}
-.rb-del:hover{background:var(--red-light);color:var(--red)!important;}
+.rb.done .rb-check{background:var(--green);border-color:var(--green);color:#fff;font-size:.75rem;transform:scale(1.1);}
+.rb.missed-time .rb-check,.rb.overdue .rb-check{border-color:rgba(239,68,68,.4);}
+/* Edit/delete — hidden until hover */
+.rb-del,.rb-edit{background:none;border:none;color:transparent;cursor:pointer;font-size:.75rem;padding:.25rem .3rem;border-radius:6px;transition:all .15s;flex-shrink:0;}
+.rb:hover .rb-del,.rb:hover .rb-edit{color:var(--muted);}
+.rb-del:hover{color:#ef4444!important;background:rgba(239,68,68,.1);}
+.rb-edit:hover{color:var(--ink)!important;background:var(--paper);}
 .home-r-item{display:flex;align-items:center;gap:.55rem;padding:.5rem .65rem;border-radius:8px;border:1px solid var(--line);margin-bottom:.35rem;cursor:pointer;background:var(--paper);transition:all .15s;}
 .home-r-item:hover{border-color:var(--ink);}
 .home-r-item.done{opacity:.4;}
@@ -1771,27 +1769,25 @@ html, body, #app {
 
             <div class="prof-section-label">Push Notifications</div>
             <button id="notif-toggle-btn" onclick="toggleNotifications()" style="width:100%;border:1.5px solid var(--line);background:var(--paper2);color:var(--muted);border-radius:10px;padding:.65rem .9rem;font-family:'DM Sans',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:.82rem;font-weight:600;cursor:pointer;margin-bottom:.55rem;transition:all .2s;">🔕 Enable notifications</button>
-            <div style="font-size:.66rem;color:var(--muted);line-height:1.65;margin-bottom:.65rem;">Reminders fire at their set time, cards due at 9am, overdue tasks at 8am.</div>
-            <button onclick="testInAppNotif()" style="width:100%;border:1.5px dashed var(--line);background:none;color:var(--muted);border-radius:10px;padding:.55rem;font-family:inherit;font-size:.78rem;font-weight:600;cursor:pointer;margin-bottom:.5rem;">🧪 Test banner now</button>
-            <button onclick="testIn30()" id="test-30-btn" style="width:100%;border:1.5px dashed #22c55e;background:none;color:#22c55e;border-radius:10px;padding:.55rem;font-family:inherit;font-size:.78rem;font-weight:600;cursor:pointer;margin-bottom:.5rem;">⏱ Test banner in 30 seconds</button>
-            <button onclick="debugFireAll()" style="width:100%;border:1.5px dashed #f59e0b;background:none;color:#f59e0b;border-radius:10px;padding:.55rem;font-family:inherit;font-size:.78rem;font-weight:600;cursor:pointer;margin-bottom:.9rem;">⚡ Force-fire today's reminders</button>
+            <div style="font-size:.72rem;color:var(--muted);line-height:1.7;margin-bottom:.9rem;">Your reminders will pop up on your phone even when you're not in the app.</div>
 
-            <!-- Live debug panel -->
-            <div id="notif-debug-panel" style="background:var(--paper2);border:1px solid var(--line);border-radius:10px;padding:.7rem .9rem;margin-bottom:.6rem;">
+            <!-- Status card -->
+            <div id="notif-status-row" style="display:none;background:var(--paper2);border:1px solid var(--line);border-radius:12px;padding:.8rem 1rem;margin-bottom:.7rem;">
+              <div id="notif-sw-status" style="font-size:.72rem;color:var(--muted);line-height:2;"></div>
+            </div>
+
+            <!-- Debug panel — hidden, tap status 5x to reveal -->
+            <div id="notif-debug-panel" style="display:none;background:var(--paper2);border:1px solid var(--line);border-radius:10px;padding:.7rem .9rem;margin-bottom:.6rem;">
               <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.4rem;">
-                <div style="font-size:.72rem;font-weight:700;color:var(--ink);">🔍 Live Debug</div>
+                <div style="font-size:.72rem;font-weight:700;color:var(--ink);">🔍 Debug</div>
                 <button onclick="refreshDebug()" style="background:none;border:1px solid var(--line);color:var(--muted);border-radius:6px;padding:.15rem .5rem;font-size:.65rem;cursor:pointer;">Refresh</button>
               </div>
               <div id="notif-debug-body" style="font-size:.65rem;color:var(--muted);line-height:2;font-family:monospace;white-space:pre-wrap;"></div>
+              <button onclick="testInAppNotif()" style="width:100%;margin-top:.5rem;border:1.5px dashed var(--line);background:none;color:var(--muted);border-radius:8px;padding:.45rem;font-family:inherit;font-size:.72rem;cursor:pointer;">🧪 Test banner</button>
+              <button onclick="testIn30()" id="test-30-btn" style="width:100%;margin-top:.4rem;border:1.5px dashed #22c55e;background:none;color:#22c55e;border-radius:8px;padding:.45rem;font-family:inherit;font-size:.72rem;cursor:pointer;">⏱ Test in 30s</button>
+              <button onclick="debugFireAll()" style="width:100%;margin-top:.4rem;border:1.5px dashed #f59e0b;background:none;color:#f59e0b;border-radius:8px;padding:.45rem;font-family:inherit;font-size:.72rem;cursor:pointer;">⚡ Force-fire</button>
             </div>
-
-            <!-- Status row -->
-            <div id="notif-status-row" style="display:none;background:var(--paper2);border:1px solid var(--line);border-radius:10px;padding:.7rem .9rem;">
-              <div style="font-size:.72rem;font-weight:600;color:var(--ink);margin-bottom:.3rem;">Notification coverage</div>
-              <div id="notif-sw-status" style="font-size:.65rem;color:var(--muted);line-height:1.8;"></div>
-            </div>
-
-          </div>
+            <div onclick="secretNotifTap()" style="height:16px;cursor:default;" title=""></div>
 
           <!-- Data tab -->
           <div class="prof-panel" id="prof-panel-data">
@@ -3327,11 +3323,11 @@ function renderAll(){
     html+=`<div class="r-group-missing">⚠️ Missing Work (${overdSorted.length})</div>`;
     html+=overdSorted.map(r=>`<div class="rb overdue" onclick="toggleR(${r.id})">
       <div class="rb-icon">${r.emoji}</div>
-      <div style="flex:1">
-        <div class="rb-title">${r.text}<span class="overdue-badge">MISSING</span></div>
-        <div class="rb-time">Was due: ${dLbl(r.date)}${r.time?' at ⏰ '+r.time:''}</div>
+      <div style="flex:1;min-width:0;">
+        <div class="rb-title" style="display:flex;align-items:center;gap:.3rem;flex-wrap:wrap;">${r.text}<span class="overdue-badge">MISSING</span></div>
+        <div class="rb-time" style="margin-top:.18rem;"><span style="font-size:.67rem;color:#ef4444;">📅 ${dLbl(r.date)}${r.time?' · ⏰ '+r.time:''}</span></div>
       </div>
-      <div class="rb-check">${r.done?'✓':''}</div>
+      <div class="rb-check" style="border-color:rgba(239,68,68,.5);">${r.done?'✓':''}</div>
       <button class="rb-edit" onclick="event.stopPropagation();openEditR(${r.id})">✏️</button>
       <button class="rb-del" onclick="event.stopPropagation();deleteR(${r.id})">✕</button>
     </div>`).join('');
@@ -3343,17 +3339,28 @@ function renderAll(){
     ${items.map(r=>{
       const missed=isMissedTime(r);
       let timeStr;
-      if(r.done) timeStr='Completed — tap to undo';
-      else if(missed) timeStr='<span style="color:var(--red);font-weight:600;">⏰ Missed — '+( r.startTime&&r.dueTime?r.startTime+'–'+r.dueTime:r.time||r.startTime)+'</span>';
-      else if(r.startTime&&r.dueTime) timeStr='⏰ '+r.startTime+'–'+r.dueTime;
-      else if(r.startTime) timeStr='⏰ '+r.startTime;
-      else if(r.dueTime) timeStr='⏰ Due '+r.dueTime;
-      else if(r.time) timeStr='⏰ '+r.time;
-      else timeStr='No time set';
+      if(r.done) timeStr='<span style="color:var(--green);font-size:.65rem;">✓ Completed — tap to undo</span>';
+      else if(missed){
+        const t=r.startTime&&r.dueTime?r.startTime+'–'+r.dueTime:r.time||r.startTime||'';
+        timeStr='<span style="color:#ef4444;font-size:.67rem;">⏰ '+t+' · missed</span>';
+      }
+      else if(r.startTime&&r.dueTime) timeStr='<span style="font-size:.67rem;">⏰ '+r.startTime+'–'+r.dueTime+'</span>';
+      else if(r.startTime) timeStr='<span style="font-size:.67rem;">⏰ '+r.startTime+'</span>';
+      else if(r.dueTime) timeStr='<span style="font-size:.67rem;">⏰ Due '+r.dueTime+'</span>';
+      else if(r.time) timeStr='<span style="font-size:.67rem;">⏰ '+r.time+'</span>';
+      else timeStr='<span style="font-size:.67rem;color:var(--muted);">No time set</span>';
+
+      const checkStyle = missed&&!r.done
+        ? 'width:22px;height:22px;border-radius:50%;border:2px solid rgba(239,68,68,.6);display:flex;align-items:center;justify-content:center;font-size:.6rem;flex-shrink:0;'
+        : '';
+
       return `<div class="rb ${r.done?'done':''} ${missed&&!r.done?'missed-time':''}" onclick="toggleR(${r.id})">
         <div class="rb-icon">${r.emoji}</div>
-        <div style="flex:1"><div class="rb-title">${r.text}${missed&&!r.done?'<span class="overdue-badge" style="background:#ef4444;">MISSED</span>':''}</div><div class="rb-time">${timeStr}</div></div>
-        <div class="rb-check">${r.done?'✓':''}</div>
+        <div style="flex:1;min-width:0;">
+          <div class="rb-title" style="display:flex;align-items:center;gap:.3rem;flex-wrap:wrap;">${r.text}${missed&&!r.done?'<span class="overdue-badge">MISSED</span>':''}</div>
+          <div class="rb-time" style="margin-top:.18rem;">${timeStr}</div>
+        </div>
+        <div class="rb-check" style="${checkStyle}">${r.done?'✓':''}</div>
         <button class="rb-edit" onclick="event.stopPropagation();openEditR(${r.id})">✏️</button>
         <button class="rb-del" onclick="event.stopPropagation();deleteR(${r.id})">✕</button>
       </div>`;
@@ -3718,11 +3725,6 @@ function toggleVoice(target){
 
 function startVoice(target){
   const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
-  _recognition=new SR();
-  _recognition.lang='en-US';
-  _recognition.continuous=false;
-  _recognition.interimResults=true;
-  _recognition.maxAlternatives=1;
   _voiceTarget=target;
   _voiceActive=true;
   setMicState(target,true);
@@ -3744,7 +3746,6 @@ function startVoice(target){
   function armSilenceTimer(){
     clearTimeout(silenceTimer);
     if(target==='chat'){
-      // Wait 2.5s of silence then auto-send
       silenceTimer=setTimeout(()=>{
         if(_voiceActive && fullText.trim()){
           updateField(fullText.trim());
@@ -3755,67 +3756,49 @@ function startVoice(target){
     }
   }
 
-  _recognition.onresult=e=>{
-    let interim='';
-    for(let i=e.resultIndex;i<e.results.length;i++){
-      if(e.results[i].isFinal) fullText+=e.results[i][0].transcript+' ';
-      else interim=e.results[i][0].transcript;
-    }
-    updateField(fullText+interim);
-    if(target==='chat') armSilenceTimer(); // reset the send timer on new speech
-  };
-
-  _recognition.onerror=e=>{
-    if(e.error==='no-speech'||e.error==='aborted') return;
-    toast('🎤 Mic error: '+e.error);
-    stopVoice();
-  };
-
-  _recognition.onend=()=>{
+  // Named function so onend can reference it without arguments.callee
+  function makeRec(){
     if(!_voiceActive) return;
-    clearTimeout(silenceTimer);
-    // For ALL targets: restart until manually stopped
-    // Chat will auto-send via silence timer above
-    if(_voiceActive){
-      try{
-        _recognition=new SR();
-        _recognition.lang='en-US';
-        _recognition.continuous=false;
-        _recognition.interimResults=true;
-        _recognition.maxAlternatives=1;
-        _recognition.onresult=e=>{
-          let interim='';
-          for(let i=e.resultIndex;i<e.results.length;i++){
-            if(e.results[i].isFinal) fullText+=e.results[i][0].transcript+' ';
-            else interim=e.results[i][0].transcript;
-          }
-          updateField(fullText+interim);
-          if(target==='chat') armSilenceTimer();
-        };
-        _recognition.onerror=e=>{ if(e.error!=='no-speech'&&e.error!=='aborted'){stopVoice();} };
-        _recognition.onend=arguments.callee; // reuse this same handler
-        _recognition.start();
-      }catch(e){ stopVoice(); }
-    }
-  };
-
-  try{
-    _recognition.start();
-    const hint=target==='chat'?'🎤 Listening — speak, then pause to send':'🎤 Listening… tap ⏹ to stop';
-    toast(hint);
-  }catch(e){
-    stopVoice();
-    toast('Could not start mic — allow microphone access first.');
+    const rec=new SR();
+    rec.lang='en-US';
+    rec.continuous=false;
+    rec.interimResults=true;
+    rec.maxAlternatives=1;
+    rec.onresult=e=>{
+      let interim='';
+      for(let i=e.resultIndex;i<e.results.length;i++){
+        if(e.results[i].isFinal) fullText+=e.results[i][0].transcript+' ';
+        else interim=e.results[i][0].transcript;
+      }
+      updateField(fullText+interim);
+      if(target==='chat') armSilenceTimer();
+    };
+    rec.onerror=e=>{ if(e.error!=='no-speech'&&e.error!=='aborted'){ toast('🎤 Mic error: '+e.error); stopVoice(); } };
+    rec.onend=()=>{
+      if(!_voiceActive) return; // user stopped — don't restart
+      clearTimeout(silenceTimer);
+      // Small delay before restarting to avoid rapid-fire restarts
+      setTimeout(()=>{ if(_voiceActive) makeRec(); }, 200);
+    };
+    try{
+      _recognition=rec;
+      rec.start();
+    }catch(e){ stopVoice(); toast('Could not start mic — allow microphone access first.'); }
   }
+
+  makeRec();
+  const hint=target==='chat'?'🎤 Listening — speak, then pause to send':'🎤 Listening… tap ⏹ to stop';
+  toast(hint);
 }
 
 function stopVoice(){
-  _voiceActive=false;
-  if(_recognition){try{_recognition.stop();}catch(e){}}
-  _recognition=null;
-  setMicState('chat',false);
-  setMicState('note',false);
-  setMicState('qc',false);
+  _voiceActive=false; // set FIRST so onend doesn't restart
+  if(_recognition){
+    try{_recognition.onend=null;}catch(e){} // detach handler before stopping
+    try{_recognition.abort();}catch(e){}    // abort is faster than stop
+    _recognition=null;
+  }
+  setMicState('all',false);
   _voiceTarget=null;
 }
 
@@ -3823,22 +3806,21 @@ function setMicState(target,on){
   const ids={chat:'chat-mic-btn',note:'note-mic-btn',qc:'qc-mic-btn'};
   const micSVG='<svg viewBox="0 0 24 24"><path d="M12 1a4 4 0 0 1 4 4v6a4 4 0 0 1-8 0V5a4 4 0 0 1 4-4zm-1 17.93V21h-2a1 1 0 0 0 0 2h6a1 1 0 0 0 0-2h-2v-2.07A8 8 0 0 0 20 11a1 1 0 0 0-2 0 6 6 0 0 1-12 0 1 1 0 0 0-2 0 8 8 0 0 0 7 7.93z"/></svg>';
   const stopSVG='<svg viewBox="0 0 24 24"><rect x="5" y="5" width="14" height="14" rx="2"/></svg>';
-  // Reset all first
+  // Always reset all buttons first
   Object.values(ids).forEach(id=>{
     const b=document.getElementById(id);
     if(b){b.classList.remove('listening');b.innerHTML=micSVG;}
   });
-  // Apply to target
-  const btn=document.getElementById(ids[target]);
-  if(btn){
-    btn.classList.toggle('listening',on);
-    btn.innerHTML=on?stopSVG:micSVG;
+  // Apply active state to specific target
+  if(on && target!=='all'){
+    const btn=document.getElementById(ids[target]);
+    if(btn){btn.classList.add('listening');btn.innerHTML=stopSVG;}
   }
-  // Show/hide pill
+  // Pill
   const pill=document.getElementById('voice-pill');
   const lbl=document.getElementById('voice-pill-label');
   if(pill){
-    if(on){
+    if(on && target!=='all'){
       const labels={chat:'Listening — will send when you stop',note:'Dictating note…',qc:'Capturing…'};
       if(lbl) lbl.textContent=labels[target]||'Listening…';
       pill.classList.add('show');
@@ -4490,14 +4472,33 @@ function renderNextAction(){
   const el=document.getElementById('home-next-action');
   if(!el)return;
   const due=getDueCards();
-  const overdueR=reminders.filter(r=>!r.done&&(r.date===todayStr()||r.date==='everyday'||r.date==='everyweek'));
+  const today=todayStr();
+  const now=new Date();
+  const nowMin=now.getHours()*60+now.getMinutes();
+
+  // Only show tasks that haven't been missed yet (time is in the future or no time set)
+  const upcomingR=reminders.filter(r=>{
+    if(r.done) return false;
+    if(r.date!==today&&r.date!=='everyday'&&r.date!=='everyweek') return false;
+    const raw=r.time||r.startTime||'';
+    if(!raw) return true; // no time = always show
+    const t24=timeTo24(raw); if(!t24) return true;
+    const p=t24.split(':'), rMin=parseInt(p[0])*60+parseInt(p[1]);
+    return rMin > nowMin; // only future tasks
+  }).sort((a,b)=>{
+    const getMin=r=>{ const raw=r.time||r.startTime||''; if(!raw) return 9999; const t=timeTo24(raw); if(!t) return 9999; const p=t.split(':'); return parseInt(p[0])*60+parseInt(p[1]); };
+    return getMin(a)-getMin(b);
+  });
+
   const daysSinceNote=notes.length?Math.floor((Date.now()-new Date(notes[0].created))/(1000*60*60*24)):999;
   let action=null;
   if(due.length>0){
     action={icon:'🃏',label:'Review due',text:`${due.length} card${due.length>1?'s':''} waiting for review`,onclick:`startStudySession()`};
-  } else if(overdueR.length>0){
-    const r=overdueR[0];
-    action={icon:r.emoji||'🔔',label:'Reminder today',text:r.text,onclick:`document.getElementById('home-reminders-section').scrollIntoView({behavior:'smooth'})`};
+  } else if(upcomingR.length>0){
+    const r=upcomingR[0];
+    const raw=r.time||r.startTime||'';
+    const timeLabel=raw?' · '+raw:'';
+    action={icon:r.emoji||'🔔',label:'Next reminder'+timeLabel,text:r.text,onclick:`navTo('tasks',document.getElementById('nav-tasks'))`};
   } else if(notes.length===0){
     action={icon:'📝',label:'Get started',text:'Write your first note to begin',onclick:`navTo('notes',document.getElementById('nav-notes'))`};
   } else if(daysSinceNote>=2){
@@ -4664,16 +4665,24 @@ function fireNotif(title, body, tag){
   nlog('fire: '+title.slice(0,30));
   showInAppNotif(title, body, 'reminder');
   if(typeof playNotifSound==='function') playNotifSound('reminder');
-  if(typeof Notification==='undefined'||Notification.permission!=='granted'){ nlog('no perm ('+( typeof Notification!=='undefined'?Notification.permission:'n/a')+')'); return; }
-  var icon="data:image/svg+xml,<svg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 100 100\'><rect width=\'100\' height=\'100\' rx=\'22\' fill=\'%231a6b3c\'/><text y=\'.9em\' font-size=\'72\' x=\'12\'>📚</text></svg>";
-  if(navigator.serviceWorker&&navigator.serviceWorker.controller){
+  if(typeof Notification==='undefined'||Notification.permission!=='granted'){ nlog('no perm ('+(typeof Notification!=='undefined'?Notification.permission:'n/a')+')'); return; }
+  // Use absolute path icon — data: URIs are blocked by Android Chrome for notifications
+  var icon = window.location.origin + '/icon-192.png';
+  var opts = { body:body, tag:tag, vibrate:[200,100,200] };
+  // Only add icon if likely to exist (hosted, not file://)
+  if(window.location.protocol !== 'file:') opts.icon = icon;
+
+  if(navigator.serviceWorker && navigator.serviceWorker.controller){
     navigator.serviceWorker.ready.then(function(reg){
-      reg.showNotification(title,{body:body,tag:tag,icon:icon,vibrate:[200,100,200]});
-      nlog('SW sent');
-    }).catch(function(e){ nlog('SW err:'+e.message); try{new Notification(title,{body:body,tag:tag,icon:icon});}catch(e2){} });
+      reg.showNotification(title, opts);
+      nlog('SW sent ✓');
+    }).catch(function(e){
+      nlog('SW err:'+e.message);
+      try{ new Notification(title, opts); }catch(e2){ nlog('fallback err:'+e2.message); }
+    });
   } else {
     nlog('direct Notification');
-    try{new Notification(title,{body:body,tag:tag,icon:icon});}catch(e){nlog('err:'+e.message);}
+    try{ new Notification(title, opts); }catch(e){ nlog('err:'+e.message); }
   }
 }
 
@@ -4764,7 +4773,22 @@ function showInAppNotif(title, body, type){
 }
 
 // ── Test in 30 seconds — switch apps then come back ──
-var _test30Timer = null;
+var _secretNotifTaps = 0, _secretNotifTimer = null;
+function secretNotifTap(){
+  _secretNotifTaps++;
+  clearTimeout(_secretNotifTimer);
+  _secretNotifTimer = setTimeout(function(){ _secretNotifTaps=0; }, 2000);
+  if(_secretNotifTaps >= 5){
+    _secretNotifTaps = 0;
+    var panel = document.getElementById('notif-debug-panel');
+    if(panel){ 
+      var showing = panel.style.display !== 'none';
+      panel.style.display = showing ? 'none' : 'block';
+      if(!showing) refreshDebug();
+      toast(showing ? 'Debug hidden' : '🔍 Debug panel revealed');
+    }
+  }
+}
 function testIn30(){
   if(_test30Timer){ clearTimeout(_test30Timer); _test30Timer=null; }
   var btn = document.getElementById('test-30-btn');
