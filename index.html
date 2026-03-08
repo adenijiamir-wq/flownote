@@ -4630,6 +4630,92 @@ function testInAppNotif(){
   toast('✅ Banner works!');
 }
 
+// ── Core notification permission functions (MISSING — now added) ──
+function notifSupported(){
+  return typeof Notification !== 'undefined' && 'Notification' in window;
+}
+
+async function requestNotifPermission(){
+  if(!notifSupported()) return false;
+  if(Notification.permission === 'granted') return true;
+  if(Notification.permission === 'denied') return false;
+  const result = await Notification.requestPermission();
+  return result === 'granted';
+}
+
+function toggleNotifications(){
+  const on = notifSupported() && Notification.permission==='granted' && localStorage.getItem('fn_notifs');
+  if(on) disableNotifications();
+  else enableNotifications();
+}
+
+async function enableNotifications(){
+  if(!notifSupported()){ toast('❌ This browser doesn\'t support notifications'); return; }
+  const granted = await requestNotifPermission();
+  if(granted){
+    localStorage.setItem('fn_notifs','1');
+    scheduleAllReminders();
+    updateNotifBtn();
+    updateNotifStatus();
+    toast('🔔 Notifications enabled!');
+    // Send a test so they know it worked
+    setTimeout(()=>{
+      showInAppNotif('✅ Notifications on!','Your reminders will pop up at their set times','reminder');
+      if(typeof playNotifSound==='function') playNotifSound('reminder');
+      try{
+        new Notification('✅ FlowNotes', { body:'Notifications on! Reminders will fire at their set times.', tag:'setup' });
+      }catch(e){}
+    }, 500);
+  } else {
+    toast('Blocked — go to your phone Settings and allow notifications for this site');
+    updateNotifBtn();
+  }
+}
+
+function disableNotifications(){
+  localStorage.removeItem('fn_notifs');
+  toast('Notifications turned off');
+  updateNotifBtn();
+  updateNotifStatus();
+}
+
+function updateNotifBtn(){
+  const btn = document.getElementById('notif-toggle-btn');
+  if(!btn) return;
+  const on = notifSupported() && Notification.permission==='granted' && localStorage.getItem('fn_notifs');
+  const blocked = notifSupported() && Notification.permission==='denied';
+  if(blocked){
+    btn.textContent = '🚫 Blocked — check phone Settings';
+    btn.style.cssText = 'width:100%;border:1.5px solid #fca5a5;background:var(--paper2);color:#dc2626;border-radius:10px;padding:.65rem .9rem;font-family:inherit;font-size:.82rem;font-weight:600;cursor:default;margin-bottom:.55rem;';
+  } else if(on){
+    btn.textContent = '🔔 On — tap to turn off';
+    btn.style.cssText = 'width:100%;border:1.5px solid var(--green);background:rgba(22,163,74,.08);color:var(--green);border-radius:10px;padding:.65rem .9rem;font-family:inherit;font-size:.82rem;font-weight:600;cursor:pointer;margin-bottom:.55rem;transition:all .2s;';
+  } else {
+    btn.textContent = '🔕 Enable notifications';
+    btn.style.cssText = 'width:100%;border:1.5px solid var(--line);background:var(--paper2);color:var(--muted);border-radius:10px;padding:.65rem .9rem;font-family:inherit;font-size:.82rem;font-weight:600;cursor:pointer;margin-bottom:.55rem;transition:all .2s;';
+  }
+}
+
+function updateNotifStatus(){
+  const row = document.getElementById('notif-status-row');
+  const txt = document.getElementById('notif-sw-status');
+  if(!row || !txt) return;
+  const on = localStorage.getItem('fn_notifs');
+  if(!on){ row.style.display='none'; return; }
+  row.style.display = 'block';
+  const swOk = !!_swReg;
+  const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone;
+  txt.innerHTML =
+    '<span style="color:'+(swOk?'var(--green)':'var(--amber)')+';">'+(swOk?'✅':'⚠️')+' Background: '+(swOk?'Active (works with tab closed)':'Tab needs to stay open')+'</span><br/>'+
+    '<span style="color:'+(isStandalone?'var(--green)':'var(--muted)')+';">'+(isStandalone?'✅':'📱')+' Installed as app: '+(isStandalone?'Yes':'No — install from browser menu for best coverage')+'</span>';
+  // iOS hint
+  const ios = document.getElementById('ios-banner');
+  if(ios){ const isIOS=/iphone|ipad|ipod/i.test(navigator.userAgent); ios.style.display=(isIOS&&!isStandalone)?'block':'none'; }
+  // Install banner
+  const ib = document.getElementById('install-banner');
+  if(ib) ib.style.display=(_deferredInstall&&!isStandalone)?'block':'none';
+}
+
 // Re-schedule whenever reminders are saved
 var _origSave = typeof save === 'function' ? save : null;
 
