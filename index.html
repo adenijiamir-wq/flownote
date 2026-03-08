@@ -4517,46 +4517,111 @@ function startSWPing(){
 }
 
 // ── Fallback in-tab polling (for when SW isn't available) ──
-function checkAndSendNotifs(){
-  const now=getNowHHMM();
-  if(now===_lastCheckedMinute) return;
-  _lastCheckedMinute=now;
+// Check a specific minute (HH:MM) for any reminders that should fire
+// Also handles "missed" notifications if the tab was closed
+function checkMinute(hhmm, isMissed){
   if(!notifSupported()||Notification.permission!=='granted') return;
   const today=todayStr();
   const fired=JSON.parse(localStorage.getItem('fn_notif_fired')||'{}');
   const todayFired=fired[today]||{};
+  let changed=false;
 
   reminders.filter(r=>!r.done).forEach(r=>{
-    const timeToCheck=r.time||(r.startTime?r.startTime:null);
+    const timeToCheck=r.time||(r.startTime||null);
     if(!timeToCheck) return;
     const t24=timeTo24(timeToCheck);
     if(!t24) return;
     const isToday=r.date===today||r.date==='everyday'||r.date==='everyweek';
     if(!isToday) return;
-    if(t24===now&&!todayFired['rem-'+r.id]){
-      sendNotif((r.emoji||'🔔')+' '+r.text,'Tap to open FlowNotes','rem-'+r.id,'reminder');
-      todayFired['rem-'+r.id]=true;
+    const key='rem-'+r.id;
+    if(t24===hhmm&&!todayFired[key]){
+      const label=isMissed?' (missed)':'';
+      sendNotif((r.emoji||'🔔')+' '+r.text, isMissed?'You missed this reminder — tap to open FlowNotes':'Tap to open FlowNotes', key, 'reminder');
+      todayFired[key]=true;
+      changed=true;
     }
   });
-  if(now==='09:00'&&!todayFired['due-cards']){
+
+  // 9am card review nudge
+  if(hhmm==='09:00'&&!todayFired['due-cards']){
     const due=getDueCards().length;
-    if(due>0){ sendNotif('📚 Cards due for review',due+' card'+(due>1?'s':'')+' waiting. Keep your streak going!','due-cards','cards'); todayFired['due-cards']=true; }
+    if(due>0){
+      sendNotif('📚 Cards due for review', due+' card'+(due>1?'s':'')+' waiting. Keep your streak going!','due-cards','cards');
+      todayFired['due-cards']=true; changed=true;
+    }
   }
-  if(now==='08:00'&&!todayFired['missing']){
+  // 8am overdue tasks nudge
+  if(hhmm==='08:00'&&!todayFired['missing']){
     const overdue=reminders.filter(r=>!r.done&&r.date&&r.date!=='everyday'&&r.date!=='everyweek'&&r.date<today);
-    if(overdue.length>0){ sendNotif('⚠️ Overdue tasks',overdue.length+' task'+(overdue.length>1?'s':'')+' need attention.','missing-work','warning'); todayFired['missing']=true; }
+    if(overdue.length>0){
+      sendNotif('⚠️ Overdue tasks', overdue.length+' task'+(overdue.length>1?'s':'')+' need attention.','missing-work','warning');
+      todayFired['missing']=true; changed=true;
+    }
   }
-  const newFired={};newFired[today]=todayFired;
-  localStorage.setItem('fn_notif_fired',JSON.stringify(newFired));
+
+  if(changed){
+    const newFired={};newFired[today]=todayFired;
+    localStorage.setItem('fn_notif_fired',JSON.stringify(newFired));
+  }
+}
+
+function checkAndSendNotifs(){
+  const now=getNowHHMM();
+  if(now===_lastCheckedMinute) return;
+  _lastCheckedMinute=now;
+  checkMinute(now, false);
+}
+
+// When the user opens the tab after a while, check if any reminders were missed
+// in the last 60 minutes and fire them now (as "missed" notifications)
+function checkMissedNotifs(){
+  if(!notifSupported()||Notification.permission!=='granted') return;
+  const lastSeen=localStorage.getItem('fn_last_seen');
+  const now=new Date();
+  localStorage.setItem('fn_last_seen', now.toISOString());
+  if(!lastSeen) return;
+  const diffMs=now - new Date(lastSeen);
+  const diffMins=Math.floor(diffMs/60000);
+  // Only look back up to 60 minutes to avoid spam
+  if(diffMins<2||diffMins>60) return;
+  // Walk each missed minute and check
+  for(let i=diffMins; i>=1; i--){
+    const d=new Date(now - i*60000);
+    const hhmm=String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0');
+    checkMinute(hhmm, true);
+  }
 }
 
 function startNotifScheduler(){
   if(notifInterval) clearInterval(notifInterval);
-  notifInterval=setInterval(checkAndSendNotifs,10000);
+  // Check every 5 seconds — much more responsive than 10
+  notifInterval=setInterval(checkAndSendNotifs, 5000);
   checkAndSendNotifs();
   syncScheduleToSW();
   startSWPing();
+  // Update last-seen timestamp every minute
+  setInterval(()=>localStorage.setItem('fn_last_seen', new Date().toISOString()), 60000);
+  localStorage.setItem('fn_last_seen', new Date().toISOString());
 }
+
+// Fire missed notifications when the user comes back to the tab
+document.addEventListener('visibilitychange', ()=>{
+  if(document.visibilityState==='visible'){
+    if(localStorage.getItem('fn_notifs')&&notifSupported()&&Notification.permission==='granted'){
+      checkMissedNotifs();
+      checkAndSendNotifs();
+      syncScheduleToSW();
+    }
+  } else {
+    // Tab going to background — save timestamp
+    localStorage.setItem('fn_last_seen', new Date().toISOString());
+  }
+});
+window.addEventListener('focus', ()=>{
+  if(localStorage.getItem('fn_notifs')&&notifSupported()&&Notification.permission==='granted'){
+    checkMissedNotifs();
+  }
+});
 
 function toggleNotifications(){
   const on=notifSupported()&&Notification.permission==='granted'&&localStorage.getItem('fn_notifs');
