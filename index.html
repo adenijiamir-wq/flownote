@@ -657,7 +657,7 @@ html,body{height:100%;overflow:hidden;font-family:'DM Sans',-apple-system,BlinkM
 /* Missed — just a left accent, no background fill */
 .rb.missed-time{border-left:3px solid #ef4444;}
 .rb.overdue{border-left:3px solid #ef4444;}
-.rb-icon{width:34px;height:34px;border-radius:9px;background:var(--paper2);border:1px solid var(--line);display:flex;align-items:center;justify-content:center;font-size:.95rem;flex-shrink:0;}
+.rb-icon{width:36px;height:36px;border-radius:10px;background:var(--paper);border:1px solid var(--line);display:flex;align-items:center;justify-content:center;font-size:1rem;flex-shrink:0;}
 [data-theme="dark"] .rb-icon{background:#2a2a2a;border-color:#333;}
 .rb-title{font-size:.9rem;font-weight:600;line-height:1.3;color:var(--ink);}
 .rb-time{font-size:.68rem;color:var(--muted);margin-top:.15rem;}
@@ -786,7 +786,7 @@ html,body{height:100%;overflow:hidden;font-family:'DM Sans',-apple-system,BlinkM
 #bottom-nav{display:none;background:var(--paper);border-top:1px solid var(--line);flex-shrink:0;padding-bottom:env(safe-area-inset-bottom,0);}
 .bn-inner{display:flex;}
 .bn-btn{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:.12rem;padding:.52rem .1rem;background:none;border:none;cursor:pointer;font-family:'DM Sans',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;color:var(--muted);font-size:.54rem;font-weight:600;text-transform:uppercase;letter-spacing:.04em;transition:color .15s;}
-.bn-svg{width:22px;height:22px;flex-shrink:0;} .bn-lbl{font-size:.54rem;font-weight:600;text-transform:uppercase;letter-spacing:.04em;}
+.bn-svg{width:22px;height:22px;flex-shrink:0;} .bn-lbl{font-size:.54rem;font-weight:600;text-transform:uppercase;letter-spacing:.04em;} .bn-btn.active .bn-svg{stroke:var(--green);} .bn-btn.active .bn-lbl{color:var(--green);}
 .bn-btn.active{color:var(--green);}
 
 /* ═══════════════════════════════════════
@@ -891,6 +891,7 @@ html,body{height:100%;overflow:hidden;font-family:'DM Sans',-apple-system,BlinkM
   .sb-close{display:block;}
   #bottom-nav{display:block;}
   .content{padding-bottom:calc(62px + env(safe-area-inset-bottom,0px)) !important;}
+  .content{padding-bottom:0;}
 
   /* ── Topbar ── */
   .topbar{padding:.65rem .9rem;}
@@ -1219,9 +1220,6 @@ html, body, #app {
 [data-theme="dark"] .next-action-card{background:#222222;border-color:var(--line);}
 [data-theme="dark"] .next-action-card:hover{border-color:var(--green);}
 [data-theme="dark"] .na-text{color:var(--ink);}
-
-.bn-btn.active .bn-svg{stroke:var(--green);}
-.bn-btn.active .bn-lbl{color:var(--green);}
 </style>
 </head>
 <body>
@@ -1380,18 +1378,18 @@ html, body, #app {
       </div>
       <div class="sb-nav">
         <div class="sb-section">Main</div>
-        <button class="nav-btn active" id="nav-home"      onclick="navTo('home',this)"><span class="nav-icon">🏠</span>Home</button>
-        <button class="nav-btn"        id="nav-notes"     onclick="navTo('notes',this)"><span class="nav-icon">📝</span>Notes</button>
-        <button class="nav-btn"        id="nav-cards"     onclick="navTo('cards',this)"><span class="nav-icon">🃏</span>Study Cards</button>
-        <button class="nav-btn"        id="nav-reminders" onclick="navTo('home',document.getElementById('nav-home'));setTimeout(()=>{document.getElementById('home-reminders-section').scrollIntoView({behavior:'smooth'});toggleRemForm(true);},120)"><span class="nav-icon">🔔</span>Reminders</button>
-        <button class="nav-btn"        id="nav-gaps"      onclick="navTo('gaps',this)"><span class="nav-icon">📊</span>Memory Gaps</button>
-        <button class="nav-btn"        id="nav-chat"      onclick="navTo('chat',this)"><span class="nav-icon">💬</span><span id="chat-nav-lbl">Chat</span><span class="nav-badge" id="review-badge" style="display:none">0</span></button>
+        <button class="nav-btn active" id="nav-home"      onclick="navTo('home',this)">Home</button>
+        <button class="nav-btn"        id="nav-notes"     onclick="navTo('notes',this)">Notes</button>
+        <button class="nav-btn"        id="nav-cards"     onclick="navTo('cards',this)">Flashcards</button>
+        <button class="nav-btn"        id="nav-reminders" onclick="navTo('home',document.getElementById('nav-home'));setTimeout(()=>{document.getElementById('home-reminders-section').scrollIntoView({behavior:'smooth'});toggleRemForm(true);},120)">Reminders</button>
+        <button class="nav-btn"        id="nav-gaps"      onclick="navTo('gaps',this)">Memory Gaps</button>
+        <button class="nav-btn"        id="nav-chat"      onclick="navTo('chat',this)"><span id="chat-nav-lbl">Chat</span><span class="nav-badge" id="review-badge" style="display:none">0</span></button>
         <div class="sb-section" style="margin-top:.5rem;">Subjects</div>
         <div id="sb-subjects"></div>
         <div style="flex:1;"></div>
         <div class="sb-section">Settings</div>
-        <button class="nav-btn" onclick="openSettings()" id="nav-settings" style="display:none"><span class="nav-icon">⚙️</span>Settings</button>
-        <button class="nav-btn" id="nav-profile" onclick="navTo('profile',this)"><span class="nav-icon">👤</span>Profile</button>
+        <button class="nav-btn" onclick="openSettings()" id="nav-settings" style="display:none">Settings</button>
+        <button class="nav-btn" id="nav-profile" onclick="navTo('profile',this)">Profile</button>
       </div>
       <div class="sb-comp" onclick="navTo('chat',document.getElementById('nav-chat'))">
         <div class="sb-comp-row">
@@ -1473,7 +1471,7 @@ html, body, #app {
                 <div style="border-top:1px solid var(--line);padding-top:.9rem;">
                   <input class="rem-input" id="nr-text" placeholder="What do you need to do?" onkeydown="if(event.key==='Enter')doAddR()" style="margin-bottom:.6rem;font-size:.92rem;padding:.75rem .9rem;border-radius:10px;"/>
                   <div style="margin-bottom:.65rem;">
-                    <label style="font-size:.65rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);display:block;margin-bottom:.3rem;">🔔 Remind me at</label>
+                    <label style="font-size:.65rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);display:block;margin-bottom:.3rem;">Remind me at</label>
                     <input type="time" class="rem-sel" id="nr-time" style="width:100%;font-size:.95rem;padding:.6rem .8rem;"/>
                     <input type="hidden" id="nr-emoji" value="📝"/>
                   </div>
@@ -1490,10 +1488,10 @@ html, body, #app {
                   <div class="due-date-wrap" id="nr-date-picker" style="margin-bottom:.6rem;">
                     <div class="due-date-label">When?</div>
                     <div class="date-presets">
-                      <button class="date-preset-btn active" data-val="today"     onclick="setDatePreset('nr','today',this)"><svg style="width:13px;height:13px;vertical-align:middle;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg> Today</button>
-                      <button class="date-preset-btn"        data-val="tomorrow"  onclick="setDatePreset('nr','tomorrow',this)"><svg style="width:13px;height:13px;vertical-align:middle;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg> Tomorrow</button>
-                      <button class="date-preset-btn recurring" data-val="everyday"  onclick="setDatePreset('nr','everyday',this)"><svg style="width:13px;height:13px;vertical-align:middle;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;" viewBox="0 0 24 24"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg> Every day</button>
-                      <button class="date-preset-btn recurring" data-val="everyweek" onclick="setDatePreset('nr','everyweek',this)"><svg style="width:13px;height:13px;vertical-align:middle;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;" viewBox="0 0 24 24"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg> Every week</button>
+                      <button class="date-preset-btn active" data-val="today"     onclick="setDatePreset('nr','today',this)">Today</button>
+                      <button class="date-preset-btn"        data-val="tomorrow"  onclick="setDatePreset('nr','tomorrow',this)">Tomorrow</button>
+                      <button class="date-preset-btn recurring" data-val="everyday"  onclick="setDatePreset('nr','everyday',this)">Every day</button>
+                      <button class="date-preset-btn recurring" data-val="everyweek" onclick="setDatePreset('nr','everyweek',this)">Every week</button>
                     </div>
                     <div class="date-calendar-trigger" id="nr-cal-trigger" onclick="toggleCalendar('nr')">
                       <span class="dct-text" id="nr-cal-label">or pick a date…</span>
@@ -1570,7 +1568,7 @@ html, body, #app {
       <!-- ── STUDY CARDS ── -->
       <div class="page" id="page-cards">
         <div class="study-header">
-          <div style="font-family:'DM Serif Display',Georgia,'Times New Roman',serif;font-size:1.1rem;">Study Cards</div>
+          <div style="font-family:'DM Serif Display',Georgia,'Times New Roman',serif;font-size:1.1rem;">Flashcards</div>
           <div style="display:flex;gap:.5rem;">
             <button class="gen-card-btn" style="width:auto;padding:.42rem .85rem;font-size:.75rem;margin-bottom:0;" onclick="openManualCardModal()">+ Add card</button>
           </div>
@@ -1675,7 +1673,7 @@ html, body, #app {
             <button class="prof-tab" onclick="switchProfTab('subjects',this)">Subjects</button>
             <button class="prof-tab" onclick="switchProfTab('style',this)">Appearance</button>
             <button class="prof-tab" onclick="switchProfTab('notifs',this)">Notifications</button>
-            <button class="prof-tab" onclick="switchProfTab('data',this);renderTrash();">Data</button>
+            <button class="prof-tab" onclick="switchProfTab('data',this);setTimeout(function(){renderDataStats();renderTrash();},50);">Data</button>
           </div>
 
           <!-- Coach tab -->
@@ -1795,17 +1793,23 @@ html, body, #app {
 
           <!-- Data tab -->
           <div class="prof-panel" id="prof-panel-data">
-            <div class="prof-section-label">🗑 Deleted Tasks</div>
-            <div id="trash-list" style="margin-bottom:.6rem;"></div>
-            <div style="display:flex;gap:.5rem;margin-bottom:1.1rem;">
-              <button onclick="renderTrash()" style="background:none;border:1px solid var(--line);color:var(--muted);border-radius:7px;padding:.35rem .75rem;font-family:inherit;font-size:.72rem;cursor:pointer;">Refresh</button>
-              <button onclick="emptyTrash()" style="background:none;border:1.5px solid #fca5a5;color:var(--red);border-radius:7px;padding:.35rem .75rem;font-family:inherit;font-size:.72rem;font-weight:600;cursor:pointer;">Empty trash</button>
+            <div class="prof-section-label">Your Stats</div>
+            <div id="data-stats" style="display:grid;grid-template-columns:1fr 1fr;gap:.5rem;margin-bottom:1rem;"></div>
+
+            <div class="prof-section-label" style="margin-top:.6rem;">Backup</div>
+            <div style="display:flex;gap:.5rem;flex-wrap:wrap;margin-bottom:1rem;">
+              <button onclick="exportData()" style="flex:1;background:none;border:1.5px solid var(--line);color:var(--ink);border-radius:8px;padding:.5rem .7rem;font-family:inherit;font-size:.75rem;font-weight:600;cursor:pointer;">Download backup</button>
+              <label style="flex:1;text-align:center;background:none;border:1.5px solid var(--line);color:var(--ink);border-radius:8px;padding:.5rem .7rem;font-family:inherit;font-size:.75rem;font-weight:600;cursor:pointer;">Restore from file<input type="file" accept=".json" onchange="importData(event)" style="display:none"/></label>
             </div>
 
-            <div class="prof-section-label" style="margin-top:.5rem;">Danger Zone</div>
+            <div class="prof-section-label">Recently Deleted</div>
+            <div id="trash-list" style="margin-bottom:.5rem;"></div>
+            <button onclick="emptyTrash()" style="background:none;border:1.5px solid #fca5a5;color:var(--red);border-radius:8px;padding:.4rem .8rem;font-family:inherit;font-size:.72rem;font-weight:600;cursor:pointer;margin-bottom:1rem;">Permanently delete all</button>
+
+            <div class="prof-section-label" style="margin-top:.4rem;">Account</div>
             <div style="display:flex;gap:.5rem;flex-wrap:wrap;">
-              <button onclick="signOut()" style="background:none;border:1.5px solid var(--line);color:var(--ink);border-radius:8px;padding:.48rem .9rem;font-family:'DM Sans',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:.78rem;font-weight:600;cursor:pointer;">← Sign out</button>
-              <button onclick="resetAccount()" style="background:none;border:1.5px solid #fca5a5;color:var(--red);border-radius:8px;padding:.48rem .9rem;font-family:'DM Sans',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:.78rem;font-weight:600;cursor:pointer;">🗑 Reset everything</button>
+              <button onclick="signOut()" style="background:none;border:1.5px solid var(--line);color:var(--ink);border-radius:8px;padding:.48rem .9rem;font-family:inherit;font-size:.78rem;font-weight:600;cursor:pointer;">Sign out</button>
+              <button onclick="resetAccount()" style="background:none;border:1.5px solid #fca5a5;color:var(--red);border-radius:8px;padding:.48rem .9rem;font-family:inherit;font-size:.78rem;font-weight:600;cursor:pointer;">Delete all my data</button>
             </div>
           </div>
 
@@ -1818,21 +1822,11 @@ html, body, #app {
   <!-- BOTTOM NAV -->
   <nav id="bottom-nav">
     <div class="bn-inner">
-      <button class="bn-btn active" id="bn-home" onclick="navTo('home',document.getElementById('nav-home'));setBN('home')">
-        <svg class="bn-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
-        <span class="bn-lbl">Home</span></button>
-      <button class="bn-btn" id="bn-notes" onclick="navTo('notes',document.getElementById('nav-notes'));setBN('notes')">
-        <svg class="bn-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
-        <span class="bn-lbl">Notes</span></button>
-      <button class="bn-btn" id="bn-cards" onclick="navTo('cards',document.getElementById('nav-cards'));setBN('cards')">
-        <svg class="bn-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg>
-        <span class="bn-lbl">Study</span></button>
-      <button class="bn-btn" id="bn-reminders" onclick="navTo('home',document.getElementById('nav-home'));setBN('home');setTimeout(()=>{document.getElementById('home-reminders-section').scrollIntoView({behavior:'smooth'});toggleRemForm(true);},150)">
-        <svg class="bn-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
-        <span class="bn-lbl">Tasks</span></button>
-      <button class="bn-btn" id="bn-chat" onclick="navTo('chat',document.getElementById('nav-chat'));setBN('chat')">
-        <svg class="bn-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
-        <span class="bn-lbl">Coach</span></button>
+      <button class="bn-btn active" id="bn-home" onclick="navTo('home',document.getElementById('nav-home'));setBN('home')"><svg class="bn-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg><span class="bn-lbl">Home</span></button>
+      <button class="bn-btn" id="bn-notes" onclick="navTo('notes',document.getElementById('nav-notes'));setBN('notes')"><svg class="bn-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/></svg><span class="bn-lbl">Notes</span></button>
+      <button class="bn-btn" id="bn-cards" onclick="navTo('cards',document.getElementById('nav-cards'));setBN('cards')"><svg class="bn-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg><span class="bn-lbl">Study</span></button>
+      <button class="bn-btn" id="bn-reminders" onclick="navTo('home',document.getElementById('nav-home'));setBN('home');setTimeout(()=>{document.getElementById('home-reminders-section').scrollIntoView({behavior:'smooth'});toggleRemForm(true);},150)"><svg class="bn-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg><span class="bn-lbl">Tasks</span></button>
+      <button class="bn-btn" id="bn-chat" onclick="navTo('chat',document.getElementById('nav-chat'));setBN('chat')"><svg class="bn-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg><span class="bn-lbl">Coach</span></button>
     </div>
   </nav>
 </div><!-- end #app -->
@@ -1884,10 +1878,10 @@ html, body, #app {
     <div class="due-date-wrap" id="m-date-picker">
       <div class="due-date-label">Due Date</div>
       <div class="date-presets">
-        <button class="date-preset-btn active" data-val="today"     onclick="setDatePreset('m','today',this)"><svg style="width:13px;height:13px;vertical-align:middle;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg> Today</button>
-        <button class="date-preset-btn"        data-val="tomorrow"  onclick="setDatePreset('m','tomorrow',this)"><svg style="width:13px;height:13px;vertical-align:middle;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg> Tomorrow</button>
-        <button class="date-preset-btn recurring" data-val="everyday"  onclick="setDatePreset('m','everyday',this)"><svg style="width:13px;height:13px;vertical-align:middle;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;" viewBox="0 0 24 24"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg> Every day</button>
-        <button class="date-preset-btn recurring" data-val="everyweek" onclick="setDatePreset('m','everyweek',this)"><svg style="width:13px;height:13px;vertical-align:middle;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;" viewBox="0 0 24 24"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg> Every week</button>
+        <button class="date-preset-btn active" data-val="today"     onclick="setDatePreset('m','today',this)">Today</button>
+        <button class="date-preset-btn"        data-val="tomorrow"  onclick="setDatePreset('m','tomorrow',this)">Tomorrow</button>
+        <button class="date-preset-btn recurring" data-val="everyday"  onclick="setDatePreset('m','everyday',this)">Every day</button>
+        <button class="date-preset-btn recurring" data-val="everyweek" onclick="setDatePreset('m','everyweek',this)">Every week</button>
       </div>
       <div class="date-calendar-trigger" id="m-cal-trigger" onclick="toggleCalendar('m')">
         <span class="dct-text" id="m-cal-label">or pick a date…</span>
@@ -1930,10 +1924,10 @@ html, body, #app {
     <div class="due-date-wrap" id="er-date-picker">
       <div class="due-date-label">Date</div>
       <div class="date-presets">
-        <button class="date-preset-btn" data-val="today"     onclick="setDatePreset('er','today',this)"><svg style="width:13px;height:13px;vertical-align:middle;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg> Today</button>
-        <button class="date-preset-btn" data-val="tomorrow"  onclick="setDatePreset('er','tomorrow',this)"><svg style="width:13px;height:13px;vertical-align:middle;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg> Tomorrow</button>
-        <button class="date-preset-btn recurring" data-val="everyday"  onclick="setDatePreset('er','everyday',this)"><svg style="width:13px;height:13px;vertical-align:middle;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;" viewBox="0 0 24 24"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg> Every day</button>
-        <button class="date-preset-btn recurring" data-val="everyweek" onclick="setDatePreset('er','everyweek',this)"><svg style="width:13px;height:13px;vertical-align:middle;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;" viewBox="0 0 24 24"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg> Every week</button>
+        <button class="date-preset-btn" data-val="today"     onclick="setDatePreset('er','today',this)">Today</button>
+        <button class="date-preset-btn" data-val="tomorrow"  onclick="setDatePreset('er','tomorrow',this)">Tomorrow</button>
+        <button class="date-preset-btn recurring" data-val="everyday"  onclick="setDatePreset('er','everyday',this)">Every day</button>
+        <button class="date-preset-btn recurring" data-val="everyweek" onclick="setDatePreset('er','everyweek',this)">Every week</button>
       </div>
       <div class="date-calendar-trigger" id="er-cal-trigger" onclick="toggleCalendar('er')">
         <span class="dct-text" id="er-cal-label">or pick a date…</span>
@@ -2523,7 +2517,7 @@ function navTo(id,btn){
   document.getElementById('page-'+id).classList.add('active');
   document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
   if(btn)btn.classList.add('active');
-  const titles={home:'Home',notes:'Notes',cards:'Study Cards',reminders:'Reminders',gaps:'Memory Gaps',chat:'Chat with '+CHARS[currentChar].name,profile:'Profile'};
+  const titles={home:'Home',notes:'Notes',cards:'Flashcards',reminders:'Reminders',gaps:'Memory Gaps',chat:'Chat with '+CHARS[currentChar].name,profile:'Profile'};
   document.getElementById('page-title').textContent=titles[id]||id;
   closeSidebar();
   if(id==='cards') renderCards();
@@ -3201,19 +3195,13 @@ function saveEditR(){
 function renderTrash(){
   const el=document.getElementById('trash-list');
   if(!el)return;
-  if(!deletedReminders.length){
-    el.innerHTML='<p style="font-size:.78rem;color:var(--muted);margin:.3rem 0;">Trash is empty.</p>';
-    return;
-  }
+  if(!deletedReminders.length){el.innerHTML='<p style="font-size:.78rem;color:var(--muted);margin:.3rem 0;">No recently deleted tasks.</p>';return;}
   el.innerHTML=deletedReminders.map((r,i)=>
-    '<div style="display:flex;align-items:center;gap:.5rem;padding:.45rem .5rem;border:1px solid var(--line);border-radius:8px;margin-bottom:.3rem;background:var(--paper);">'+
-      '<span style="font-size:.85rem;">'+(r.emoji||'📝')+'</span>'+
-      '<div style="flex:1;min-width:0;">'+
-        '<div style="font-size:.78rem;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">'+r.text+'</div>'+
-        '<div style="font-size:.62rem;color:var(--muted);">'+dLbl(r.date)+' · deleted '+relTime(r.deletedAt)+'</div>'+
-      '</div>'+
-      '<button onclick="restoreReminder('+i+')" style="background:var(--green-light);color:var(--green);border:none;border-radius:6px;padding:.22rem .5rem;font-size:.68rem;font-weight:700;cursor:pointer;flex-shrink:0;">Restore</button>'+
-      '<button onclick="deleteFromTrash('+i+')" style="background:none;border:none;color:var(--muted);font-size:.8rem;padding:.2rem .3rem;cursor:pointer;flex-shrink:0;" title="Delete permanently">✕</button>'+
+    '<div style="display:flex;align-items:center;gap:.6rem;padding:.55rem .6rem;border:1px solid var(--line);border-radius:10px;margin-bottom:.35rem;background:var(--paper);">'+
+    '<span style="font-size:1rem;">'+(r.emoji||'📝')+'</span>'+
+    '<div style="flex:1;min-width:0;"><div style="font-size:.8rem;font-weight:600;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">'+r.text+'</div>'+
+    '<div style="font-size:.65rem;color:var(--muted);">'+(r.deletedAt?new Date(r.deletedAt).toLocaleDateString():'Recently')+'</div></div>'+
+    '<button onclick="restoreFromTrash('+i+')" style="background:var(--green);border:none;color:#fff;border-radius:7px;padding:.32rem .65rem;font-family:inherit;font-size:.7rem;font-weight:600;cursor:pointer;">Restore</button>'+
     '</div>'
   ).join('');
 }
@@ -3228,6 +3216,7 @@ function restoreReminder(i){
     toast('✅ Reminder restored!');
   }
 }
+function restoreFromTrash(i){const r=deletedReminders[i];if(!r)return;deletedReminders.splice(i,1);localStorage.setItem('fn_trash',JSON.stringify(deletedReminders));delete r.deletedAt;reminders.push(r);save();renderAll();renderTrash();toast('Task restored ✓');}
 function emptyTrash(){
   if(!deletedReminders.length){toast('Trash is already empty.');return;}
   showConfirm('Empty trash?','Permanently delete all '+deletedReminders.length+' item'+(deletedReminders.length>1?'s':'')+'.',function(){
@@ -3339,11 +3328,11 @@ function renderAll(){
       <div class="rb-icon">${r.emoji}</div>
       <div style="flex:1;min-width:0;">
         <div class="rb-title" style="display:flex;align-items:center;gap:.3rem;flex-wrap:wrap;">${r.text}<span class="overdue-badge">MISSING</span></div>
-        <div class="rb-time" style="margin-top:.18rem;"><span style="font-size:.67rem;color:#ef4444;">${dLbl(r.date)}${r.time?' · <svg style="width:11px;height:11px;vertical-align:middle;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;display:inline-block;margin-right:2px;" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>'+r.time:''}</span></div>
+        <div class="rb-time" style="margin-top:.18rem;"><span style="font-size:.67rem;color:#ef4444;">${dLbl(r.date)}${r.time?' · '+r.time:''}</span></div>
       </div>
       <div class="rb-check" style="border-color:rgba(239,68,68,.5);">${r.done?'✓':''}</div>
-      <button class="rb-edit" onclick="event.stopPropagation();openEditR(${r.id})"><svg style="width:15px;height:15px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;" viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>
-      <button class="rb-del" onclick="event.stopPropagation();deleteR(${r.id})"><svg style="width:15px;height:15px;stroke:currentColor;fill:none;stroke-width:2.5;stroke-linecap:round;" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+      <button class="rb-edit" onclick="event.stopPropagation();openEditR(${r.id})">✏️</button>
+      <button class="rb-del" onclick="event.stopPropagation();deleteR(${r.id})">✕</button>
     </div>`).join('');
   }
 
@@ -3356,12 +3345,12 @@ function renderAll(){
       if(r.done) timeStr='<span style="color:var(--green);font-size:.65rem;">✓ Completed — tap to undo</span>';
       else if(missed){
         const t=r.startTime&&r.dueTime?r.startTime+'–'+r.dueTime:r.time||r.startTime||'';
-        timeStr='<span style="color:#ef4444;font-size:.67rem;display:flex;align-items:center;gap:2px;"><svg width=\'11\' height=\'11\' viewBox=\'0 0 24 24\' fill=\'none\' stroke=\'#ef4444\' stroke-width=\'2\'><circle cx=\'12\' cy=\'12\' r=\'10\'/><polyline points=\'12 6 12 12 16 14\'/></svg>'+t+' · missed</span>';
+        timeStr='<span style="color:#ef4444;font-size:.67rem;">'+t+' · missed</span>';
       }
-      else if(r.startTime&&r.dueTime) timeStr='<span style="font-size:.67rem;display:flex;align-items:center;gap:2px;"><svg width=\"11\" height=\"11\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\"><circle cx=\"12\" cy=\"12\" r=\"10\"/><polyline points=\"12 6 12 12 16 14\"/></svg>'+r.startTime+'–'+r.dueTime+'</span>';
-      else if(r.startTime) timeStr='<span style="font-size:.67rem;display:flex;align-items:center;gap:2px;"><svg width=\"11\" height=\"11\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\"><circle cx=\"12\" cy=\"12\" r=\"10\"/><polyline points=\"12 6 12 12 16 14\"/></svg>'+r.startTime+'</span>';
-      else if(r.dueTime) timeStr='<span style="font-size:.67rem;display:flex;align-items:center;gap:2px;"><svg width=\"11\" height=\"11\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\"><circle cx=\"12\" cy=\"12\" r=\"10\"/><polyline points=\"12 6 12 12 16 14\"/></svg>Due '+r.dueTime+'</span>';
-      else if(r.time) timeStr='<span style="font-size:.67rem;display:flex;align-items:center;gap:2px;"><svg width=\"11\" height=\"11\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\"><circle cx=\"12\" cy=\"12\" r=\"10\"/><polyline points=\"12 6 12 12 16 14\"/></svg>'+r.time+'</span>';
+      else if(r.startTime&&r.dueTime) timeStr='<span style="font-size:.67rem;">'+r.startTime+'–'+r.dueTime+'</span>';
+      else if(r.startTime) timeStr='<span style="font-size:.67rem;">'+r.startTime+'</span>';
+      else if(r.dueTime) timeStr='<span style="font-size:.67rem;">Due '+r.dueTime+'</span>';
+      else if(r.time) timeStr='<span style="font-size:.67rem;">'+r.time+'</span>';
       else timeStr='<span style="font-size:.67rem;color:var(--muted);">No time set</span>';
 
       const checkStyle = missed&&!r.done
@@ -3375,8 +3364,8 @@ function renderAll(){
           <div class="rb-time" style="margin-top:.18rem;">${timeStr}</div>
         </div>
         <div class="rb-check" style="${checkStyle}">${r.done?'✓':''}</div>
-        <button class="rb-edit" onclick="event.stopPropagation();openEditR(${r.id})"><svg style="width:15px;height:15px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;" viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>
-        <button class="rb-del" onclick="event.stopPropagation();deleteR(${r.id})"><svg style="width:15px;height:15px;stroke:currentColor;fill:none;stroke-width:2.5;stroke-linecap:round;" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+        <button class="rb-edit" onclick="event.stopPropagation();openEditR(${r.id})">✏️</button>
+        <button class="rb-del" onclick="event.stopPropagation();deleteR(${r.id})">✕</button>
       </div>`;
     }).join('')}`).join('');
 
@@ -4096,12 +4085,12 @@ function timeTo24(timeStr){
 }
 function tomorrowStr(){const d=new Date();d.setDate(d.getDate()+1);return d.toISOString().split('T')[0];}
 function dLbl(d){
-  if(!d) return'<svg style="width:13px;height:13px;vertical-align:middle;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg> Today';
-  if(d==='everyday') return'<svg style="width:13px;height:13px;vertical-align:middle;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;" viewBox="0 0 24 24"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg> Every day';
-  if(d==='everyweek') return'<svg style="width:13px;height:13px;vertical-align:middle;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;" viewBox="0 0 24 24"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg> Every week';
+  if(!d) return'Today';
+  if(d==='everyday') return'Every day';
+  if(d==='everyweek') return'Every week';
   const t=todayStr(), tm=tomorrowStr();
-  if(d===t) return'<svg style="width:13px;height:13px;vertical-align:middle;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg> Today';
-  if(d===tm) return'<svg style="width:13px;height:13px;vertical-align:middle;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg> Tomorrow';
+  if(d===t) return'Today';
+  if(d===tm) return'Tomorrow';
   const dt=new Date(d+'T12:00:00');
   const now=new Date(); now.setHours(0,0,0,0);
   if(dt<now) return'⚠️ '+dt.toLocaleDateString('en-GB',{weekday:'short',day:'numeric',month:'short'});
@@ -4945,3 +4934,121 @@ document.addEventListener('DOMContentLoaded', function(){
 </script>
 </body>
 </html>
+<script>
+// ── Swipe navigation ──
+(function(){
+  var pages=['home','notes','cards','reminders','chat','profile'],cur=0,sx=0,sy=0,drag=false;
+  var bnMap={home:'bn-home',notes:'bn-notes',cards:'bn-cards',reminders:'bn-reminders',chat:'bn-chat',profile:null};
+  var _orig=navTo;
+  navTo=function(id,btn){
+    _orig(id,btn);
+    var i=pages.indexOf(id);if(i>-1)cur=i;
+    document.querySelectorAll('.bn-btn').forEach(function(b){b.classList.remove('active');});
+    var bi=bnMap[id];if(bi){var e=document.getElementById(bi);if(e)e.classList.add('active');}
+  };
+  var cv=document.querySelector('.content');if(!cv)return;
+  cv.addEventListener('touchstart',function(e){if(e.touches.length!==1)return;sx=e.touches[0].clientX;sy=e.touches[0].clientY;drag=true;},{passive:true});
+  cv.addEventListener('touchend',function(e){
+    if(!drag)return;drag=false;
+    var dx=e.changedTouches[0].clientX-sx,dy=e.changedTouches[0].clientY-sy;
+    if(Math.abs(dx)<60||Math.abs(dx)<Math.abs(dy)*1.5)return;
+    var n=dx<0?cur+1:cur-1;if(n<0||n>=pages.length)return;
+    cur=n;navTo(pages[cur],document.getElementById('nav-'+pages[cur]));
+  },{passive:true});
+})();
+
+// ── Data tab stats + export/import ──
+function renderDataStats(){
+  var el=document.getElementById('data-stats');if(!el)return;
+  var d;try{d=JSON.parse(localStorage.getItem('mb7_data')||'{}');}catch(e){return;}
+  var rems=d.reminders||[],notes=d.notes||[],cards=d.studyCards||[];
+  var done=rems.filter(function(r){return r.done;}).length;
+  el.innerHTML=[{n:rems.length,l:'Tasks'},{n:done,l:'Completed'},{n:notes.length,l:'Notes'},{n:cards.length,l:'Flashcards'}].map(function(s){
+    return'<div style="background:var(--paper2);border-radius:10px;padding:.7rem .6rem;text-align:center;"><div style="font-size:1.5rem;font-weight:700;color:var(--ink);">'+s.n+'</div><div style="font-size:.62rem;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin-top:.15rem;">'+s.l+'</div></div>';
+  }).join('');
+}
+function exportData(){
+  var d=localStorage.getItem('mb7_data')||'{}';
+  var a=document.createElement('a');a.href=URL.createObjectURL(new Blob([d],{type:'application/json'}));
+  a.download='flownotes-backup-'+new Date().toISOString().slice(0,10)+'.json';a.click();toast('Backup downloaded \u2713');
+}
+function importData(e){
+  var f=e.target.files[0];if(!f)return;
+  var r=new FileReader();r.onload=function(ev){
+    try{JSON.parse(ev.target.result);
+      if(!confirm('Replace ALL data with this backup?'))return;
+      localStorage.setItem('mb7_data',ev.target.result);
+      if(typeof loadData==='function')loadData();
+      if(typeof renderAll==='function')renderAll();
+      toast('Restored \u2713');
+    }catch(err){toast('Invalid file');}
+  };r.readAsText(f);
+}
+var _origSPT=typeof switchProfTab==='function'?switchProfTab:null;
+if(_origSPT){switchProfTab=function(tab,el){_origSPT(tab,el);if(tab==='data'){renderDataStats();renderTrash();}};}
+
+// ── Permissions on first open ──
+function requestAllPermissions(){
+  if(typeof Notification!=='undefined'&&Notification.permission==='default'){
+    Notification.requestPermission().then(function(p){
+      if(p==='granted'){localStorage.setItem('fn_notifs','1');if(typeof updateNotifBtn==='function')updateNotifBtn();toast('Notifications enabled \u2713');}
+    });
+  }
+  if(navigator.mediaDevices&&navigator.mediaDevices.getUserMedia)
+    navigator.mediaDevices.getUserMedia({audio:true}).then(function(s){s.getTracks().forEach(function(t){t.stop();});}).catch(function(){});
+  if(navigator.storage&&navigator.storage.persist) navigator.storage.persist();
+}
+if(!localStorage.getItem('fn_perms_asked')){
+  setTimeout(function(){requestAllPermissions();localStorage.setItem('fn_perms_asked','1');},2000);
+}
+
+// ── Notifications ──
+function timeTo24(ts){if(!ts)return null;var m=ts.match(/^(\d{1,2}):(\d{2})$/);if(m)return String(parseInt(m[1])).padStart(2,'0')+':'+m[2];m=ts.match(/^(\d{1,2}):(\d{2})\s*(AM|PM)$/i);if(!m)return null;var h=parseInt(m[1]),mn=m[2],ap=m[3].toUpperCase();if(ap==='PM'&&h!==12)h+=12;if(ap==='AM'&&h===12)h=0;return String(h).padStart(2,'0')+':'+mn;}
+var _rt={};
+function scheduleAllReminders(){
+  var data;try{data=JSON.parse(localStorage.getItem('mb7_data')||'{}');}catch(e){return;}
+  var today=typeof todayStr==='function'?todayStr():new Date().toISOString().slice(0,10);
+  (data.reminders||[]).forEach(function(r){
+    if(r.done)return;var raw=r.time||r.startTime||'';if(!raw)return;
+    var t24=timeTo24(raw);if(!t24)return;
+    if(r.date!==today&&r.date!=='everyday'&&r.date!=='everyweek')return;
+    if(_rt[r.id])clearTimeout(_rt[r.id]);
+    var p=t24.split(':'),tgt=new Date();tgt.setHours(parseInt(p[0]),parseInt(p[1]),0,0);
+    var delay=tgt-new Date();if(delay<-120000)return;if(delay<0)delay=0;
+    _rt[r.id]=setTimeout(function(){
+      var d2;try{d2=JSON.parse(localStorage.getItem('mb7_data')||'{}');}catch(e){return;}
+      var live=(d2.reminders||[]).find(function(x){return String(x.id)===String(r.id);});
+      if(!live||live.done)return;
+      showInAppNotif((live.emoji||'\uD83D\uDD14')+' '+live.text,'Tap to open FlowNotes');
+      if(typeof playNotifSound==='function')playNotifSound('reminder');
+      if(typeof Notification!=='undefined'&&Notification.permission==='granted'){
+        if(navigator.serviceWorker&&navigator.serviceWorker.controller)
+          navigator.serviceWorker.controller.postMessage({type:'SHOW_NOTIF',title:(live.emoji||'\uD83D\uDD14')+' '+live.text,body:'Tap to open',tag:'r'+live.id});
+        else try{new Notification((live.emoji||'\uD83D\uDD14')+' '+live.text,{body:'Tap to open',icon:'/icon-192.png'});}catch(e){}
+      }
+      if(r.date==='everyday'||r.date==='everyweek')setTimeout(function(){delete _rt[r.id];scheduleAllReminders();},65000);
+    },delay);
+  });
+}
+function showInAppNotif(title,body){
+  var s=document.getElementById('ian-stack');
+  if(!s){s=document.createElement('div');s.id='ian-stack';s.style.cssText='position:fixed;bottom:calc(70px + env(safe-area-inset-bottom,0px));right:12px;left:12px;z-index:9999;display:flex;flex-direction:column;gap:.45rem;pointer-events:none;align-items:flex-end;';document.body.appendChild(s);}
+  var el=document.createElement('div');
+  el.style.cssText='background:var(--paper);color:var(--ink);border:1px solid var(--line);border-radius:14px;padding:.8rem 1rem;display:flex;align-items:center;gap:.7rem;box-shadow:0 6px 24px rgba(0,0,0,.3);pointer-events:all;cursor:pointer;max-width:360px;width:100%;position:relative;overflow:hidden;';
+  el.innerHTML='<div style="font-size:1.3rem;">'+title.split(' ')[0]+'</div><div style="flex:1;"><div style="font-size:.85rem;font-weight:700;">'+title+'</div><div style="font-size:.7rem;opacity:.7;">'+body+'</div></div><button onclick="event.stopPropagation();this.parentElement.remove()" style="background:none;border:none;color:inherit;opacity:.5;font-size:1.1rem;cursor:pointer;">&#x2715;</button>';
+  el.onclick=function(e){if(e.target.tagName==='BUTTON')return;navTo('home',document.getElementById('nav-home'));el.remove();};
+  s.appendChild(el);setTimeout(function(){if(el.parentElement)el.remove();},8000);
+  var all=s.querySelectorAll('div[style*="border-radius:14px"]');if(all.length>4)all[0].remove();
+}
+function testInAppNotif(){showInAppNotif('\uD83D\uDD14 Test — notifications work!','This is how reminders appear');if(typeof playNotifSound==='function')playNotifSound('reminder');toast('Test sent \u2713');}
+
+// ── Avatar ──
+(function(){var ha=document.getElementById('home-avi');if(!ha)return;var img=localStorage.getItem('fn_avatar_img'),em=localStorage.getItem('fn_avatar')||'\uD83D\uDE42';if(img)ha.innerHTML='<img src="'+img+'" style="width:100%;height:100%;object-fit:cover;border-radius:50%" alt=""/>';else ha.textContent=em;})();
+
+// ── Boot ──
+document.addEventListener('DOMContentLoaded',function(){
+  if(typeof registerSW==='function')registerSW();
+  scheduleAllReminders();setInterval(scheduleAllReminders,60000);
+  if(typeof updateNotifBtn==='function')updateNotifBtn();
+});
+</script>
