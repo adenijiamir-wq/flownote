@@ -23,9 +23,9 @@
   :root { --font-body: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; --font-display: Georgia, serif; }
 
 #inapp-notif-stack{position:fixed;bottom:calc(72px + env(safe-area-inset-bottom,0px));right:12px;left:12px;z-index:9999;display:flex;flex-direction:column;gap:.45rem;pointer-events:none;align-items:flex-end;}
-.ian{background:var(--ink);color:var(--paper);border-radius:14px;padding:.8rem 1rem;display:flex;align-items:center;gap:.65rem;box-shadow:0 6px 24px rgba(0,0,0,.3);pointer-events:all;cursor:pointer;max-width:360px;width:100%;position:relative;overflow:hidden;animation:ianIn .3s cubic-bezier(.34,1.3,.64,1);}
+.ian{background:var(--ink);color:var(--paper);border-radius:14px;padding:.8rem 1rem;display:flex;align-items:center;gap:.7rem;box-shadow:0 6px 24px rgba(0,0,0,.3);pointer-events:all;cursor:pointer;max-width:360px;width:100%;position:relative;overflow:hidden;animation:ianIn .3s cubic-bezier(.34,1.3,.64,1);}
 @keyframes ianIn{from{opacity:0;transform:translateY(16px) scale(.95);}to{opacity:1;transform:translateY(0) scale(1);}}
-.ian-prog{position:absolute;bottom:0;left:0;height:3px;background:rgba(255,255,255,.25);animation:ianProg 7s linear forwards;}
+.ian-prog{position:absolute;bottom:0;left:0;height:3px;background:rgba(255,255,255,.25);animation:ianProg 8s linear forwards;}
 @keyframes ianProg{from{width:100%;}to{width:0;}}
 @media(min-width:600px){#inapp-notif-stack{left:auto;min-width:320px;}}
 </style></noscript>
@@ -529,8 +529,6 @@ html,body{height:100%;overflow:hidden;font-family:'DM Sans',-apple-system,BlinkM
 .greet-card::after{content:'';position:absolute;right:20px;bottom:-30px;width:80px;height:80px;border-radius:50%;background:rgba(255,255,255,.03);}
 .greet-top{display:flex;align-items:center;gap:.8rem;margin-bottom:.85rem;position:relative;z-index:1;}
 .greet-avi{width:52px;height:52px;border-radius:50%;object-fit:cover;border:2px solid rgba(255,255,255,.2);}
-.greet-avi-user{display:flex;align-items:center;justify-content:center;font-size:1.7rem;background:rgba(255,255,255,.1);overflow:hidden;}
-.greet-avi-user img{width:100%;height:100%;object-fit:cover;border-radius:50%;}
 .greet-badge-wrap{position:relative;}
 .greet-badge{position:absolute;top:-3px;right:-4px;font-size:.85rem;}
 .greet-name{font-family:'DM Serif Display',Georgia,'Times New Roman',serif;font-size:1.2rem;line-height:1.2;}
@@ -1429,7 +1427,7 @@ html, body, #app {
             <div class="greet-card">
               <div class="greet-top">
                 <div class="greet-badge-wrap">
-                  <div id="home-avi" class="greet-avi greet-avi-user"></div>
+                  <div id="home-avi" class="greet-avi" style="display:flex;align-items:center;justify-content:center;font-size:1.7rem;background:rgba(255,255,255,.1);overflow:hidden;"></div>
                   <span class="greet-badge" id="home-badge">👍</span>
                 </div>
                 <div class="greet-name">
@@ -1517,8 +1515,7 @@ html, body, #app {
               <div id="big-r-list"></div>
 
               <!-- Subtle clear all at bottom -->
-              <div id="rem-clear-row" style="display:none;margin-top:1rem;padding-top:.75rem;border-top:1px solid var(--line);text-align:center;display:flex;gap:.75rem;justify-content:center;">
-                <button onclick="clearCompletedReminders()" id="clear-completed-btn" style="background:none;border:none;color:var(--muted);font-size:.68rem;font-family:inherit;cursor:pointer;opacity:.7;">🗑 Clear completed</button>
+              <div id="rem-clear-row" style="display:none;margin-top:1rem;padding-top:.75rem;border-top:1px solid var(--line);text-align:center;">
                 <button onclick="clearAllReminders()" style="background:none;border:none;color:var(--muted);font-size:.68rem;font-family:inherit;cursor:pointer;opacity:.7;">Clear all tasks</button>
               </div>
             </div>
@@ -2430,6 +2427,7 @@ function startApp(){
   document.getElementById('sb-avi').src=c.img;
   document.getElementById('sb-cname').textContent=c.name;
   document.getElementById('chat-nav-lbl').textContent='Chat with '+c.name;
+  document.getElementById('home-avi').src=c.img;
   document.getElementById('home-badge').textContent=c.badge;
   document.getElementById('greet-name').textContent=userName||'there';
   document.getElementById('home-speech').textContent=c.speech[Math.floor(Math.random()*c.speech.length)];
@@ -3265,11 +3263,7 @@ function renderAll(){
 
   bl.innerHTML=html;
   const clearRow = document.getElementById('rem-clear-row');
-  const hasDone=reminders.filter(r=>r.done).length>0;
-  const hasPending=reminders.filter(r=>!r.done).length>1;
-  if(clearRow) clearRow.style.display=(hasDone||hasPending)?'flex':'none';
-  const ccBtn=document.getElementById('clear-completed-btn');
-  if(ccBtn) ccBtn.style.display=hasDone?'':'none';
+  if(clearRow) clearRow.style.display = reminders.filter(r=>!r.done).length > 1 ? 'block' : 'none';
   const sDone=document.getElementById('s-done'); if(sDone) sDone.textContent=reminders.filter(r=>r.done).length;
   const sNotes=document.getElementById('s-notes'); if(sNotes) sNotes.textContent=notes.length;
   const sCards=document.getElementById('s-cards'); if(sCards) sCards.textContent=studyCards.length;
@@ -3824,27 +3818,13 @@ function handleAvatarUpload(input){
 }
 
 function _updateAvatarDisplay(emoji, imgUrl){
-  // Update profile header
   const prof=document.getElementById('prof-avatar');
-  if(prof){
-    if(imgUrl) prof.innerHTML='<img src="'+imgUrl+'" alt="avatar"/>';
-    else{ prof.innerHTML=''; prof.textContent=emoji||'🙂'; }
-  }
-  // Update large preview in Style tab
+  if(prof){ if(imgUrl) prof.innerHTML='<img src="'+imgUrl+'" alt="avatar"/>'; else{ prof.innerHTML=''; prof.textContent=emoji||'🙂'; } }
   const prev=document.getElementById('avatar-preview-large');
-  if(prev){
-    if(imgUrl) prev.innerHTML='<img src="'+imgUrl+'" alt="avatar"/>';
-    else{ prev.innerHTML=''; prev.textContent=emoji||'🙂'; }
-  }
-  // Update home screen greeting avatar
-  const homeAvi=document.getElementById('home-avi');
-  if(homeAvi){
-    if(imgUrl) homeAvi.innerHTML='<img src="'+imgUrl+'" alt="avatar"/>';
-    else homeAvi.textContent=emoji||'🙂';
-  }
-  // Update sidebar avatar
-  const sbAvi=document.getElementById('sb-avi');
-  if(sbAvi && !imgUrl) sbAvi.src=''; // only clear if no custom image
+  if(prev){ if(imgUrl) prev.innerHTML='<img src="'+imgUrl+'" alt="avatar"/>'; else{ prev.innerHTML=''; prev.textContent=emoji||'🙂'; } }
+  // HOME SCREEN — show user's own avatar, not the coach
+  const ha=document.getElementById('home-avi');
+  if(ha){ if(imgUrl) ha.innerHTML='<img src="'+imgUrl+'" style="width:100%;height:100%;object-fit:cover;border-radius:50%" alt=""/>'; else ha.textContent=emoji||'🙂'; }
 }
 
 function updateAccentUI(){
@@ -4536,221 +4516,105 @@ function startSWPing(){
 }
 
 // ── Fallback in-tab polling (for when SW isn't available) ──
+function timeTo24(timeStr){
+  if(!timeStr) return null;
+  var m=timeStr.match(/^(\d{1,2}):(\d{2})$/);
+  if(m) return String(parseInt(m[1])).padStart(2,'0')+':'+m[2];
+  m=timeStr.match(/^(\d{1,2}):(\d{2})\s*(AM|PM)$/i);
+  if(!m) return null;
+  var h=parseInt(m[1]),min=m[2],ap=m[3].toUpperCase();
+  if(ap==='PM'&&h!==12)h+=12;
+  if(ap==='AM'&&h===12)h=0;
+  return String(h).padStart(2,'0')+':'+min;
+}
+function getNowHHMM(){
+  var n=new Date();
+  return String(n.getHours()).padStart(2,'0')+':'+String(n.getMinutes()).padStart(2,'0');
+}
+function timeToMins(hhmm){
+  if(!hhmm) return 0;
+  var p=hhmm.split(':');
+  return parseInt(p[0])*60+parseInt(p[1]);
+}
 function checkAndSendNotifs(){
-  const now=getNowHHMM();
-  if(now===_lastCheckedMinute) return;
-  _lastCheckedMinute=now;
-  const today=todayStr();
-  const fired=JSON.parse(localStorage.getItem('fn_notif_fired')||'{}');
-  const todayFired=fired[today]||{};
-
-  reminders.filter(r=>!r.done).forEach(r=>{
-    const timeToCheck=r.time||(r.startTime?r.startTime:null);
-    if(!timeToCheck) return;
-    const t24=timeTo24(timeToCheck);
+  var now=getNowHHMM(), today=todayStr();
+  var data; try{data=JSON.parse(localStorage.getItem('mb7_data')||'{}');}catch(e){return;}
+  var rems=data.reminders||[];
+  var fired={}; try{fired=JSON.parse(localStorage.getItem('fn_fired')||'{}');}catch(e){}
+  var todayFired=fired[today]||{};
+  var changed=false;
+  rems.forEach(function(r){
+    if(r.done) return;
+    var raw=r.time||r.startTime||'';
+    if(!raw) return;
+    var t24=timeTo24(raw);
     if(!t24) return;
-    const isToday=r.date===today||r.date==='everyday'||r.date==='everyweek';
+    var isToday=r.date===today||r.date==='everyday'||r.date==='everyweek';
     if(!isToday) return;
-    if(t24===now&&!todayFired['rem-'+r.id]){
-      sendNotif((r.emoji||'🔔')+' '+r.text,'Tap to open FlowNotes','rem-'+r.id,'reminder');
-      todayFired['rem-'+r.id]=true;
+    var diff=timeToMins(now)-timeToMins(t24);
+    var key='r'+r.id;
+    if(diff>=0&&diff<=2&&!todayFired[key]){
+      todayFired[key]=true; changed=true;
+      showInAppNotif((r.emoji||'🔔')+' '+r.text,'Tap to open FlowNotes','reminder');
+      if(typeof playNotifSound==='function') playNotifSound('reminder');
+      if(typeof Notification!=='undefined'&&Notification.permission==='granted'){
+        try{new Notification((r.emoji||'🔔')+' '+r.text,{body:'Tap to open FlowNotes',tag:key});}catch(e){}
+      }
     }
   });
-  if(now==='09:00'&&!todayFired['due-cards']){
-    const due=getDueCards().length;
-    if(due>0){ sendNotif('📚 Cards due for review',due+' card'+(due>1?'s':'')+' waiting. Keep your streak going!','due-cards','cards'); todayFired['due-cards']=true; }
-  }
-  if(now==='08:00'&&!todayFired['missing']){
-    const overdue=reminders.filter(r=>!r.done&&r.date&&r.date!=='everyday'&&r.date!=='everyweek'&&r.date<today);
-    if(overdue.length>0){ sendNotif('⚠️ Overdue tasks',overdue.length+' task'+(overdue.length>1?'s':'')+' need attention.','missing-work','warning'); todayFired['missing']=true; }
-  }
-  const newFired={};newFired[today]=todayFired;
-  localStorage.setItem('fn_notif_fired',JSON.stringify(newFired));
+  if(changed){var nf={};nf[today]=todayFired;localStorage.setItem('fn_fired',JSON.stringify(nf));}
+}
+
+function showInAppNotif(title,body,type){
+  var s=document.getElementById('inapp-notif-stack');
+  if(!s){s=document.createElement('div');s.id='inapp-notif-stack';document.body.appendChild(s);}
+  var el=document.createElement('div');el.className='ian';
+  el.innerHTML='<div style="font-size:1.4rem;flex-shrink:0">🔔</div>'+
+    '<div style="flex:1;min-width:0">'+
+      '<div style="font-size:.85rem;font-weight:700;line-height:1.3">'+title+'</div>'+
+      '<div style="font-size:.7rem;opacity:.7;margin-top:.1rem">'+body+'</div>'+
+    '</div>'+
+    '<button onclick="event.stopPropagation();this.parentElement.remove()" style="background:none;border:none;color:inherit;opacity:.5;font-size:1.1rem;cursor:pointer;padding:0 .3rem">✕</button>'+
+    '<div class="ian-prog"></div>';
+  el.onclick=function(e){if(e.target.tagName==='BUTTON')return;navTo('home',document.getElementById('nav-home'));el.remove();};
+  s.appendChild(el);
+  setTimeout(function(){if(el.parentElement)el.remove();},8000);
+  var all=s.querySelectorAll('.ian');if(all.length>4)all[0].remove();
+}
+
+function testInAppNotif(){
+  showInAppNotif('🔔 Test — notifications work!','Your reminders will appear like this','reminder');
+  if(typeof playNotifSound==='function') playNotifSound('reminder');
+  toast('✅ Banner works!');
 }
 
 function startNotifScheduler(){
   if(notifInterval) clearInterval(notifInterval);
   notifInterval=setInterval(checkAndSendNotifs,5000);
   checkAndSendNotifs();
-  syncScheduleToSW();
-  startSWPing();
+  if(typeof syncScheduleToSW==='function') syncScheduleToSW();
+  if(typeof startSWPing==='function') startSWPing();
 }
 
-function toggleNotifications(){
-  const on=notifSupported()&&Notification.permission==='granted'&&localStorage.getItem('fn_notifs');
-  if(on) disableNotifications(); else enableNotifications();
-}
-
-async function enableNotifications(){
-  if(!notifSupported()){toast('❌ Your browser doesn\'t support notifications.');return;}
-  const granted=await requestNotifPermission();
-  if(granted){
-    startNotifScheduler();
-    localStorage.setItem('fn_notifs','1');
-    updateNotifBtn();
-    updateNotifStatus();
-    toast('🔔 Notifications enabled!');
-    setTimeout(()=>{
-      sendNotif('✅ FlowNotes','Notifications on! Reminders will fire at their set times.','test','reminder');
-    },600);
-  } else {
-    toast('Notifications blocked — enable them in your phone settings, then try again.');
-    updateNotifBtn();
-  }
-}
-
-function disableNotifications(){
-  if(notifInterval){clearInterval(notifInterval);notifInterval=null;}
-  if(_swPingInterval){clearInterval(_swPingInterval);_swPingInterval=null;}
-  localStorage.removeItem('fn_notifs');
-  toast('Notifications turned off.');
-  updateNotifBtn();
-  updateNotifStatus();
-}
-
-function updateNotifBtn(){
-  const btn=document.getElementById('notif-toggle-btn');
-  if(!btn) return;
-  const on=notifSupported()&&Notification.permission==='granted'&&localStorage.getItem('fn_notifs');
-  const blocked=notifSupported()&&Notification.permission==='denied';
-  if(blocked){
-    btn.textContent='🚫 Blocked — check phone Settings';
-    btn.style.cssText='width:100%;border:1.5px solid #fca5a5;background:var(--paper2);color:var(--red);border-radius:10px;padding:.65rem .9rem;font-family:inherit;font-size:.82rem;font-weight:600;cursor:default;margin-bottom:.55rem;';
-  } else if(on){
-    btn.textContent='🔔 Notifications: On — tap to turn off';
-    btn.style.cssText='width:100%;border:1.5px solid var(--green);background:rgba(22,163,74,.08);color:var(--green);border-radius:10px;padding:.65rem .9rem;font-family:inherit;font-size:.82rem;font-weight:600;cursor:pointer;margin-bottom:.55rem;transition:all .2s;';
-  } else {
-    btn.textContent='🔕 Enable notifications';
-    btn.style.cssText='width:100%;border:1.5px solid var(--line);background:var(--paper2);color:var(--muted);border-radius:10px;padding:.65rem .9rem;font-family:inherit;font-size:.82rem;font-weight:600;cursor:pointer;margin-bottom:.55rem;transition:all .2s;';
-  }
-}
-
-function updateNotifStatus(){
-  const row=document.getElementById('notif-status-row');
-  const txt=document.getElementById('notif-sw-status');
-  if(!row||!txt) return;
-  const on=localStorage.getItem('fn_notifs');
-  if(!on){ row.style.display='none'; return; }
-  row.style.display='block';
-  const swOk=!!_swReg;
-  const isStandalone=window.matchMedia('(display-mode: standalone)').matches||window.navigator.standalone;
-  let html='';
-  html+=`<span style="color:${swOk?'var(--green)':'var(--amber)'};">${swOk?'✅':'⚠️'} Background (tab closed): ${swOk?'Active via service worker':'Tab must stay open'}</span><br/>`;
-  html+=`<span style="color:${isStandalone?'var(--green)':'var(--muted)'};">${isStandalone?'✅':'📱'} Installed as app: ${isStandalone?'Yes — best coverage':'No — install for better coverage'}</span>`;
-  txt.innerHTML=html;
-
-  // Show install banner if not installed and prompt available
-  const banner=document.getElementById('install-banner');
-  if(banner) banner.style.display=(_deferredInstall&&!isStandalone)?'block':'none';
-
-  // Show iOS hint
-  const ios=document.getElementById('ios-banner');
-  if(ios){
-    const isIOS=/iphone|ipad|ipod/i.test(navigator.userAgent);
-    ios.style.display=(isIOS&&!isStandalone)?'block':'none';
-  }
-}
-
-let _lastCheckedMinute='';
-
-function playNotifSound(type){
-  try{
-    const ctx=new(window.AudioContext||window.webkitAudioContext)();
-    const freqs=type==='cards'?[440,554,659]:type==='warning'?[330,294]:[523,659,784];
-    freqs.forEach((freq,i)=>{
-      const osc=ctx.createOscillator(),gain=ctx.createGain();
-      osc.connect(gain);gain.connect(ctx.destination);
-      osc.type='sine';osc.frequency.value=freq;
-      const t=ctx.currentTime+i*0.18;
-      gain.gain.setValueAtTime(0,t);
-      gain.gain.linearRampToValueAtTime(0.2,t+0.04);
-      gain.gain.exponentialRampToValueAtTime(0.001,t+0.42);
-      osc.start(t);osc.stop(t+0.5);
-    });
-  }catch(e){}
-}
-
-function notifSupported(){
-  return 'Notification' in window;
-}
-
-async function requestNotifPermission(){
-  if(!notifSupported()) return false;
-  if(Notification.permission === 'granted') return true;
-  if(Notification.permission === 'denied') return false;
-  const result = await Notification.requestPermission();
-  return result === 'granted';
-}
-
-function sendNotif(title,body,tag,soundType){
-  playNotifSound(soundType||'reminder');
-  showInAppNotif(title,body,soundType);
-  if(notifSupported()&&Notification.permission==='granted'){
-    try{const n=new Notification(title,{body,
-      icon:"data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='22' fill='%231a6b3c'/><text y='.9em' font-size='72' x='12'>📚</text></svg>",
-      tag:tag||'flownotes',requireInteraction:false});
-      n.onclick=()=>{window.focus();n.close();};}catch(e){}
-  }
-}
-function showInAppNotif(title,body,type){
-  let s=document.getElementById('inapp-notif-stack');
-  if(!s){s=document.createElement('div');s.id='inapp-notif-stack';document.body.appendChild(s);}
-  const icons={reminder:'🔔',cards:'🃏',warning:'⚠️'};
-  const el=document.createElement('div');el.className='ian';
-  el.innerHTML='<div style="font-size:1.4rem;flex-shrink:0">'+(icons[type]||'🔔')+'</div>'+
-    '<div style="flex:1;min-width:0"><div style="font-size:.85rem;font-weight:700;line-height:1.3">'+title+'</div>'+
-    '<div style="font-size:.71rem;opacity:.72;margin-top:.1rem">'+body+'</div></div>'+
-    '<button onclick="event.stopPropagation();this.parentElement.remove()" style="background:none;border:none;color:inherit;opacity:.5;font-size:1rem;cursor:pointer;padding:0 .3rem">✕</button>'+
-    '<div class="ian-prog"></div>';
-  el.onclick=function(e){if(e.target.tagName==='BUTTON')return;navTo('home',document.getElementById('nav-home'));el.remove();};
-  s.appendChild(el);setTimeout(function(){if(el.parentElement)el.remove();},7000);
-  var all=s.querySelectorAll('.ian');if(all.length>4)all[0].remove();
-}
-function testInAppNotif(){
-  showInAppNotif('🔔 Test reminder','This is what your reminders will look like!','reminder');
-  playNotifSound('reminder');
-  toast('✅ In-app notification fired!');
-}
-
-// Convert stored "9:00 AM" / "14:30" → "HH:MM" 24h for comparison
-function timeTo24(timeStr){
-  if(!timeStr) return null;
-  let m=timeStr.match(/^(\d{1,2}):(\d{2})$/);
-  if(m) return String(parseInt(m[1])).padStart(2,'0')+':'+m[2];
-  m=timeStr.match(/^(\d{1,2}):(\d{2})\s*(AM|PM)$/i);
-  if(!m) return null;
-  let h=parseInt(m[1]),min=m[2],ap=m[3].toUpperCase();
-  if(ap==='PM'&&h!==12)h+=12;
-  if(ap==='AM'&&h===12)h=0;
-  return String(h).padStart(2,'0')+':'+min;
-}
-
-function getNowHHMM(){
-  const n=new Date();
-  return String(n.getHours()).padStart(2,'0')+':'+String(n.getMinutes()).padStart(2,'0');
-}
-
-// Auto-start if previously granted + register SW
-document.addEventListener('DOMContentLoaded',()=>{
-  // Register service worker
-  registerSW().then(reg=>{
-    if(reg && localStorage.getItem('fn_notifs') && Notification.permission==='granted'){
-      syncScheduleToSW();
-      startSWPing();
+document.addEventListener('DOMContentLoaded',function(){
+  if(typeof registerSW==='function') registerSW().then(function(reg){
+    if(reg&&localStorage.getItem('fn_notifs')&&typeof Notification!=='undefined'&&Notification.permission==='granted'){
+      if(typeof syncScheduleToSW==='function') syncScheduleToSW();
+      if(typeof startSWPing==='function') startSWPing();
     }
   });
   startNotifScheduler();
-  updateNotifBtn();
-  // Init home screen avatar from user's saved profile
-  (function(){
-    const imgUrl=localStorage.getItem('fn_avatar_img');
-    const emoji=localStorage.getItem('fn_avatar')||'🙂';
-    const el=document.getElementById('home-avi');
-    if(!el) return;
-    if(imgUrl) el.innerHTML='<img src="'+imgUrl+'" alt="" style="width:100%;height:100%;object-fit:cover;border-radius:50%"/>';
-    else el.textContent=emoji;
-  })();
+  if(typeof updateNotifBtn==='function') updateNotifBtn();
 });
+
+// Init home avatar from user profile on load
+(function initHomeAvi(){
+  var ha=document.getElementById('home-avi'); if(!ha) return;
+  var imgUrl=localStorage.getItem('fn_avatar_img');
+  var emoji=localStorage.getItem('fn_avatar')||'🙂';
+  if(imgUrl) ha.innerHTML='<img src="'+imgUrl+'" style="width:100%;height:100%;object-fit:cover;border-radius:50%" alt=""/>';
+  else ha.textContent=emoji;
+})();
 </script>
 </body>
 </html>
