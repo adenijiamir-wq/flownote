@@ -1916,8 +1916,26 @@ html, body, #app {
   </nav>
 </div><!-- end #app -->
 
-<!-- Overlays -->
-<div id="sb-overlay" onclick="closeSidebar()"></div>
+<!-- Permission prompt modal -->
+<div id="perm-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:99998;align-items:center;justify-content:center;padding:1.5rem;">
+  <div style="background:var(--paper);border-radius:20px;padding:1.8rem 1.5rem;max-width:340px;width:100%;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,.4);">
+    <div style="font-size:2.2rem;margin-bottom:.8rem;">🔔</div>
+    <div style="font-family:'DM Serif Display',Georgia,serif;font-size:1.15rem;margin-bottom:.4rem;color:var(--ink);">Stay on track</div>
+    <div style="font-size:.82rem;color:var(--muted);line-height:1.6;margin-bottom:1.3rem;">Allow Menmory to send you reminders so you never miss a study session — even when the app is closed.</div>
+    <button onclick="grantNotifFromModal()" style="width:100%;background:var(--green);color:#fff;border:none;border-radius:12px;padding:.78rem 1rem;font-family:inherit;font-size:.92rem;font-weight:700;cursor:pointer;margin-bottom:.6rem;">Allow notifications</button>
+    <button onclick="skipPermModal()" style="width:100%;background:none;border:1.5px solid var(--line);color:var(--muted);border-radius:12px;padding:.7rem 1rem;font-family:inherit;font-size:.82rem;font-weight:600;cursor:pointer;">Not now</button>
+  </div>
+</div>
+
+<div id="mic-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:99997;align-items:center;justify-content:center;padding:1.5rem;">
+  <div style="background:var(--paper);border-radius:20px;padding:1.8rem 1.5rem;max-width:340px;width:100%;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,.4);">
+    <div style="font-size:2.2rem;margin-bottom:.8rem;">🎙️</div>
+    <div style="font-family:'DM Serif Display',Georgia,serif;font-size:1.15rem;margin-bottom:.4rem;color:var(--ink);">Voice input</div>
+    <div style="font-size:.82rem;color:var(--muted);line-height:1.6;margin-bottom:1.3rem;">Allow Menmory to use your microphone so you can speak your notes, tasks and messages to your coach.</div>
+    <button onclick="grantMicFromModal()" style="width:100%;background:var(--green);color:#fff;border:none;border-radius:12px;padding:.78rem 1rem;font-family:inherit;font-size:.92rem;font-weight:700;cursor:pointer;margin-bottom:.6rem;">Allow microphone</button>
+    <button onclick="skipMicModal()" style="width:100%;background:none;border:1.5px solid var(--line);color:var(--muted);border-radius:12px;padding:.7rem 1rem;font-family:inherit;font-size:.82rem;font-weight:600;cursor:pointer;">Not now</button>
+  </div>
+</div>
 
 <!-- Quick Capture -->
 <div id="qc-sidebar">
@@ -2523,11 +2541,11 @@ function afterAuth(isReturning){
   updateBadge();
   if(isReturning&&load()){
     document.getElementById('ob').style.display='none';
-    document.getElementById('app').classList.add('on');
+    (document.getElementById('app')||document.createElement('div')).classList.add('on');
     startApp();
   } else if(load()){
     document.getElementById('ob').style.display='none';
-    document.getElementById('app').classList.add('on');
+    (document.getElementById('app')||document.createElement('div')).classList.add('on');
     startApp();
   } else {
     buildOBComps();
@@ -2639,7 +2657,7 @@ function goOB(n){
   }
   if(n===3) userSubjects=[...obSubjects];
   document.querySelectorAll('.ob-screen').forEach(s=>s.classList.remove('show'));
-  document.getElementById('ob'+n).classList.add('show');
+  const _obn=document.getElementById('ob'+n);if(_obn)_obn.classList.add('show');
 }
 function finishOB(){
   const rt=document.getElementById('ob-r-text').value.trim();
@@ -2648,7 +2666,7 @@ function finishOB(){
   if(rt) addRem(rt,rv?fmt12(rv):'','🔔','everyday');
   if(!userSubjects.length) userSubjects=['General'];
   document.getElementById('ob').style.display='none';
-  document.getElementById('app').classList.add('on');
+  (document.getElementById('app')||document.createElement('div')).classList.add('on');
   save(); startApp();
 }
 
@@ -2673,9 +2691,10 @@ function startApp(){
   updatePermUI();
   _initSwipe();
   initFAB();
-  // FIX 3: Schedule reminders NOW that data is fully loaded, and start the safety-net poller
   scheduleAllReminders();
   startNotifPoller();
+  // Show permission prompts if not yet asked
+  setTimeout(showStartupPermissions, 1500);
   // Reload avatar
   const imgUrl=localStorage.getItem('fn_avatar_img');
   if(imgUrl && currentAvatar==='__img__') _updateAvatarDisplay(null,imgUrl);
@@ -2701,12 +2720,12 @@ function filterBySubject(subj){
   setBN('notes');
 }
 function openSidebar(){
-  document.getElementById('sidebar').classList.add('open');
-  document.getElementById('sb-overlay').classList.add('show');
+  (document.getElementById('sidebar')||document.createElement('div')).classList.add('open');
+  (document.getElementById('sb-overlay')||document.createElement('div')).classList.add('show');
 }
 function closeSidebar(){
-  document.getElementById('sidebar').classList.remove('open');
-  document.getElementById('sb-overlay').classList.remove('show');
+  (document.getElementById('sidebar')||document.createElement('div')).classList.remove('open');
+  (document.getElementById('sb-overlay')||document.createElement('div')).classList.remove('show');
 }
 function setBN(id){
   document.querySelectorAll('.bn-btn').forEach(b=>b.classList.remove('active'));
@@ -2766,7 +2785,8 @@ function _initSwipe(){
 
 function navTo(id,btn){
   document.querySelectorAll('.page,.chat-wrap').forEach(p=>p.classList.remove('active'));
-  document.getElementById('page-'+id).classList.add('active');
+  const pageEl = document.getElementById('page-'+id);
+  if(pageEl) pageEl.classList.add('active');
   document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
   if(btn)btn.classList.add('active');
   const titles={home:'Home',notes:'Notes',cards:'Study Cards',reminders:'Reminders',gaps:'Memory Gaps',chat:'Chat with '+CHARS[currentChar].name,profile:'Profile'};
@@ -2831,7 +2851,7 @@ function subjectTag(subj){
 function toggleQC(){qcOpen?closeQC():openQC();}
 function openQC(){
   qcOpen=true;
-  document.getElementById('qc-sidebar').classList.add('open');
+  (document.getElementById('qc-sidebar')||document.createElement('div')).classList.add('open');
   const toggle=document.getElementById('qc-toggle');
   if(toggle&&toggle.offsetParent!==null) toggle.classList.add('pushed');
   const fab=document.getElementById('qc-fab');
@@ -2840,7 +2860,7 @@ function openQC(){
 }
 function closeQC(){
   qcOpen=false;
-  document.getElementById('qc-sidebar').classList.remove('open');
+  (document.getElementById('qc-sidebar')||document.createElement('div')).classList.remove('open');
   const toggle=document.getElementById('qc-toggle');
   if(toggle) toggle.classList.remove('pushed');
   const fab=document.getElementById('qc-fab');
@@ -2893,7 +2913,7 @@ function openNoteEditor(noteId){
   setTimeout(()=>document.getElementById('note-title').focus(),100);
 }
 function closeNoteEditor(){
-  document.getElementById('note-editor').classList.remove('open');
+  (document.getElementById('note-editor')||document.createElement('div')).classList.remove('open');
   document.getElementById('add-note-btn').style.display='flex';
   editingNoteId=null;
 }
@@ -3026,9 +3046,9 @@ function openManualCardModal(){
   buildSubjectSelects();
   document.getElementById('card-q').value='';
   document.getElementById('card-a').value='';
-  document.getElementById('card-modal').classList.add('open');
+  (document.getElementById('card-modal')||document.createElement('div')).classList.add('open');
 }
-function closeCardModal(){document.getElementById('card-modal').classList.remove('open');}
+function closeCardModal(){(document.getElementById('card-modal')||document.createElement('div')).classList.remove('open');}
 function confirmAddCard(){
   const q=document.getElementById('card-q').value.trim();
   const a=document.getElementById('card-a').value.trim();
@@ -3101,7 +3121,7 @@ function startStudySession(){
 function showSessionCard(){
   const card=sessionCards[sessionIdx];
   if(!card){endSession();return;}
-  document.getElementById('flashcard').classList.remove('flipped');
+  (document.getElementById('flashcard')||document.createElement('div')).classList.remove('flipped');
   document.getElementById('fc-q').textContent=card.question;
   document.getElementById('fc-a').textContent=card.answer;
   document.getElementById('fc-hint').style.display='block';
@@ -3114,7 +3134,7 @@ function showSessionCard(){
 function flipCard(){
   if(sessionFlipped)return;
   sessionFlipped=true;
-  document.getElementById('flashcard').classList.add('flipped');
+  (document.getElementById('flashcard')||document.createElement('div')).classList.add('flipped');
   document.getElementById('fc-side').textContent='Answer';
   document.getElementById('fc-hint').style.display='none';
   document.getElementById('fc-grade-btns').style.display='flex';
@@ -3149,14 +3169,14 @@ function openReviewModal(){
   document.getElementById('rm-q').textContent=card.question;
   document.getElementById('rm-a').textContent=card.answer;
   document.getElementById('rm-subj').innerHTML=subjectTag(card.subject||'General');
-  document.getElementById('rm-a').classList.remove('show');
+  (document.getElementById('rm-a')||document.createElement('div')).classList.remove('show');
   document.getElementById('rm-reveal-btn').style.display='block';
   document.getElementById('rm-grade-btns').style.display='none';
   document.getElementById('rm-progress').textContent=`${reviewIndex+1} of ${reviewSession.length}`;
-  document.getElementById('review-modal').classList.add('open');
+  (document.getElementById('review-modal')||document.createElement('div')).classList.add('open');
 }
 function revealAnswer(){
-  document.getElementById('rm-a').classList.add('show');
+  (document.getElementById('rm-a')||document.createElement('div')).classList.add('show');
   document.getElementById('rm-reveal-btn').style.display='none';
   document.getElementById('rm-grade-btns').style.display='flex';
 }
@@ -3169,7 +3189,7 @@ function gradeReview(grade){
   openReviewModal();
 }
 function closeReviewModal(){
-  document.getElementById('review-modal').classList.remove('open');
+  (document.getElementById('review-modal')||document.createElement('div')).classList.remove('open');
   checkReviewBadge();
 }
 function checkReviewBadge(){
@@ -3273,9 +3293,9 @@ function doAddR(){
 }
 function openAddModal(){
   resetDatePicker('m');
-  document.getElementById('add-modal').classList.add('open');
+  (document.getElementById('add-modal')||document.createElement('div')).classList.add('open');
 }
-function closeAddModal(){document.getElementById('add-modal').classList.remove('open');}
+function closeAddModal(){(document.getElementById('add-modal')||document.createElement('div')).classList.remove('open');}
 function confirmAdd(){
   const text=document.getElementById('m-text').value.trim();
   if(!text){toast('Add some text!');return;}
@@ -3335,10 +3355,10 @@ function showOverlapSuggestion(newR,overlap){
   pendingReminder=newR;
   document.getElementById('overlap-text').textContent=overlap.text;
   document.getElementById('overlap-time').textContent=(overlap.startTime||'')+(overlap.dueTime?'–'+overlap.dueTime:'');
-  document.getElementById('overlap-modal').classList.add('open');
+  (document.getElementById('overlap-modal')||document.createElement('div')).classList.add('open');
 }
 function closeOverlapModal(proceed){
-  document.getElementById('overlap-modal').classList.remove('open');
+  (document.getElementById('overlap-modal')||document.createElement('div')).classList.remove('open');
   if(proceed&&pendingReminder){
     reminders.push(pendingReminder);save();renderAll();toast('🔔 Added!');
   } else if(!proceed){
@@ -3409,10 +3429,10 @@ function openEditR(id){
   // Show/hide done row
   const doneRow=document.getElementById('er-done-row');
   doneRow.style.display=r.done?'flex':'none';
-  document.getElementById('edit-rem-modal').classList.add('open');
+  (document.getElementById('edit-rem-modal')||document.createElement('div')).classList.add('open');
 }
 function closeEditR(){
-  document.getElementById('edit-rem-modal').classList.remove('open');
+  (document.getElementById('edit-rem-modal')||document.createElement('div')).classList.remove('open');
   editingRemId=null;
 }
 function erToggleDone(){
@@ -3935,41 +3955,97 @@ Q: [question]|A: [answer]
 }
 
 // ══════════════════════════════════════════════════════
+// STARTUP PERMISSION PROMPTS
+// ══════════════════════════════════════════════════════
+function showStartupPermissions(){
+  // Only show if not already decided
+  if(localStorage.getItem('fn_perm_notif_asked')) {
+    // Already asked notif, check mic
+    if(!localStorage.getItem('fn_perm_mic_asked')) showMicModal();
+    return;
+  }
+  if(typeof Notification === 'undefined' || Notification.permission === 'granted'){
+    localStorage.setItem('fn_perm_notif_asked','1');
+    showMicModal();
+    return;
+  }
+  // Show notif modal
+  const m = document.getElementById('perm-modal');
+  if(m){ m.style.display='flex'; }
+}
+
+function showMicModal(){
+  if(localStorage.getItem('fn_perm_mic_asked')) return;
+  setTimeout(()=>{
+    const m = document.getElementById('mic-modal');
+    if(m){ m.style.display='flex'; }
+  }, 600);
+}
+
+async function grantNotifFromModal(){
+  document.getElementById('perm-modal').style.display='none';
+  localStorage.setItem('fn_perm_notif_asked','1');
+  await requestNotifPermission();
+  showMicModal();
+}
+
+function skipPermModal(){
+  document.getElementById('perm-modal').style.display='none';
+  localStorage.setItem('fn_perm_notif_asked','1');
+  showMicModal();
+}
+
+async function grantMicFromModal(){
+  document.getElementById('mic-modal').style.display='none';
+  localStorage.setItem('fn_perm_mic_asked','1');
+  await requestMicPermission();
+}
+
+function skipMicModal(){
+  document.getElementById('mic-modal').style.display='none';
+  localStorage.setItem('fn_perm_mic_asked','1');
+}
+
+// ══════════════════════════════════════════════════════
 // PERMISSIONS — notifications + microphone
 // ══════════════════════════════════════════════════════
 function updatePermUI(){
-  // Notifications
   const ns = document.getElementById('perm-notif-status');
   const nb = document.getElementById('perm-notif-btn');
   if(ns && nb){
     const p = typeof Notification !== 'undefined' ? Notification.permission : 'unsupported';
     if(p === 'granted'){
       ns.textContent = '✅ Allowed';
-      nb.textContent = 'On'; nb.style.background = 'var(--green)'; nb.disabled = true;
+      nb.textContent = 'Manage'; nb.style.background = 'var(--muted)'; nb.disabled = false;
+      nb.onclick = ()=>toast('To turn off: phone Settings → Apps → Menmory → Notifications');
     } else if(p === 'denied'){
-      ns.textContent = '❌ Blocked — enable in browser settings';
+      ns.textContent = '❌ Blocked — go to phone Settings → Apps → Menmory';
       nb.textContent = 'Blocked'; nb.style.background = 'var(--muted)'; nb.disabled = true;
+      nb.onclick = null;
     } else {
       ns.textContent = 'Tap Allow to get reminders when app is closed';
       nb.textContent = 'Allow'; nb.style.background = 'var(--green)'; nb.disabled = false;
+      nb.onclick = requestNotifPermission;
     }
   }
-  // Mic
   const ms = document.getElementById('perm-mic-status');
   const mb = document.getElementById('perm-mic-btn');
   if(ms && mb){
     navigator.permissions && navigator.permissions.query({name:'microphone'}).then(r=>{
       if(r.state === 'granted'){
         ms.textContent = '✅ Allowed — voice input ready';
-        mb.textContent = 'On'; mb.style.background = 'var(--green)'; mb.disabled = true;
+        mb.textContent = 'Manage'; mb.style.background = 'var(--muted)'; mb.disabled = false;
+        mb.onclick = ()=>toast('To turn off: phone Settings → Apps → Menmory → Permissions');
       } else if(r.state === 'denied'){
-        ms.textContent = '❌ Blocked — enable in browser settings';
+        ms.textContent = '❌ Blocked — go to phone Settings → Apps → Menmory';
         mb.textContent = 'Blocked'; mb.style.background = 'var(--muted)'; mb.disabled = true;
+        mb.onclick = null;
       } else {
         ms.textContent = 'Used for voice input on notes & coach';
         mb.textContent = 'Allow'; mb.style.background = 'var(--green)'; mb.disabled = false;
+        mb.onclick = requestMicPermission;
       }
-    }).catch(()=>{ ms.textContent = 'Tap Allow to enable voice input'; });
+    }).catch(()=>{ if(ms) ms.textContent = 'Tap Allow to enable voice input'; });
   }
 }
 
@@ -4101,9 +4177,9 @@ function buildProfList(){
 function openSettings(){
   switchAITab(aiBackend==='anthropic'?'anthropic':'none');
   document.getElementById('settings-key').value=anthropicApiKey||'';
-  document.getElementById('settings-modal').classList.add('open');
+  (document.getElementById('settings-modal')||document.createElement('div')).classList.add('open');
 }
-function closeSettings(){document.getElementById('settings-modal').classList.remove('open');}
+function closeSettings(){(document.getElementById('settings-modal')||document.createElement('div')).classList.remove('open');}
 
 let _secretTaps=0,_secretTimer=null;
 // ══════════════════════════════════════════════════════
@@ -4716,7 +4792,7 @@ window.addEventListener('beforeinstallprompt', e => {
     // Don't show if user already dismissed or installed
     if (!localStorage.getItem('fn_install_dismissed')) {
         setTimeout(() => {
-            document.getElementById('install-banner').classList.add('show');
+            (document.getElementById('install-banner')||document.createElement('div')).classList.add('show');
         }, 3000);
     }
 });
@@ -4732,7 +4808,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const ibBtn = document.getElementById('ib-add-btn');
   if(ibBtn) ibBtn.addEventListener('click', async () => {
     if (!deferredInstallPrompt) return;
-    document.getElementById('install-banner').classList.remove('show');
+    (document.getElementById('install-banner')||document.createElement('div')).classList.remove('show');
     deferredInstallPrompt.prompt();
     const { outcome } = await deferredInstallPrompt.userChoice;
     deferredInstallPrompt = null;
@@ -4763,7 +4839,7 @@ function isStandalone() {
 }
 
 function dismissIosTip() {
-    document.getElementById('ios-tip').classList.remove('show');
+    (document.getElementById('ios-tip')||document.createElement('div')).classList.remove('show');
     localStorage.setItem('fn_ios_tip_dismissed', '1');
 }
 
