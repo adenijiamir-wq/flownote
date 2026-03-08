@@ -2009,6 +2009,18 @@ html, body, #app {
   </div>
 </div>
 
+<!-- Custom confirm modal — replaces browser confirm() which is blocked on Android PWA -->
+<div class="modal-bg" id="confirm-modal" style="display:none;opacity:0;transition:opacity .18s;">
+  <div class="modal">
+    <h3 id="confirm-title">Are you sure?</h3>
+    <p id="confirm-body" style="font-size:.85rem;line-height:1.6;color:var(--muted);margin:.3rem 0 1rem;"></p>
+    <div class="m-btns">
+      <button class="btn-c" onclick="closeConfirm(false)">Cancel</button>
+      <button class="btn-ok" id="confirm-ok-btn" style="background:#dc2626;border-color:#dc2626;" onclick="closeConfirm(true)">Delete</button>
+    </div>
+  </div>
+</div>
+
 <div class="toast" id="toast"></div>
 <div id="voice-pill">
   <div class="voice-waves"><div class="voice-wave"></div><div class="voice-wave"></div><div class="voice-wave"></div><div class="voice-wave"></div><div class="voice-wave"></div></div>
@@ -2144,10 +2156,11 @@ function save(){
     userName,userStruggles,userSubjects,currentChar,
     reminders,notes,studyCards,streakDays,onboarded:true
   }));
-  // Re-schedule reminders whenever data is saved
-  if(typeof scheduleAllReminders==='function') scheduleAllReminders();
-  // Keep SW notification schedule up to date
-  if(typeof syncScheduleToSW==='function') syncScheduleToSW();
+  // Defer reschedule so it always runs after all functions are defined
+  setTimeout(function(){
+    if(typeof scheduleAllReminders==='function') scheduleAllReminders();
+    if(typeof syncScheduleToSW==='function') syncScheduleToSW();
+  }, 0);
 }
 function load(){
   try{
@@ -2241,9 +2254,10 @@ function getMemoryGaps(){
 // AUTH — localStorage now, swap for Supabase later
 // ══════════════════════════════════════════════════════
 function signOut(){
-  if(!confirm('Sign out? Your data stays saved on this device.'))return;
-  localStorage.removeItem('fn_current_user');
-  location.reload();
+  showConfirm('Sign out?','Your data stays saved on this device.',function(){
+    localStorage.removeItem('fn_current_user');
+    location.reload();
+  },'Sign out');
 }
 
 function showLogin(){
@@ -2680,10 +2694,11 @@ RULES:
   }catch(e){console.warn('Card gen failed',e);}
 }
 function deleteNote(id){
-  if(!confirm('Delete this note?'))return;
-  notes=notes.filter(n=>n.id!==id);
-  studyCards=studyCards.filter(c=>c.sourceNoteId!==id);
-  save();renderNotes();renderCards();renderAll();toast('Deleted.');
+  showConfirm('Delete this note?','Study cards from this note will also be removed.',function(){
+    notes=notes.filter(n=>n.id!==id);
+    studyCards=studyCards.filter(c=>c.sourceNoteId!==id);
+    save();renderNotes();renderCards();renderAll();toast('Deleted.');
+  });
 }
 function renderQCNotes(){
   const section=document.getElementById('qc-notes-section');
@@ -2703,9 +2718,10 @@ function renderQCNotes(){
   ).join('');
 }
 function clearAllCaptures(){
-  if(!confirm('Clear all quick captures?'))return;
-  notes=notes.filter(n=>!n.quickCapture);
-  save();renderNotes();renderAll();toast('Cleared!');
+  showConfirm('Clear all quick captures?','This cannot be undone.',function(){
+    notes=notes.filter(n=>!n.quickCapture);
+    save();renderNotes();renderAll();toast('Cleared!');
+  });
 }
 function renderNotes(){
   renderQCNotes();
@@ -3195,11 +3211,12 @@ function restoreReminder(i){
 }
 function emptyTrash(){
   if(!deletedReminders.length){toast('Trash is already empty.');return;}
-  if(!confirm(`Permanently delete all ${deletedReminders.length} item(s) in trash?`))return;
-  deletedReminders=[];
-  localStorage.removeItem('fn_trash');
-  renderTrash();
-  toast('Trash emptied.');
+  showConfirm('Empty trash?','Permanently delete all '+deletedReminders.length+' item'+(deletedReminders.length>1?'s':'')+'.',function(){
+    deletedReminders=[];
+    localStorage.removeItem('fn_trash');
+    renderTrash();
+    toast('Trash emptied.');
+  });
 }
 function deleteFromTrash(i){
   deletedReminders.splice(i,1);
@@ -3218,10 +3235,19 @@ function deleteR(id){
   save();renderAll();toast('Moved to trash 🗑');
 }
 function clearAllReminders(){
-  if(!reminders.length) return;
-  if(!confirm(`Delete all ${reminders.length} reminder${reminders.length>1?'s':''}? This can't be undone.`)) return;
-  reminders=[];
-  save();renderAll();toast('All reminders cleared.');
+  if(!reminders.length){ toast('No tasks to clear!'); return; }
+  showConfirm(
+    'Clear all ' + reminders.length + ' task' + (reminders.length>1?'s':'') + '?',
+    'This cannot be undone.',
+    function(){
+      reminders=[];
+      save();renderAll();
+      // Clear all scheduled timers
+      Object.values(_scheduledTimers||{}).forEach(function(t){ clearTimeout(t); });
+      _scheduledTimers={};
+      toast('All tasks cleared.');
+    }
+  );
 }
 function renderAll(){
   const today=todayStr();
@@ -3992,13 +4018,14 @@ function saveSettings(){
   toast(anthropicApiKey?'✓ AI connected!':'Saved – running without AI.');
 }
 function resetAccount(){
-  if(!confirm('Reset everything? This cannot be undone.'))return;
-  ['mb7_data','mb7_key','mb7_backend','fn_feedback','fn_streak_date','fn_avatar','fn_avatar_img','fn_accent','fn_theme_pref','fn_tts','fn_fab_pos'].forEach(k=>localStorage.removeItem(k));
-  Object.keys(CHARS).forEach(id=>{
-    localStorage.removeItem('fn_chat_html_'+id);
-    localStorage.removeItem('fn_chat_hist_'+id);
-  });
-  location.reload();
+  showConfirm('Reset everything?','All your notes, tasks, cards and data will be permanently deleted.',function(){
+    ['mb7_data','mb7_key','mb7_backend','fn_feedback','fn_streak_date','fn_avatar','fn_avatar_img','fn_accent','fn_theme_pref','fn_tts','fn_fab_pos'].forEach(k=>localStorage.removeItem(k));
+    Object.keys(CHARS).forEach(id=>{
+      localStorage.removeItem('fn_chat_html_'+id);
+      localStorage.removeItem('fn_chat_hist_'+id);
+    });
+    location.reload();
+  },'Reset everything');
 }
 
 // ══════════════════════════════════════════════════════
@@ -4695,7 +4722,26 @@ function testInAppNotif(){
   toast('✅ Banner works!');
 }
 
-// ── Core notification permission functions (MISSING — now added) ──
+// ── Custom confirm modal — browser confirm() is blocked on Android PWA ──
+var _confirmCallback = null;
+function showConfirm(title, body, onOk, okLabel){
+  document.getElementById('confirm-title').textContent = title;
+  document.getElementById('confirm-body').textContent = body || '';
+  document.getElementById('confirm-ok-btn').textContent = okLabel || 'Delete';
+  _confirmCallback = onOk;
+  var m = document.getElementById('confirm-modal');
+  m.style.display = 'flex';
+  requestAnimationFrame(function(){ m.style.opacity = '1'; });
+}
+function closeConfirm(proceed){
+  var m = document.getElementById('confirm-modal');
+  m.style.opacity = '0';
+  setTimeout(function(){ m.style.display = 'none'; }, 180);
+  if(proceed && typeof _confirmCallback === 'function') _confirmCallback();
+  _confirmCallback = null;
+}
+
+// ── Core notification permission functions ──
 function notifSupported(){
   return typeof Notification !== 'undefined' && 'Notification' in window;
 }
