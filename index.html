@@ -3154,6 +3154,12 @@ function saveEditR(){
   r.dueTime=dueVal?fmt12(dueVal):'';
   r.date=getSelectedDate('er');
   save();renderAll();closeEditR();
+  // Clear fired state so the edited reminder can fire at its new time
+  try{
+    var fired=JSON.parse(localStorage.getItem('fn_fired')||'{}');
+    var today=todayStr();
+    if(fired[today]) { delete fired[today]['r'+r.id]; localStorage.setItem('fn_fired',JSON.stringify(fired)); }
+  }catch(e){}
   scheduleAllReminders();
   toast('✓ Task updated!');
 }
@@ -4575,29 +4581,6 @@ function scheduleReminder(r, today){
   // Clear any existing timer for this reminder
   if(_scheduledTimers[r.id]) clearTimeout(_scheduledTimers[r.id]);
 
-// ── Unified notification fire function — works on Android + desktop ──
-function fireNotif(title, body, tag){
-  // Always show in-app banner
-  showInAppNotif(title, body, 'reminder');
-  if(typeof playNotifSound==='function') playNotifSound('reminder');
-
-  // Native notification — Android Chrome requires SW, desktop accepts new Notification()
-  if(typeof Notification==='undefined' || Notification.permission!=='granted') return;
-  var icon = "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='22' fill='%231a6b3c'/><text y='.9em' font-size='72' x='12'>📚</text></svg>";
-  // Try SW first (required on Android Chrome)
-  if(navigator.serviceWorker && navigator.serviceWorker.controller){
-    navigator.serviceWorker.ready.then(function(reg){
-      reg.showNotification(title, { body:body, tag:tag, icon:icon, vibrate:[200,100,200] });
-    }).catch(function(){
-      // SW failed — fall back to direct Notification
-      try{ new Notification(title, {body:body, tag:tag, icon:icon}); }catch(e){}
-    });
-  } else {
-    // No SW — desktop fallback
-    try{ new Notification(title, {body:body, tag:tag, icon:icon}); }catch(e){}
-  }
-}
-
   _scheduledTimers[r.id] = setTimeout(function(){
     var fired2={}; try{ fired2=JSON.parse(localStorage.getItem('fn_fired')||'{}'); }catch(e){}
     var tf = fired2[today]||{};
@@ -4609,6 +4592,26 @@ function fireNotif(title, body, tag){
       setTimeout(function(){ scheduleAllReminders(); }, 65000);
     }
   }, delay);
+}
+
+// ── Unified notification fire function — global scope, works on Android + desktop ──
+function fireNotif(title, body, tag){
+  // Always show in-app banner (works with no permission)
+  showInAppNotif(title, body, 'reminder');
+  if(typeof playNotifSound==='function') playNotifSound('reminder');
+
+  // Native notification — Android Chrome requires SW; desktop can use new Notification()
+  if(typeof Notification==='undefined' || Notification.permission!=='granted') return;
+  var icon = "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='22' fill='%231a6b3c'/><text y='.9em' font-size='72' x='12'>📚</text></svg>";
+  if(navigator.serviceWorker && navigator.serviceWorker.controller){
+    navigator.serviceWorker.ready.then(function(reg){
+      reg.showNotification(title, { body:body, tag:tag, icon:icon, vibrate:[200,100,200] });
+    }).catch(function(){
+      try{ new Notification(title, {body:body, tag:tag, icon:icon}); }catch(e){}
+    });
+  } else {
+    try{ new Notification(title, {body:body, tag:tag, icon:icon}); }catch(e){}
+  }
 }
 
 // Safety net poller — runs every 30s AND when tab becomes visible again after being hidden
