@@ -1778,7 +1778,17 @@ html, body, #app {
             <div class="prof-section-label">Push Notifications</div>
             <button id="notif-toggle-btn" onclick="toggleNotifications()" style="width:100%;border:1.5px solid var(--line);background:var(--paper2);color:var(--muted);border-radius:10px;padding:.65rem .9rem;font-family:'DM Sans',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:.82rem;font-weight:600;cursor:pointer;margin-bottom:.55rem;transition:all .2s;">🔕 Enable notifications</button>
             <div style="font-size:.66rem;color:var(--muted);line-height:1.65;margin-bottom:.65rem;">Reminders fire at their set time, cards due at 9am, overdue tasks at 8am.</div>
-            <button onclick="testInAppNotif()" style="width:100%;border:1.5px dashed var(--line);background:none;color:var(--muted);border-radius:10px;padding:.55rem;font-family:inherit;font-size:.78rem;font-weight:600;cursor:pointer;margin-bottom:.9rem;">🧪 Test notification now</button>
+            <button onclick="testInAppNotif()" style="width:100%;border:1.5px dashed var(--line);background:none;color:var(--muted);border-radius:10px;padding:.55rem;font-family:inherit;font-size:.78rem;font-weight:600;cursor:pointer;margin-bottom:.5rem;">🧪 Test banner now</button>
+            <button onclick="debugFireAll()" style="width:100%;border:1.5px dashed #f59e0b;background:none;color:#f59e0b;border-radius:10px;padding:.55rem;font-family:inherit;font-size:.78rem;font-weight:600;cursor:pointer;margin-bottom:.9rem;">⚡ Force-fire today's reminders</button>
+
+            <!-- Live debug panel -->
+            <div id="notif-debug-panel" style="background:var(--paper2);border:1px solid var(--line);border-radius:10px;padding:.7rem .9rem;margin-bottom:.6rem;">
+              <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.4rem;">
+                <div style="font-size:.72rem;font-weight:700;color:var(--ink);">🔍 Live Debug</div>
+                <button onclick="refreshDebug()" style="background:none;border:1px solid var(--line);color:var(--muted);border-radius:6px;padding:.15rem .5rem;font-size:.65rem;cursor:pointer;">Refresh</button>
+              </div>
+              <div id="notif-debug-body" style="font-size:.65rem;color:var(--muted);line-height:2;font-family:monospace;white-space:pre-wrap;"></div>
+            </div>
 
             <!-- Status row -->
             <div id="notif-status-row" style="display:none;background:var(--paper2);border:1px solid var(--line);border-radius:10px;padding:.7rem .9rem;">
@@ -2053,6 +2063,10 @@ html, body, #app {
 </div>
 
 <script>
+// ── Hoisted stubs — defined first so any early call site never crashes ──
+function scheduleAllReminders(){ if(typeof checkAndFireReminders==='function') checkAndFireReminders(); }
+function scheduleReminder(){}
+var _scheduledTimers={};
 // ══════════════════════════════════════════════════════
 // DARK MODE — defined first so DOMContentLoaded can call setDark()
 // ══════════════════════════════════════════════════════
@@ -4034,6 +4048,17 @@ function resetAccount(){
 function nowTime12(){const n=new Date(),h=n.getHours(),m=String(n.getMinutes()).padStart(2,'0');return`${h===0?12:h>12?h-12:h}:${m} ${h<12?'AM':'PM'}`;}
 function fmt12(v){if(!v)return'';const[h,m]=v.split(':');let hr=parseInt(h);const ap=hr>=12?'PM':'AM';if(hr===0)hr=12;else if(hr>12)hr-=12;return`${String(hr).padStart(2,'0')}:${m} ${ap}`;}
 function todayStr(){return new Date().toISOString().split('T')[0];}
+function timeTo24(timeStr){
+  if(!timeStr) return null;
+  var m=timeStr.match(/^(\d{1,2}):(\d{2})$/);
+  if(m) return String(parseInt(m[1])).padStart(2,'0')+':'+m[2];
+  m=timeStr.match(/^(\d{1,2}):(\d{2})\s*(AM|PM)$/i);
+  if(!m) return null;
+  var h=parseInt(m[1]),min=m[2],ap=m[3].toUpperCase();
+  if(ap==='PM'&&h!==12)h+=12;
+  if(ap==='AM'&&h===12)h=0;
+  return String(h).padStart(2,'0')+':'+min;
+}
 function tomorrowStr(){const d=new Date();d.setDate(d.getDate()+1);return d.toISOString().split('T')[0];}
 function dLbl(d){
   if(!d) return'📅 Today';
@@ -4453,17 +4478,11 @@ function renderNextAction(){
 }
 
 // ══════════════════════════════════════════════════════
-// NOTIFICATIONS — Service Worker backed
+// PWA INSTALL PROMPT
 // ══════════════════════════════════════════════════════
-let notifInterval=null;
-let _swReg=null;
-let _deferredInstall=null; // PWA install prompt
-
-// ── PWA install prompt capture ──
+let _deferredInstall=null;
 window.addEventListener('beforeinstallprompt', e => {
-  e.preventDefault();
-  _deferredInstall=e;
-  // Show install banner in notifs tab if it's open
+  e.preventDefault(); _deferredInstall=e;
   const b=document.getElementById('install-banner');
   if(b) b.style.display='block';
 });
@@ -4473,254 +4492,135 @@ window.addEventListener('appinstalled', ()=>{
   if(b) b.style.display='none';
   toast('✅ FlowNotes installed!');
 });
-
 async function installPWA(){
   if(!_deferredInstall){ toast('Open in Chrome/Edge to install'); return; }
   _deferredInstall.prompt();
-  const { outcome }=await _deferredInstall.userChoice;
-  if(outcome==='accepted'){ _deferredInstall=null; }
+  const {outcome}=await _deferredInstall.userChoice;
+  if(outcome==='accepted') _deferredInstall=null;
 }
-
-// ── Service Worker registration ──
+// Register SW purely for background push (sw.js handles its own schedule via syncScheduleToSW)
 async function registerSW(){
   if(!('serviceWorker' in navigator)) return null;
   try{
     const reg=await navigator.serviceWorker.register('/sw.js');
-    _swReg=reg;
-    // Listen for SW firing a notification (so we can mark it fired in localStorage)
-    navigator.serviceWorker.addEventListener('message', e=>{
-      if(e.data&&e.data.type==='FIRED'){
-        const fired=JSON.parse(localStorage.getItem('fn_notif_fired')||'{}');
-        const today=todayStr();
-        if(!fired[today]) fired[today]={};
-        fired[today][e.data.tag]=true;
-        localStorage.setItem('fn_notif_fired',JSON.stringify(fired));
-      }
-    });
     return reg;
-  }catch(err){ return null; }
+  }catch(e){ return null; }
+}
+// Stubs — kept so any old call sites don't crash
+function syncScheduleToSW(){}
+function startSWPing(){}
+function buildNotifSchedule(){ return []; }
+
+// ══════════════════════════════════════════════════════
+// NOTIFICATION ENGINE v3 — simple, reliable, debuggable
+// ══════════════════════════════════════════════════════
+var _notifLog = [];
+function nlog(msg){
+  var t=new Date();
+  var ts=String(t.getHours()).padStart(2,'0')+':'+String(t.getMinutes()).padStart(2,'0')+':'+String(t.getSeconds()).padStart(2,'0');
+  _notifLog.unshift('['+ts+'] '+msg);
+  if(_notifLog.length>30) _notifLog=_notifLog.slice(0,30);
 }
 
-// ── Build schedule and push to SW ──
-function buildNotifSchedule(){
-  const today=todayStr();
-  const fired=JSON.parse(localStorage.getItem('fn_notif_fired')||'{}');
-  const todayFired=fired[today]||{};
-  const schedule=[];
-
-  // Reminders
-  reminders.filter(r=>!r.done).forEach(r=>{
-    const timeToCheck=r.time||(r.startTime||null);
-    if(!timeToCheck) return;
-    const t24=timeTo24(timeToCheck);
-    if(!t24) return;
-    const isToday=r.date===today||r.date==='everyday'||r.date==='everyweek';
-    if(!isToday) return;
-    schedule.push({
-      tag:'rem-'+r.id, time:t24,
-      title:(r.emoji||'🔔')+' '+r.text,
-      body:'Tap to open FlowNotes',
-      firedDate: todayFired['rem-'+r.id] ? today : null
-    });
+function refreshDebug(){
+  var el=document.getElementById('notif-debug-body'); if(!el) return;
+  var today=todayStr(), now=new Date(), nowMin=now.getHours()*60+now.getMinutes();
+  var data; try{ data=JSON.parse(localStorage.getItem('mb7_data')||'{}'); }catch(e){ data={}; }
+  var rems=(data.reminders||[]).filter(function(r){ return !r.done; });
+  var fired={}; try{ fired=JSON.parse(localStorage.getItem('fn_fired')||'{}'); }catch(e){}
+  var firedToday=fired[today]||{};
+  var lines=[];
+  lines.push('Today: '+today);
+  lines.push('Now: '+String(now.getHours()).padStart(2,'0')+':'+String(now.getMinutes()).padStart(2,'0'));
+  lines.push('Permission: '+(typeof Notification!=='undefined'?Notification.permission:'unsupported'));
+  lines.push('fn_notifs: '+(localStorage.getItem('fn_notifs')||'off'));
+  lines.push('SW: '+(navigator.serviceWorker&&navigator.serviceWorker.controller?'active':'none'));
+  lines.push('Tasks (undone): '+rems.length);
+  rems.forEach(function(r){
+    var raw=r.time||r.startTime||'(no time)';
+    var t24=timeTo24(raw)||'PARSE_FAIL';
+    var isToday=r.date===today||r.date==='everyday'||r.date==='everyweek';
+    var af=!!firedToday['r'+r.id];
+    var rMin=-1;
+    if(t24&&t24!=='PARSE_FAIL'){ var p=t24.split(':'); rMin=parseInt(p[0])*60+parseInt(p[1]); }
+    lines.push((af?'✅':'⏳')+' "'+r.text.slice(0,18)+'" '+raw+'→'+t24+' date='+r.date+(isToday?'✓':'✗')+(af?' FIRED':' gap='+(rMin>=0?nowMin-rMin:'?')+'m'));
   });
-
-  // 9am cards due
-  const due=getDueCards().length;
-  if(due>0) schedule.push({
-    tag:'due-cards', time:'09:00',
-    title:'📚 Cards due for review',
-    body:due+' card'+(due>1?'s':'')+' waiting. Keep your streak going!',
-    firedDate: todayFired['due-cards'] ? today : null
-  });
-
-  // 8am overdue tasks
-  const overdue=reminders.filter(r=>!r.done&&r.date&&r.date!=='everyday'&&r.date!=='everyweek'&&r.date<today);
-  if(overdue.length>0) schedule.push({
-    tag:'missing-work', time:'08:00',
-    title:'⚠️ Overdue tasks',
-    body:overdue.length+' task'+(overdue.length>1?'s':'')+' need your attention.',
-    firedDate: todayFired['missing'] ? today : null
-  });
-
-  return schedule;
+  lines.push('--- log ---');
+  _notifLog.slice(0,8).forEach(function(l){ lines.push(l); });
+  el.textContent=lines.join('\n');
 }
 
-function syncScheduleToSW(){
-  if(!_swReg||!_swReg.active) return;
-  const schedule=buildNotifSchedule();
-  _swReg.active.postMessage({ type:'SCHEDULE', schedule });
-}
-
-// ── Keepalive ping to SW every 25s ──
-let _swPingInterval=null;
-function startSWPing(){
-  if(_swPingInterval) clearInterval(_swPingInterval);
-  _swPingInterval=setInterval(()=>{
-    if(_swReg&&_swReg.active) _swReg.active.postMessage({ type:'PING' });
-  }, 25000);
-}
-
-// ── Fallback in-tab polling (for when SW isn't available) ──
-// ── Notification system — setTimeout based (reliable) ──
-var _scheduledTimers = {}; // track active timers by reminder id
-
-function scheduleAllReminders(){
-  // Clear old timers
-  Object.values(_scheduledTimers).forEach(function(t){ clearTimeout(t); });
-  _scheduledTimers = {};
-  // Load fresh from storage
-  var data; try{ data=JSON.parse(localStorage.getItem('mb7_data')||'{}'); }catch(e){ return; }
-  var rems = data.reminders || [];
-  var today = todayStr();
-  rems.forEach(function(r){ scheduleReminder(r, today); });
-}
-
-function scheduleReminder(r, today){
-  if(r.done) return;
-  var raw = r.time || r.startTime || '';
-  if(!raw) return;
-  var t24 = timeTo24(raw);
-  if(!t24) return;
-
-  var isToday = r.date===today || r.date==='everyday' || r.date==='everyweek';
-  if(!isToday) return;
-
-  // Check if already fired today
-  var fired = {}; try{ fired=JSON.parse(localStorage.getItem('fn_fired')||'{}'); }catch(e){}
-  var todayFired = fired[today]||{};
-  var key = 'r'+r.id;
-  if(todayFired[key]) return;
-
-  // Calculate ms until reminder time
-  var parts = t24.split(':');
-  var target = new Date();
-  target.setHours(parseInt(parts[0]), parseInt(parts[1]), 0, 0);
-  var now = new Date();
-  var delay = target - now;
-
-  // FIX 1: If within 90 seconds past (page loaded slightly late), fire immediately
-  if(delay < 0 && delay > -90000){
-    delay = 100; // fire in 100ms
-  } else if(delay < -90000){
-    return; // genuinely past, skip
-  }
-
-  // Clear any existing timer for this reminder
-  if(_scheduledTimers[r.id]) clearTimeout(_scheduledTimers[r.id]);
-
-  _scheduledTimers[r.id] = setTimeout(function(){
-    var fired2={}; try{ fired2=JSON.parse(localStorage.getItem('fn_fired')||'{}'); }catch(e){}
-    var tf = fired2[today]||{};
-    if(tf[key]) return;
-    tf[key]=true; fired2[today]=tf;
-    localStorage.setItem('fn_fired', JSON.stringify(fired2));
-    fireNotif((r.emoji||'🔔')+' '+r.text, r.date==='everyday'?'Daily reminder':'Tap to open FlowNotes', key);
-    if(r.date==='everyday'||r.date==='everyweek'){
-      setTimeout(function(){ scheduleAllReminders(); }, 65000);
-    }
-  }, delay);
-}
-
-// ── Unified notification fire function — global scope, works on Android + desktop ──
 function fireNotif(title, body, tag){
-  // Always show in-app banner (works with no permission)
+  nlog('fire: '+title.slice(0,30));
   showInAppNotif(title, body, 'reminder');
   if(typeof playNotifSound==='function') playNotifSound('reminder');
-
-  // Native notification — Android Chrome requires SW; desktop can use new Notification()
-  if(typeof Notification==='undefined' || Notification.permission!=='granted') return;
-  var icon = "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='22' fill='%231a6b3c'/><text y='.9em' font-size='72' x='12'>📚</text></svg>";
-  if(navigator.serviceWorker && navigator.serviceWorker.controller){
+  if(typeof Notification==='undefined'||Notification.permission!=='granted'){ nlog('no perm ('+( typeof Notification!=='undefined'?Notification.permission:'n/a')+')'); return; }
+  var icon="data:image/svg+xml,<svg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 100 100\'><rect width=\'100\' height=\'100\' rx=\'22\' fill=\'%231a6b3c\'/><text y=\'.9em\' font-size=\'72\' x=\'12\'>📚</text></svg>";
+  if(navigator.serviceWorker&&navigator.serviceWorker.controller){
     navigator.serviceWorker.ready.then(function(reg){
-      reg.showNotification(title, { body:body, tag:tag, icon:icon, vibrate:[200,100,200] });
-    }).catch(function(){
-      try{ new Notification(title, {body:body, tag:tag, icon:icon}); }catch(e){}
-    });
+      reg.showNotification(title,{body:body,tag:tag,icon:icon,vibrate:[200,100,200]});
+      nlog('SW sent');
+    }).catch(function(e){ nlog('SW err:'+e.message); try{new Notification(title,{body:body,tag:tag,icon:icon});}catch(e2){} });
   } else {
-    try{ new Notification(title, {body:body, tag:tag, icon:icon}); }catch(e){}
+    nlog('direct Notification');
+    try{new Notification(title,{body:body,tag:tag,icon:icon});}catch(e){nlog('err:'+e.message);}
   }
 }
 
-// Safety net poller — runs every 30s AND when tab becomes visible again after being hidden
-// This is the key mobile fix: phone switches app → timers freeze → come back → catch-up runs
-function _checkMissedReminders(){
-  var today = todayStr();
-  var now = new Date();
-  var nowStr = String(now.getHours()).padStart(2,'0')+':'+String(now.getMinutes()).padStart(2,'0');
-  var fired = {}; try{ fired=JSON.parse(localStorage.getItem('fn_fired')||'{}'); }catch(e){}
-  var todayFired = fired[today]||{};
-  var data; try{ data=JSON.parse(localStorage.getItem('mb7_data')||'{}'); }catch(e){ return; }
-  var rems = data.reminders||[];
-  var changed = false;
-  rems.forEach(function(r){
+function checkAndFireReminders(){
+  var today=todayStr(), now=new Date(), nowMin=now.getHours()*60+now.getMinutes();
+  var fired={}; try{ fired=JSON.parse(localStorage.getItem('fn_fired')||'{}'); }catch(e){}
+  var firedToday=fired[today]||{};
+  var data; try{ data=JSON.parse(localStorage.getItem('mb7_data')||'{}'); }catch(e){ nlog('data fail'); return; }
+  var changed=false;
+  (data.reminders||[]).forEach(function(r){
     if(r.done) return;
-    var raw = r.time||r.startTime||''; if(!raw) return;
-    var t24 = timeTo24(raw); if(!t24) return;
-    var isToday = r.date===today||r.date==='everyday'||r.date==='everyweek';
-    if(!isToday) return;
-    var key='r'+r.id;
-    if(todayFired[key]) return;
-    // Fire if it's the current minute OR up to 5 mins late (catches frozen timers)
-    var tParts=t24.split(':'), rH=parseInt(tParts[0]), rM=parseInt(tParts[1]);
-    var rMinutes=rH*60+rM, nowMinutes=now.getHours()*60+now.getMinutes();
-    if(nowMinutes >= rMinutes && nowMinutes - rMinutes <= 5){
-      todayFired[key]=true; changed=true;
-      fireNotif((r.emoji||'🔔')+' '+r.text, r.date==='everyday'?'Daily reminder':'Tap to open FlowNotes', key);
+    var raw=r.time||r.startTime||''; if(!raw) return;
+    var t24=timeTo24(raw); if(!t24){ nlog('t24 fail:'+raw); return; }
+    if(r.date!==today&&r.date!=='everyday'&&r.date!=='everyweek') return;
+    var key='r'+r.id; if(firedToday[key]) return;
+    var p=t24.split(':'), rMin=parseInt(p[0])*60+parseInt(p[1]);
+    if(nowMin>=rMin && nowMin-rMin<=5){
+      nlog('FIRE: '+r.text.slice(0,20));
+      firedToday[key]=true; changed=true;
+      fireNotif((r.emoji||'🔔')+' '+r.text, r.date==='everyday'?'Daily reminder':'Tap to view task', key);
     }
   });
-  if(changed){ fired[today]=todayFired; localStorage.setItem('fn_fired',JSON.stringify(fired)); }
+  if(changed){ fired[today]=firedToday; localStorage.setItem('fn_fired',JSON.stringify(fired)); }
 }
 
-var _notifPollInterval = null;
+function debugFireAll(){
+  nlog('debugFireAll');
+  var today=todayStr();
+  var fired={}; try{ fired=JSON.parse(localStorage.getItem('fn_fired')||'{}'); }catch(e){}
+  fired[today]={}; localStorage.setItem('fn_fired',JSON.stringify(fired));
+  var data; try{ data=JSON.parse(localStorage.getItem('mb7_data')||'{}'); }catch(e){ toast('No data!'); return; }
+  var todayR=(data.reminders||[]).filter(function(r){ return !r.done&&(r.date===today||r.date==='everyday'||r.date==='everyweek'); });
+  if(!todayR.length){ toast('No tasks for today!'); refreshDebug(); return; }
+  todayR.forEach(function(r,i){ setTimeout(function(){ fireNotif((r.emoji||'🔔')+' '+r.text,'Force test','force-'+r.id); },i*700); });
+  toast('⚡ Forcing '+todayR.length+' reminder'+(todayR.length>1?'s':'')+' now!');
+  setTimeout(refreshDebug,1000);
+}
+
+var _notifPollerStarted=false;
 function startNotifPoller(){
-  if(_notifPollInterval) clearInterval(_notifPollInterval);
-  _notifPollInterval = setInterval(_checkMissedReminders, 30000);
-
-  // KEY MOBILE FIX: when user comes back to the tab, immediately check for missed reminders
-  document.addEventListener('visibilitychange', function(){
-    if(document.visibilityState === 'visible'){
-      _checkMissedReminders();
-      // Also re-register timers in case they were killed
-      scheduleAllReminders();
-    }
+  if(_notifPollerStarted) return;
+  _notifPollerStarted=true;
+  nlog('poller start');
+  setInterval(function(){ nlog('tick'); checkAndFireReminders(); refreshDebug(); }, 30000);
+  document.addEventListener('visibilitychange',function(){
+    if(document.visibilityState==='visible'){ nlog('visible'); checkAndFireReminders(); }
   });
-}
-
-function timeTo24(timeStr){
-  if(!timeStr) return null;
-  var m=timeStr.match(/^(\d{1,2}):(\d{2})$/);
-  if(m) return String(parseInt(m[1])).padStart(2,'0')+':'+m[2];
-  m=timeStr.match(/^(\d{1,2}):(\d{2})\s*(AM|PM)$/i);
-  if(!m) return null;
-  var h=parseInt(m[1]),min=m[2],ap=m[3].toUpperCase();
-  if(ap==='PM'&&h!==12)h+=12;
-  if(ap==='AM'&&h===12)h=0;
-  return String(h).padStart(2,'0')+':'+min;
-}
-
-function showInAppNotif(title,body,type){
-  var s=document.getElementById('inapp-notif-stack');
-  if(!s){ s=document.createElement('div'); s.id='inapp-notif-stack'; document.body.appendChild(s); }
-  var el=document.createElement('div'); el.className='ian';
-  el.innerHTML=
-    '<div style="font-size:1.4rem;flex-shrink:0">🔔</div>'+
-    '<div style="flex:1;min-width:0">'+
-      '<div style="font-size:.85rem;font-weight:700;line-height:1.3">'+title+'</div>'+
-      '<div style="font-size:.7rem;opacity:.7;margin-top:.1rem">'+body+'</div>'+
-    '</div>'+
-    '<button onclick="event.stopPropagation();this.parentElement.remove()" style="background:none;border:none;color:inherit;opacity:.5;font-size:1.1rem;cursor:pointer;padding:0 .3rem">✕</button>'+
-    '<div class="ian-prog"></div>';
-  el.onclick=function(e){ if(e.target.tagName==='BUTTON')return; navTo('home',document.getElementById('nav-home')); el.remove(); };
-  s.appendChild(el);
-  setTimeout(function(){ if(el.parentElement) el.remove(); }, 8000);
-  var all=s.querySelectorAll('.ian'); if(all.length>4) all[0].remove();
 }
 
 function testInAppNotif(){
-  showInAppNotif('🔔 Test — notifications work!','Your reminders will look like this','reminder');
+  nlog('manual test');
+  showInAppNotif('🔔 Test — banner works!','Your reminders will look like this','reminder');
   if(typeof playNotifSound==='function') playNotifSound('reminder');
-  toast('✅ Banner works!');
+  toast('✅ Banner fired!');
+  setTimeout(refreshDebug,300);
 }
+
 
 // ── Custom confirm modal — browser confirm() is blocked on Android PWA ──
 var _confirmCallback = null;
@@ -4814,7 +4714,7 @@ function updateNotifStatus(){
   const on = localStorage.getItem('fn_notifs');
   if(!on){ row.style.display='none'; return; }
   row.style.display = 'block';
-  const swOk = !!_swReg;
+  const swOk = !!(navigator.serviceWorker && navigator.serviceWorker.controller);
   const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone;
   txt.innerHTML =
     '<span style="color:'+(swOk?'var(--green)':'var(--amber)')+';">'+(swOk?'✅':'⚠️')+' Background: '+(swOk?'Active (works with tab closed)':'Tab needs to stay open')+'</span><br/>'+
@@ -4827,22 +4727,11 @@ function updateNotifStatus(){
   if(ib) ib.style.display=(_deferredInstall&&!isStandalone)?'block':'none';
 }
 
-// Re-schedule whenever reminders are saved
-var _origSave = typeof save === 'function' ? save : null;
-
 document.addEventListener('DOMContentLoaded', function(){
-  if(typeof registerSW==='function') registerSW().then(function(reg){
-    if(reg&&localStorage.getItem('fn_notifs')&&typeof Notification!=='undefined'&&Notification.permission==='granted'){
-      if(typeof syncScheduleToSW==='function') syncScheduleToSW();
-      if(typeof startSWPing==='function') startSWPing();
-    }
-  });
-  // Schedule all existing reminders
+  registerSW();
   scheduleAllReminders();
   if(typeof updateNotifBtn==='function') updateNotifBtn();
 });
-
-(function(){var ha=document.getElementById('home-avi');if(!ha)return;var img=localStorage.getItem('fn_avatar_img');var em=localStorage.getItem('fn_avatar')||'🙂';if(img)ha.innerHTML='<img src="'+img+'" style="width:100%;height:100%;object-fit:cover;border-radius:50%" alt=""/>';else ha.textContent=em;})();
 
 (function(){var ha=document.getElementById('home-avi');if(!ha)return;var img=localStorage.getItem('fn_avatar_img');var em=localStorage.getItem('fn_avatar')||'🙂';if(img)ha.innerHTML='<img src="'+img+'" style="width:100%;height:100%;object-fit:cover;border-radius:50%" alt=""/>';else ha.textContent=em;})();
 </script>
