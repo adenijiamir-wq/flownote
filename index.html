@@ -172,7 +172,7 @@
 
 /* Bottom nav */
 [data-theme="dark"] #bottom-nav{background:#1e1e1e;border-color:var(--line);}
-[data-theme="dark"] .bn-btn{color:var(--muted);} .bn-btn.active{color:var(--green);}
+[data-theme="dark"] .bn-btn{color:var(--muted);}
 [data-theme="dark"] .bn-btn.active{color:var(--green);}
 
 /* Modals */
@@ -657,7 +657,7 @@ html,body{height:100%;overflow:hidden;font-family:'DM Sans',-apple-system,BlinkM
 /* Missed — just a left accent, no background fill */
 .rb.missed-time{border-left:3px solid #ef4444;}
 .rb.overdue{border-left:3px solid #ef4444;}
-.rb-icon{width:36px;height:36px;border-radius:10px;background:var(--paper);border:1px solid var(--line);display:flex;align-items:center;justify-content:center;font-size:1rem;flex-shrink:0;}
+.rb-icon{width:34px;height:34px;border-radius:9px;background:var(--paper2);border:1px solid var(--line);display:flex;align-items:center;justify-content:center;font-size:.95rem;flex-shrink:0;}
 [data-theme="dark"] .rb-icon{background:#2a2a2a;border-color:#333;}
 .rb-title{font-size:.9rem;font-weight:600;line-height:1.3;color:var(--ink);}
 .rb-time{font-size:.68rem;color:var(--muted);margin-top:.15rem;}
@@ -784,9 +784,9 @@ html,body{height:100%;overflow:hidden;font-family:'DM Sans',-apple-system,BlinkM
    BOTTOM NAV (mobile)
 ═══════════════════════════════════════ */
 #bottom-nav{display:none;background:var(--paper);border-top:1px solid var(--line);flex-shrink:0;padding-bottom:env(safe-area-inset-bottom,0);}
-.bn-inner{display:flex;height:56px;}
+.bn-inner{display:flex;}
 .bn-btn{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:.12rem;padding:.52rem .1rem;background:none;border:none;cursor:pointer;font-family:'DM Sans',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;color:var(--muted);font-size:.54rem;font-weight:600;text-transform:uppercase;letter-spacing:.04em;transition:color .15s;}
-.bn-icon{font-size:1.4rem;line-height:1;}
+.bn-svg{width:22px;height:22px;flex-shrink:0;} .bn-lbl{font-size:.54rem;font-weight:600;text-transform:uppercase;letter-spacing:.04em;}
 .bn-btn.active{color:var(--green);}
 
 /* ═══════════════════════════════════════
@@ -890,8 +890,7 @@ html,body{height:100%;overflow:hidden;font-family:'DM Sans',-apple-system,BlinkM
   .sidebar.open{transform:translateX(0);}
   .sb-close{display:block;}
   #bottom-nav{display:block;}
-  .content{padding-bottom:calc(60px + env(safe-area-inset-bottom,0px)) !important;}
-  .hamburger{display:none !important;}
+  .content{padding-bottom:calc(62px + env(safe-area-inset-bottom,0px)) !important;}
 
   /* ── Topbar ── */
   .topbar{padding:.65rem .9rem;}
@@ -1112,12 +1111,10 @@ html, body, #app {
 
     /* Bottom nav: account for safe area */
     #bottom-nav {
+        position: fixed !important;
+        bottom: 0 !important; left: 0 !important; right: 0 !important;
+        z-index: 200 !important;
         padding-bottom: env(safe-area-inset-bottom, 0px);
-        position: fixed;
-        bottom: 0;
-        left: 0;
-        right: 0;
-        z-index: 100;
     }
 
     /* Swipe handle pill on bottom sheets */
@@ -1222,6 +1219,9 @@ html, body, #app {
 [data-theme="dark"] .next-action-card{background:#222222;border-color:var(--line);}
 [data-theme="dark"] .next-action-card:hover{border-color:var(--green);}
 [data-theme="dark"] .na-text{color:var(--ink);}
+
+.bn-btn.active .bn-svg{stroke:var(--green);}
+.bn-btn.active .bn-lbl{color:var(--green);}
 </style>
 </head>
 <body>
@@ -1490,10 +1490,10 @@ html, body, #app {
                   <div class="due-date-wrap" id="nr-date-picker" style="margin-bottom:.6rem;">
                     <div class="due-date-label">When?</div>
                     <div class="date-presets">
-                      <button class="date-preset-btn active" data-val="today"     onclick="setDatePreset('nr','today',this)">📅 Today</button>
-                      <button class="date-preset-btn"        data-val="tomorrow"  onclick="setDatePreset('nr','tomorrow',this)">📅 Tomorrow</button>
-                      <button class="date-preset-btn recurring" data-val="everyday"  onclick="setDatePreset('nr','everyday',this)">🔁 Every day</button>
-                      <button class="date-preset-btn recurring" data-val="everyweek" onclick="setDatePreset('nr','everyweek',this)">🔁 Every week</button>
+                      <button class="date-preset-btn active" data-val="today"     onclick="setDatePreset('nr','today',this)"><svg style="width:13px;height:13px;vertical-align:middle;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg> Today</button>
+                      <button class="date-preset-btn"        data-val="tomorrow"  onclick="setDatePreset('nr','tomorrow',this)"><svg style="width:13px;height:13px;vertical-align:middle;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg> Tomorrow</button>
+                      <button class="date-preset-btn recurring" data-val="everyday"  onclick="setDatePreset('nr','everyday',this)"><svg style="width:13px;height:13px;vertical-align:middle;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;" viewBox="0 0 24 24"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg> Every day</button>
+                      <button class="date-preset-btn recurring" data-val="everyweek" onclick="setDatePreset('nr','everyweek',this)"><svg style="width:13px;height:13px;vertical-align:middle;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;" viewBox="0 0 24 24"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg> Every week</button>
                     </div>
                     <div class="date-calendar-trigger" id="nr-cal-trigger" onclick="toggleCalendar('nr')">
                       <span class="dct-text" id="nr-cal-label">or pick a date…</span>
@@ -1671,11 +1671,11 @@ html, body, #app {
 
           <!-- Tabs -->
           <div class="prof-tabs">
-            <button class="prof-tab active" onclick="switchProfTab('coach',this)">🎓 Coach</button>
-            <button class="prof-tab" onclick="switchProfTab('subjects',this)">📚 Subjects</button>
-            <button class="prof-tab" onclick="switchProfTab('style',this)">🎨 Style</button>
-            <button class="prof-tab" onclick="switchProfTab('notifs',this)">🔔 Alerts</button>
-            <button class="prof-tab" onclick="switchProfTab('data',this)">🗑 Data</button>
+            <button class="prof-tab active" onclick="switchProfTab('coach',this)">Coach</button>
+            <button class="prof-tab" onclick="switchProfTab('subjects',this)">Subjects</button>
+            <button class="prof-tab" onclick="switchProfTab('style',this)">Appearance</button>
+            <button class="prof-tab" onclick="switchProfTab('notifs',this)">Notifications</button>
+            <button class="prof-tab" onclick="switchProfTab('data',this);renderTrash();">Data</button>
           </div>
 
           <!-- Coach tab -->
@@ -1818,11 +1818,21 @@ html, body, #app {
   <!-- BOTTOM NAV -->
   <nav id="bottom-nav">
     <div class="bn-inner">
-      <button class="bn-btn active" id="bn-home"       onclick="navTo('home',document.getElementById('nav-home'));setBN('home')"><span class="bn-icon">🏠</span>Home</button>
-      <button class="bn-btn"        id="bn-notes"      onclick="navTo('notes',document.getElementById('nav-notes'));setBN('notes')"><span class="bn-icon">📝</span>Notes</button>
-      <button class="bn-btn"        id="bn-cards"      onclick="navTo('cards',document.getElementById('nav-cards'));setBN('cards')"><span class="bn-icon">🃏</span>Cards</button>
-      <button class="bn-btn"        id="bn-reminders"  onclick="navTo('home',document.getElementById('nav-home'));setBN('home');setTimeout(()=>{document.getElementById('home-reminders-section').scrollIntoView({behavior:'smooth'});toggleRemForm(true);},150)"><span class="bn-icon">🔔</span>Tasks</button>
-      <button class="bn-btn"        id="bn-chat"       onclick="navTo('chat',document.getElementById('nav-chat'));setBN('chat')"><span class="bn-icon">💬</span>Coach</button>
+      <button class="bn-btn active" id="bn-home" onclick="navTo('home',document.getElementById('nav-home'));setBN('home')">
+        <svg class="bn-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+        <span class="bn-lbl">Home</span></button>
+      <button class="bn-btn" id="bn-notes" onclick="navTo('notes',document.getElementById('nav-notes'));setBN('notes')">
+        <svg class="bn-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+        <span class="bn-lbl">Notes</span></button>
+      <button class="bn-btn" id="bn-cards" onclick="navTo('cards',document.getElementById('nav-cards'));setBN('cards')">
+        <svg class="bn-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg>
+        <span class="bn-lbl">Study</span></button>
+      <button class="bn-btn" id="bn-reminders" onclick="navTo('home',document.getElementById('nav-home'));setBN('home');setTimeout(()=>{document.getElementById('home-reminders-section').scrollIntoView({behavior:'smooth'});toggleRemForm(true);},150)">
+        <svg class="bn-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+        <span class="bn-lbl">Tasks</span></button>
+      <button class="bn-btn" id="bn-chat" onclick="navTo('chat',document.getElementById('nav-chat'));setBN('chat')">
+        <svg class="bn-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+        <span class="bn-lbl">Coach</span></button>
     </div>
   </nav>
 </div><!-- end #app -->
@@ -1874,10 +1884,10 @@ html, body, #app {
     <div class="due-date-wrap" id="m-date-picker">
       <div class="due-date-label">Due Date</div>
       <div class="date-presets">
-        <button class="date-preset-btn active" data-val="today"     onclick="setDatePreset('m','today',this)">📅 Today</button>
-        <button class="date-preset-btn"        data-val="tomorrow"  onclick="setDatePreset('m','tomorrow',this)">📅 Tomorrow</button>
-        <button class="date-preset-btn recurring" data-val="everyday"  onclick="setDatePreset('m','everyday',this)">🔁 Every day</button>
-        <button class="date-preset-btn recurring" data-val="everyweek" onclick="setDatePreset('m','everyweek',this)">🔁 Every week</button>
+        <button class="date-preset-btn active" data-val="today"     onclick="setDatePreset('m','today',this)"><svg style="width:13px;height:13px;vertical-align:middle;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg> Today</button>
+        <button class="date-preset-btn"        data-val="tomorrow"  onclick="setDatePreset('m','tomorrow',this)"><svg style="width:13px;height:13px;vertical-align:middle;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg> Tomorrow</button>
+        <button class="date-preset-btn recurring" data-val="everyday"  onclick="setDatePreset('m','everyday',this)"><svg style="width:13px;height:13px;vertical-align:middle;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;" viewBox="0 0 24 24"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg> Every day</button>
+        <button class="date-preset-btn recurring" data-val="everyweek" onclick="setDatePreset('m','everyweek',this)"><svg style="width:13px;height:13px;vertical-align:middle;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;" viewBox="0 0 24 24"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg> Every week</button>
       </div>
       <div class="date-calendar-trigger" id="m-cal-trigger" onclick="toggleCalendar('m')">
         <span class="dct-text" id="m-cal-label">or pick a date…</span>
@@ -1920,10 +1930,10 @@ html, body, #app {
     <div class="due-date-wrap" id="er-date-picker">
       <div class="due-date-label">Date</div>
       <div class="date-presets">
-        <button class="date-preset-btn" data-val="today"     onclick="setDatePreset('er','today',this)">📅 Today</button>
-        <button class="date-preset-btn" data-val="tomorrow"  onclick="setDatePreset('er','tomorrow',this)">📅 Tomorrow</button>
-        <button class="date-preset-btn recurring" data-val="everyday"  onclick="setDatePreset('er','everyday',this)">🔁 Every day</button>
-        <button class="date-preset-btn recurring" data-val="everyweek" onclick="setDatePreset('er','everyweek',this)">🔁 Every week</button>
+        <button class="date-preset-btn" data-val="today"     onclick="setDatePreset('er','today',this)"><svg style="width:13px;height:13px;vertical-align:middle;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg> Today</button>
+        <button class="date-preset-btn" data-val="tomorrow"  onclick="setDatePreset('er','tomorrow',this)"><svg style="width:13px;height:13px;vertical-align:middle;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg> Tomorrow</button>
+        <button class="date-preset-btn recurring" data-val="everyday"  onclick="setDatePreset('er','everyday',this)"><svg style="width:13px;height:13px;vertical-align:middle;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;" viewBox="0 0 24 24"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg> Every day</button>
+        <button class="date-preset-btn recurring" data-val="everyweek" onclick="setDatePreset('er','everyweek',this)"><svg style="width:13px;height:13px;vertical-align:middle;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;" viewBox="0 0 24 24"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg> Every week</button>
       </div>
       <div class="date-calendar-trigger" id="er-cal-trigger" onclick="toggleCalendar('er')">
         <span class="dct-text" id="er-cal-label">or pick a date…</span>
@@ -3329,11 +3339,11 @@ function renderAll(){
       <div class="rb-icon">${r.emoji}</div>
       <div style="flex:1;min-width:0;">
         <div class="rb-title" style="display:flex;align-items:center;gap:.3rem;flex-wrap:wrap;">${r.text}<span class="overdue-badge">MISSING</span></div>
-        <div class="rb-time" style="margin-top:.18rem;"><span style="font-size:.67rem;color:#ef4444;">📅 ${dLbl(r.date)}${r.time?' · ⏰ '+r.time:''}</span></div>
+        <div class="rb-time" style="margin-top:.18rem;"><span style="font-size:.67rem;color:#ef4444;">${dLbl(r.date)}${r.time?' · <svg style="width:11px;height:11px;vertical-align:middle;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;display:inline-block;margin-right:2px;" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>'+r.time:''}</span></div>
       </div>
       <div class="rb-check" style="border-color:rgba(239,68,68,.5);">${r.done?'✓':''}</div>
-      <button class="rb-edit" onclick="event.stopPropagation();openEditR(${r.id})">✏️</button>
-      <button class="rb-del" onclick="event.stopPropagation();deleteR(${r.id})">✕</button>
+      <button class="rb-edit" onclick="event.stopPropagation();openEditR(${r.id})"><svg style="width:15px;height:15px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;" viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>
+      <button class="rb-del" onclick="event.stopPropagation();deleteR(${r.id})"><svg style="width:15px;height:15px;stroke:currentColor;fill:none;stroke-width:2.5;stroke-linecap:round;" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
     </div>`).join('');
   }
 
@@ -3346,12 +3356,12 @@ function renderAll(){
       if(r.done) timeStr='<span style="color:var(--green);font-size:.65rem;">✓ Completed — tap to undo</span>';
       else if(missed){
         const t=r.startTime&&r.dueTime?r.startTime+'–'+r.dueTime:r.time||r.startTime||'';
-        timeStr='<span style="color:#ef4444;font-size:.67rem;">⏰ '+t+' · missed</span>';
+        timeStr='<span style="color:#ef4444;font-size:.67rem;display:flex;align-items:center;gap:2px;"><svg width=\'11\' height=\'11\' viewBox=\'0 0 24 24\' fill=\'none\' stroke=\'#ef4444\' stroke-width=\'2\'><circle cx=\'12\' cy=\'12\' r=\'10\'/><polyline points=\'12 6 12 12 16 14\'/></svg>'+t+' · missed</span>';
       }
-      else if(r.startTime&&r.dueTime) timeStr='<span style="font-size:.67rem;">⏰ '+r.startTime+'–'+r.dueTime+'</span>';
-      else if(r.startTime) timeStr='<span style="font-size:.67rem;">⏰ '+r.startTime+'</span>';
-      else if(r.dueTime) timeStr='<span style="font-size:.67rem;">⏰ Due '+r.dueTime+'</span>';
-      else if(r.time) timeStr='<span style="font-size:.67rem;">⏰ '+r.time+'</span>';
+      else if(r.startTime&&r.dueTime) timeStr='<span style="font-size:.67rem;display:flex;align-items:center;gap:2px;"><svg width=\"11\" height=\"11\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\"><circle cx=\"12\" cy=\"12\" r=\"10\"/><polyline points=\"12 6 12 12 16 14\"/></svg>'+r.startTime+'–'+r.dueTime+'</span>';
+      else if(r.startTime) timeStr='<span style="font-size:.67rem;display:flex;align-items:center;gap:2px;"><svg width=\"11\" height=\"11\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\"><circle cx=\"12\" cy=\"12\" r=\"10\"/><polyline points=\"12 6 12 12 16 14\"/></svg>'+r.startTime+'</span>';
+      else if(r.dueTime) timeStr='<span style="font-size:.67rem;display:flex;align-items:center;gap:2px;"><svg width=\"11\" height=\"11\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\"><circle cx=\"12\" cy=\"12\" r=\"10\"/><polyline points=\"12 6 12 12 16 14\"/></svg>Due '+r.dueTime+'</span>';
+      else if(r.time) timeStr='<span style="font-size:.67rem;display:flex;align-items:center;gap:2px;"><svg width=\"11\" height=\"11\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\"><circle cx=\"12\" cy=\"12\" r=\"10\"/><polyline points=\"12 6 12 12 16 14\"/></svg>'+r.time+'</span>';
       else timeStr='<span style="font-size:.67rem;color:var(--muted);">No time set</span>';
 
       const checkStyle = missed&&!r.done
@@ -3365,8 +3375,8 @@ function renderAll(){
           <div class="rb-time" style="margin-top:.18rem;">${timeStr}</div>
         </div>
         <div class="rb-check" style="${checkStyle}">${r.done?'✓':''}</div>
-        <button class="rb-edit" onclick="event.stopPropagation();openEditR(${r.id})">✏️</button>
-        <button class="rb-del" onclick="event.stopPropagation();deleteR(${r.id})">✕</button>
+        <button class="rb-edit" onclick="event.stopPropagation();openEditR(${r.id})"><svg style="width:15px;height:15px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;" viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>
+        <button class="rb-del" onclick="event.stopPropagation();deleteR(${r.id})"><svg style="width:15px;height:15px;stroke:currentColor;fill:none;stroke-width:2.5;stroke-linecap:round;" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
       </div>`;
     }).join('')}`).join('');
 
@@ -4086,12 +4096,12 @@ function timeTo24(timeStr){
 }
 function tomorrowStr(){const d=new Date();d.setDate(d.getDate()+1);return d.toISOString().split('T')[0];}
 function dLbl(d){
-  if(!d) return'📅 Today';
-  if(d==='everyday') return'🔁 Every day';
-  if(d==='everyweek') return'🔁 Every week';
+  if(!d) return'<svg style="width:13px;height:13px;vertical-align:middle;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg> Today';
+  if(d==='everyday') return'<svg style="width:13px;height:13px;vertical-align:middle;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;" viewBox="0 0 24 24"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg> Every day';
+  if(d==='everyweek') return'<svg style="width:13px;height:13px;vertical-align:middle;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;" viewBox="0 0 24 24"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg> Every week';
   const t=todayStr(), tm=tomorrowStr();
-  if(d===t) return'📅 Today';
-  if(d===tm) return'📅 Tomorrow';
+  if(d===t) return'<svg style="width:13px;height:13px;vertical-align:middle;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg> Today';
+  if(d===tm) return'<svg style="width:13px;height:13px;vertical-align:middle;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg> Tomorrow';
   const dt=new Date(d+'T12:00:00');
   const now=new Date(); now.setHours(0,0,0,0);
   if(dt<now) return'⚠️ '+dt.toLocaleDateString('en-GB',{weekday:'short',day:'numeric',month:'short'});
@@ -4932,61 +4942,6 @@ document.addEventListener('DOMContentLoaded', function(){
 });
 
 (function(){var ha=document.getElementById('home-avi');if(!ha)return;var img=localStorage.getItem('fn_avatar_img');var em=localStorage.getItem('fn_avatar')||'🙂';if(img)ha.innerHTML='<img src="'+img+'" style="width:100%;height:100%;object-fit:cover;border-radius:50%" alt=""/>';else ha.textContent=em;})();
-
-// ── Swipe navigation (mobile) ──
-(function(){
-  var pages = ['home','notes','cards','reminders','chat','profile'];
-  var currentIdx = 0;
-  var startX = 0, startY = 0, isDragging = false;
-  var THRESHOLD = 60; // px to trigger page change
-
-  var bnMap = {home:'bn-home',notes:'bn-notes',cards:'bn-cards',reminders:'bn-reminders',chat:'bn-chat',profile:null};
-
-  function goToPage(idx){
-    if(idx < 0 || idx >= pages.length) return;
-    currentIdx = idx;
-    var id = pages[idx];
-    navTo(id, document.getElementById('nav-'+id));
-    // Sync bottom nav active state
-    document.querySelectorAll('.bn-btn').forEach(function(b){b.classList.remove('active');});
-    var bnId = bnMap[id];
-    if(bnId){ var el=document.getElementById(bnId); if(el) el.classList.add('active'); }
-  }
-
-  // Update currentIdx when navTo is called by buttons
-  var _origNavTo = navTo;
-  navTo = function(id, btn){
-    _origNavTo(id, btn);
-    var idx = pages.indexOf(id);
-    if(idx > -1) currentIdx = idx;
-    // Sync bottom nav
-    document.querySelectorAll('.bn-btn').forEach(function(b){b.classList.remove('active');});
-    var bnId = bnMap[id];
-    if(bnId){ var el=document.getElementById(bnId); if(el) el.classList.add('active'); }
-  };
-
-  var content = document.querySelector('.content');
-  if(!content) return;
-
-  content.addEventListener('touchstart', function(e){
-    if(e.touches.length !== 1) return;
-    startX = e.touches[0].clientX;
-    startY = e.touches[0].clientY;
-    isDragging = true;
-  }, {passive:true});
-
-  content.addEventListener('touchend', function(e){
-    if(!isDragging) return;
-    isDragging = false;
-    var dx = e.changedTouches[0].clientX - startX;
-    var dy = e.changedTouches[0].clientY - startY;
-    // Only swipe if horizontal movement dominates
-    if(Math.abs(dx) < THRESHOLD || Math.abs(dx) < Math.abs(dy)*1.5) return;
-    if(dx < 0) goToPage(currentIdx + 1); // swipe left → next
-    else        goToPage(currentIdx - 1); // swipe right → prev
-  }, {passive:true});
-})();
-
 </script>
 </body>
 </html>
