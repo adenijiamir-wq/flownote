@@ -2695,6 +2695,19 @@ function startApp(){
   startNotifPoller();
   // Show permission prompts if not yet asked
   setTimeout(showStartupPermissions, 1500);
+  // Register SW message listener for fired notifications
+  if(navigator.serviceWorker){
+    navigator.serviceWorker.addEventListener('message', function(e){
+      if(e.data && e.data.type==='FIRED'){
+        var fired={}; try{ fired=JSON.parse(localStorage.getItem('fn_fired')||'{}'); }catch(ex){}
+        var today=todayStr();
+        if(!fired[today]) fired[today]={};
+        fired[today][e.data.tag]=true;
+        localStorage.setItem('fn_fired',JSON.stringify(fired));
+        showInAppNotif(e.data.title, e.data.body, 'reminder');
+      }
+    });
+  }
   // Reload avatar
   const imgUrl=localStorage.getItem('fn_avatar_img');
   if(imgUrl && currentAvatar==='__img__') _updateAvatarDisplay(null,imgUrl);
@@ -3958,20 +3971,17 @@ Q: [question]|A: [answer]
 // STARTUP PERMISSION PROMPTS
 // ══════════════════════════════════════════════════════
 function showStartupPermissions(){
-  // Only show if not already decided
-  if(localStorage.getItem('fn_perm_notif_asked')) {
-    // Already asked notif, check mic
-    if(!localStorage.getItem('fn_perm_mic_asked')) showMicModal();
+  const notifGranted = typeof Notification !== 'undefined' && Notification.permission === 'granted';
+  const micAsked = localStorage.getItem('fn_perm_mic_asked');
+
+  // Always show notif modal if permission not yet granted
+  if(!notifGranted){
+    const m = document.getElementById('perm-modal');
+    if(m){ m.style.display='flex'; }
     return;
   }
-  if(typeof Notification === 'undefined' || Notification.permission === 'granted'){
-    localStorage.setItem('fn_perm_notif_asked','1');
-    showMicModal();
-    return;
-  }
-  // Show notif modal
-  const m = document.getElementById('perm-modal');
-  if(m){ m.style.display='flex'; }
+  // Notif already granted — check mic
+  if(!micAsked) showMicModal();
 }
 
 function showMicModal(){
@@ -5144,15 +5154,27 @@ function refreshDebug(){
 
 function fireNotif(title, body, tag){
   nlog('fire: '+title.slice(0,30));
+
+  // Always show in-app banner when app is open
   showInAppNotif(title, body, 'reminder');
   if(typeof playNotifSound==='function') playNotifSound('reminder');
-  if(typeof Notification==='undefined'||Notification.permission!=='granted'){ nlog('no perm ('+(typeof Notification!=='undefined'?Notification.permission:'n/a')+')'); return; }
-  // Use absolute path icon — data: URIs are blocked by Android Chrome for notifications
+
+  if(typeof Notification==='undefined'||Notification.permission!=='granted'){
+    nlog('no perm ('+(typeof Notification!=='undefined'?Notification.permission:'n/a')+')');
+    return;
+  }
+
   var icon = window.location.origin + '/icon-192.png';
-  var opts = { body:body, tag:tag, vibrate:[200,100,200] };
-  // Only add icon if likely to exist (hosted, not file://)
+  var opts = {
+    body: body,
+    tag: tag,
+    vibrate: [200,100,200],
+    requireInteraction: true,
+    silent: false
+  };
   if(window.location.protocol !== 'file:') opts.icon = icon;
 
+  // Fire via SW (works in background too)
   if(navigator.serviceWorker && navigator.serviceWorker.controller){
     navigator.serviceWorker.ready.then(function(reg){
       reg.showNotification(title, opts);
