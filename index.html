@@ -2446,6 +2446,9 @@ function startApp(){
   buildSubjectFilters(); buildSubjectSelects(); populateCardSubjectFilter();
   initChat(); renderAll(); renderNotes(); renderCards(); renderGaps(); checkReviewBadge(); renderNextAction();
   initFAB();
+  // FIX 3: Schedule reminders NOW that data is fully loaded, and start the safety-net poller
+  scheduleAllReminders();
+  startNotifPoller();
   // Reload avatar
   const imgUrl=localStorage.getItem('fn_avatar_img');
   if(imgUrl && currentAvatar==='__img__') _updateAvatarDisplay(null,imgUrl);
@@ -3151,6 +3154,7 @@ function saveEditR(){
   r.dueTime=dueVal?fmt12(dueVal):'';
   r.date=getSelectedDate('er');
   save();renderAll();closeEditR();
+  scheduleAllReminders();
   toast('✓ Task updated!');
 }
 function renderTrash(){
@@ -4561,8 +4565,12 @@ function scheduleReminder(r, today){
   var now = new Date();
   var delay = target - now;
 
-  // If time already passed today, skip (don't reschedule for tomorrow for one-off)
-  if(delay < 0) return;
+  // FIX 1: If within 90 seconds past (page loaded slightly late), fire immediately
+  if(delay < 0 && delay > -90000){
+    delay = 100; // fire in 100ms
+  } else if(delay < -90000){
+    return; // genuinely past, skip
+  }
 
   // Clear any existing timer for this reminder
   if(_scheduledTimers[r.id]) clearTimeout(_scheduledTimers[r.id]);
@@ -4571,12 +4579,12 @@ function scheduleReminder(r, today){
     // Mark as fired
     var fired2={}; try{ fired2=JSON.parse(localStorage.getItem('fn_fired')||'{}'); }catch(e){}
     var tf = fired2[today]||{};
-    if(tf[key]) return; // already fired (tab reopened etc)
+    if(tf[key]) return;
     tf[key]=true; fired2[today]=tf;
     localStorage.setItem('fn_fired', JSON.stringify(fired2));
 
-    // Show banner
-    showInAppNotif((r.emoji||'🔔')+' '+r.text, 'Tap to open FlowNotes', 'reminder');
+    // Show in-app banner (always, no permission needed)
+    showInAppNotif((r.emoji||'🔔')+' '+r.text, r.date==='everyday'?'Daily reminder':'Tap to open FlowNotes', 'reminder');
     if(typeof playNotifSound==='function') playNotifSound('reminder');
 
     // Native push if permitted
@@ -4587,11 +4595,45 @@ function scheduleReminder(r, today){
       }); }catch(e){}
     }
 
-    // Reschedule for tomorrow if recurring
+    // Reschedule for next day if recurring
     if(r.date==='everyday'||r.date==='everyweek'){
-      setTimeout(function(){ scheduleAllReminders(); }, 60000);
+      setTimeout(function(){ scheduleAllReminders(); }, 65000);
     }
   }, delay);
+}
+
+// FIX 2: Minute-by-minute safety net — catches anything setTimeout missed
+var _notifPollInterval = null;
+function startNotifPoller(){
+  if(_notifPollInterval) clearInterval(_notifPollInterval);
+  _notifPollInterval = setInterval(function(){
+    var today = todayStr();
+    var nowH = new Date().getHours(), nowM = new Date().getMinutes();
+    var nowStr = String(nowH).padStart(2,'0')+':'+String(nowM).padStart(2,'0');
+    var fired = {}; try{ fired=JSON.parse(localStorage.getItem('fn_fired')||'{}'); }catch(e){}
+    var todayFired = fired[today]||{};
+    var data; try{ data=JSON.parse(localStorage.getItem('mb7_data')||'{}'); }catch(e){ return; }
+    var rems = data.reminders||[];
+    var changed = false;
+    rems.forEach(function(r){
+      if(r.done) return;
+      var raw = r.time||r.startTime||''; if(!raw) return;
+      var t24 = timeTo24(raw); if(!t24) return;
+      var isToday = r.date===today||r.date==='everyday'||r.date==='everyweek';
+      if(!isToday) return;
+      var key='r'+r.id;
+      if(todayFired[key]) return;
+      if(t24===nowStr){
+        todayFired[key]=true; changed=true;
+        showInAppNotif((r.emoji||'🔔')+' '+r.text, r.date==='everyday'?'Daily reminder':'Tap to open FlowNotes','reminder');
+        if(typeof playNotifSound==='function') playNotifSound('reminder');
+        if(typeof Notification!=='undefined'&&Notification.permission==='granted'){
+          try{ new Notification((r.emoji||'🔔')+' '+r.text,{body:'Tap to open FlowNotes',tag:key}); }catch(e){}
+        }
+      }
+    });
+    if(changed){ fired[today]=todayFired; localStorage.setItem('fn_fired',JSON.stringify(fired)); }
+  }, 30000); // check every 30 seconds
 }
 
 function timeTo24(timeStr){
