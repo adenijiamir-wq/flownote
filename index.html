@@ -27,7 +27,7 @@
 @keyframes ianIn{from{opacity:0;transform:translateY(16px) scale(.95);}to{opacity:1;transform:translateY(0) scale(1);}}
 .ian-prog{position:absolute;bottom:0;left:0;height:3px;background:rgba(255,255,255,.25);animation:ianProg 7s linear forwards;}
 @keyframes ianProg{from{width:100%;}to{width:0;}}
-@media(min-width:640px){#inapp-notif-stack{left:auto;min-width:320px;}}
+@media(min-width:600px){#inapp-notif-stack{left:auto;min-width:320px;}}
 </style></noscript>
 <style>
 /* ═══════════════════════════════════════
@@ -1469,8 +1469,8 @@ html, body, #app {
               <div id="rem-expand-area" style="display:none;margin-bottom:.85rem;">
                 <div style="border-top:1px solid var(--line);padding-top:.9rem;">
                   <input class="rem-input" id="nr-text" placeholder="What do you need to do?" onkeydown="if(event.key==='Enter')doAddR()" style="margin-bottom:.6rem;font-size:.92rem;padding:.75rem .9rem;border-radius:10px;"/>
-                  <div style="margin-bottom:.6rem;">
-                    <div style="font-size:.63rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin-bottom:.3rem;">🔔 Notify me at</div>
+                  <div style="margin-bottom:.65rem;">
+                    <label style="font-size:.65rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);display:block;margin-bottom:.3rem;">🔔 Remind me at</label>
                     <input type="time" class="rem-sel" id="nr-time" style="width:100%;font-size:.95rem;padding:.6rem .8rem;"/>
                     <input type="hidden" id="nr-emoji" value="📝"/>
                   </div>
@@ -1770,7 +1770,7 @@ html, body, #app {
 
             <div class="prof-section-label">Push Notifications</div>
             <button id="notif-toggle-btn" onclick="toggleNotifications()" style="width:100%;border:1.5px solid var(--line);background:var(--paper2);color:var(--muted);border-radius:10px;padding:.65rem .9rem;font-family:'DM Sans',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:.82rem;font-weight:600;cursor:pointer;margin-bottom:.55rem;transition:all .2s;">🔕 Enable notifications</button>
-            <div style="font-size:.66rem;color:var(--muted);line-height:1.65;margin-bottom:.7rem;">Reminders fire at their set time, cards due at 9am, overdue tasks at 8am.</div>
+            <div style="font-size:.66rem;color:var(--muted);line-height:1.65;margin-bottom:.65rem;">Reminders fire at their set time, cards due at 9am, overdue tasks at 8am.</div>
             <button onclick="testInAppNotif()" style="width:100%;border:1.5px dashed var(--line);background:none;color:var(--muted);border-radius:10px;padding:.55rem;font-family:inherit;font-size:.78rem;font-weight:600;cursor:pointer;margin-bottom:.9rem;">🧪 Test notification now</button>
 
             <!-- Status row -->
@@ -4525,7 +4525,7 @@ function checkAndSendNotifs(){
   const now=getNowHHMM();
   if(now===_lastCheckedMinute) return;
   _lastCheckedMinute=now;
-  const today=todayStr(); // no permission gate — in-app banners always fire
+  const today=todayStr();
   const fired=JSON.parse(localStorage.getItem('fn_notif_fired')||'{}');
   const todayFired=fired[today]||{};
 
@@ -4677,25 +4677,20 @@ function sendNotif(title,body,tag,soundType){
       n.onclick=()=>{window.focus();n.close();};}catch(e){}
   }
 }
-
 function showInAppNotif(title,body,type){
-  let stack=document.getElementById('inapp-notif-stack');
-  if(!stack){stack=document.createElement('div');stack.id='inapp-notif-stack';document.body.appendChild(stack);}
+  let s=document.getElementById('inapp-notif-stack');
+  if(!s){s=document.createElement('div');s.id='inapp-notif-stack';document.body.appendChild(s);}
   const icons={reminder:'🔔',cards:'🃏',warning:'⚠️'};
-  const el=document.createElement('div');
-  el.className='ian';
+  const el=document.createElement('div');el.className='ian';
   el.innerHTML='<div style="font-size:1.4rem;flex-shrink:0">'+(icons[type]||'🔔')+'</div>'+
-    '<div style="flex:1;min-width:0"><div style="font-size:.84rem;font-weight:700;line-height:1.3">'+title+'</div>'+
-    '<div style="font-size:.71rem;opacity:.7;margin-top:.1rem">'+body+'</div></div>'+
-    '<button onclick="event.stopPropagation();this.parentElement.remove()" style="background:none;border:none;color:inherit;opacity:.5;font-size:1rem;cursor:pointer;flex-shrink:0;padding:0 .3rem">✕</button>'+
+    '<div style="flex:1;min-width:0"><div style="font-size:.85rem;font-weight:700;line-height:1.3">'+title+'</div>'+
+    '<div style="font-size:.71rem;opacity:.72;margin-top:.1rem">'+body+'</div></div>'+
+    '<button onclick="event.stopPropagation();this.parentElement.remove()" style="background:none;border:none;color:inherit;opacity:.5;font-size:1rem;cursor:pointer;padding:0 .3rem">✕</button>'+
     '<div class="ian-prog"></div>';
   el.onclick=function(e){if(e.target.tagName==='BUTTON')return;navTo('home',document.getElementById('nav-home'));el.remove();};
-  stack.appendChild(el);
-  setTimeout(function(){if(el.parentElement)el.remove();},7000);
-  var all=stack.querySelectorAll('.ian');
-  if(all.length>4)all[0].remove();
+  s.appendChild(el);setTimeout(function(){if(el.parentElement)el.remove();},7000);
+  var all=s.querySelectorAll('.ian');if(all.length>4)all[0].remove();
 }
-
 function testInAppNotif(){
   showInAppNotif('🔔 Test reminder','This is what your reminders will look like!','reminder');
   playNotifSound('reminder');
@@ -4705,15 +4700,15 @@ function testInAppNotif(){
 // Convert stored "9:00 AM" / "14:30" → "HH:MM" 24h for comparison
 function timeTo24(timeStr){
   if(!timeStr) return null;
-  // Pure 24h: "09:00" or "9:00"
+  // Pure 24h: "9:00" or "09:00"
   let m=timeStr.match(/^(\d{1,2}):(\d{2})$/);
-  if(m){return String(parseInt(m[1])).padStart(2,'0')+':'+m[2];}
-  // AM/PM: "9:00 AM" or "09:00 PM"
+  if(m) return String(parseInt(m[1])).padStart(2,'0')+':'+m[2];
+  // AM/PM: "9:00 AM" or "09:30 PM"
   m=timeStr.match(/^(\d{1,2}):(\d{2})\s*(AM|PM)$/i);
   if(!m) return null;
   let h=parseInt(m[1]),min=m[2],ap=m[3].toUpperCase();
-  if(ap==='PM'&&h!==12) h+=12;
-  if(ap==='AM'&&h===12) h=0;
+  if(ap==='PM'&&h!==12)h+=12;
+  if(ap==='AM'&&h===12)h=0;
   return String(h).padStart(2,'0')+':'+min;
 }
 
@@ -4731,9 +4726,74 @@ document.addEventListener('DOMContentLoaded',()=>{
       startSWPing();
     }
   });
-  startNotifScheduler(); // always run — in-app banners work without push permission
+  startNotifScheduler(); // always run — banners work without push permission
   updateNotifBtn();
 });
+
+// ── Debug panel ──
+function dbgRefresh(){
+  const now=getNowHHMM();
+  const today=todayStr();
+  const fired=JSON.parse(localStorage.getItem('fn_notif_fired')||'{}');
+  const todayFired=fired[today]||{};
+  let html='<b>Now:</b> '+now+' | <b>Today:</b> '+today+'<br>';
+  html+='<b>Scheduler running:</b> '+(notifInterval?'YES ✅':'NO ❌')+'<br>';
+  html+='<b>Push permission:</b> '+(typeof Notification!=='undefined'?Notification.permission:'unsupported')+'<br>';
+  html+='<b>Last checked minute:</b> '+(_lastCheckedMinute||'(none)')+'<br><br>';
+  html+='<b>REMINDERS ('+reminders.length+' total):</b><br>';
+  reminders.forEach(function(r,i){
+    var raw=r.time||(r.startTime||'');
+    var t24=timeTo24(raw);
+    var isToday=r.date===today||r.date==='everyday'||r.date==='everyweek';
+    var alreadyFired=!!todayFired['rem-'+r.id];
+    var willFire=!!t24&&isToday&&!alreadyFired;
+    var matches=t24===now;
+    html+='<div style="border:1px solid #333;padding:.4rem;margin:.3rem 0;border-radius:4px;background:'+(willFire?'#011':'#111')+'">';
+    html+='['+i+'] <b>'+r.text+'</b><br>';
+    html+='  raw time: <b>'+(raw||'NONE ❌')+'</b> → parsed: <b>'+(t24||'NULL ❌')+'</b><br>';
+    html+='  date: '+r.date+' | isToday: '+(isToday?'✅':'❌')+' | fired: '+(alreadyFired?'yes':'no')+' | done: '+(r.done?'yes':'no')+'<br>';
+    html+='  → <b style="color:'+(willFire?'#0f0':'#f44')+'">'+(willFire?'WILL FIRE when time matches':'BLOCKED — see above')+'</b>';
+    if(matches) html+=' <b style="color:#ff0">← TIME MATCHES NOW!</b>';
+    html+='</div>';
+  });
+  if(reminders.length===0) html+='<span style="color:#f44">No reminders saved!</span>';
+  document.getElementById('dbg-content').innerHTML=html;
+}
+function dbgFireNow(){
+  const today=todayStr();
+  const fired=JSON.parse(localStorage.getItem('fn_notif_fired')||'{}');
+  const todayFired=fired[today]||{};
+  var count=0;
+  reminders.filter(function(r){return !r.done;}).forEach(function(r){
+    var raw=r.time||(r.startTime||'');
+    var t24=timeTo24(raw);
+    var isToday=r.date===today||r.date==='everyday'||r.date==='everyweek';
+    if(t24&&isToday&&!todayFired['rem-'+r.id]){
+      sendNotif((r.emoji||'🔔')+' '+r.text,'Debug: forced fire','rem-'+r.id,'reminder');
+      todayFired['rem-'+r.id]=true; count++;
+    }
+  });
+  var nf={};nf[today]=todayFired;localStorage.setItem('fn_notif_fired',JSON.stringify(nf));
+  toast('Fired '+count+' reminder(s)');
+  dbgRefresh();
+}
+// Open with long-press on the clock icon or by pressing D key
+document.addEventListener('keydown',function(e){if(e.key==='d'||e.key==='D'){var p=document.getElementById('dbg-panel');p.style.display=p.style.display==='none'?'block':'none';if(p.style.display==='block')dbgRefresh();}});
+// Also update debug every time scheduler runs
+var _origCheck=checkAndSendNotifs;
+checkAndSendNotifs=function(){_origCheck();if(document.getElementById('dbg-panel').style.display!=='none')dbgRefresh();};
+
 </script>
+
+<!-- Debug panel — shake phone or press D to toggle -->
+<div id="dbg-panel" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.92);z-index:99999;overflow-y:auto;padding:1rem;font-family:monospace;font-size:.72rem;color:#0f0;">
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.75rem;">
+    <span style="font-weight:700;font-size:.85rem;">🔍 Notification Debug</span>
+    <button onclick="document.getElementById('dbg-panel').style.display='none'" style="background:#333;border:none;color:#fff;border-radius:6px;padding:.3rem .7rem;cursor:pointer;">Close</button>
+  </div>
+  <div id="dbg-content">loading…</div>
+  <button onclick="dbgRefresh()" style="margin-top:.75rem;background:#1a3;border:none;color:#fff;border-radius:6px;padding:.4rem .8rem;cursor:pointer;font-size:.75rem;">🔄 Refresh</button>
+  <button onclick="dbgFireNow()" style="margin-top:.75rem;margin-left:.5rem;background:#a31;border:none;color:#fff;border-radius:6px;padding:.4rem .8rem;cursor:pointer;font-size:.75rem;">⚡ Force fire all due now</button>
+</div>
 </body>
 </html>
