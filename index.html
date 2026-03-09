@@ -114,9 +114,9 @@ onAuthStateChanged(auth, (user) => {
 [data-theme="dark"] body{background:var(--paper);color:var(--ink);}
 
 /* Greet card */
-[data-theme="dark"] .greet-card{background:#1f2d24;color:var(--ink);}
-[data-theme="dark"] .greet-card .greet-name{color:var(--ink);}
-[data-theme="dark"] .greet-speech{background:rgba(255,255,255,.08);color:var(--ink);}
+[data-theme="dark"] .greet-card{background:var(--green);color:#fff;}
+[data-theme="dark"] .greet-card .greet-name{color:#fff;}
+[data-theme="dark"] .greet-speech{background:rgba(255,255,255,.12);color:#fff;}
 
 /* Navigation & chrome */
 [data-theme="dark"] .sidebar{background:#1e1e1e;border-color:var(--line);}
@@ -563,7 +563,7 @@ html,body{height:100%;overflow:hidden;font-family:'DM Sans',-apple-system,BlinkM
 .home-grid .full{grid-column:1/-1;}
 
 /* Greet card */
-.greet-card{background:var(--ink);color:var(--paper);border-radius:var(--r);padding:1.25rem 1.3rem;position:relative;overflow:hidden;}
+.greet-card{background:var(--green);color:#fff;border-radius:var(--r);padding:1.25rem 1.3rem;position:relative;overflow:hidden;}
 .greet-card::before{content:'';position:absolute;right:-20px;top:-20px;width:120px;height:120px;border-radius:50%;background:rgba(255,255,255,.04);}
 .greet-card::after{content:'';position:absolute;right:20px;bottom:-30px;width:80px;height:80px;border-radius:50%;background:rgba(255,255,255,.03);}
 .greet-top{display:flex;align-items:center;gap:.8rem;margin-bottom:.85rem;position:relative;z-index:1;}
@@ -823,7 +823,7 @@ html,body{height:100%;overflow:hidden;font-family:'DM Sans',-apple-system,BlinkM
 /* ═══════════════════════════════════════
    BOTTOM NAV (mobile)
 ═══════════════════════════════════════ */
-#bottom-nav{display:none;background:var(--paper);border-top:1px solid var(--line);flex-shrink:0;padding-bottom:env(safe-area-inset-bottom,0);}
+#bottom-nav{display:none;background:var(--paper);border-top:1px solid var(--line);flex-shrink:0;}
 .bn-inner{display:flex;}
 .bn-btn{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:.12rem;padding:.52rem .1rem;background:none;border:none;cursor:pointer;font-family:'DM Sans',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;color:var(--muted);font-size:.54rem;font-weight:600;text-transform:uppercase;letter-spacing:.04em;transition:color .15s;}
 .bn-icon{width:22px;height:22px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}.bn-icon svg{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round;}
@@ -1015,7 +1015,7 @@ html,body{height:100%;overflow:hidden;font-family:'DM Sans',-apple-system,BlinkM
     border-left:none;
     border-top:1px solid var(--line);
     top:auto;
-    bottom:calc(56px + env(safe-area-inset-bottom, 0px));
+    bottom:56px;
     height:55vh;
     border-radius:20px 20px 0 0;
     overflow:hidden;
@@ -1027,7 +1027,7 @@ html,body{height:100%;overflow:hidden;font-family:'DM Sans',-apple-system,BlinkM
   #qc-fab{ display:flex; }
 
   /* ── Toast ── */
-  .toast{bottom:calc(env(safe-area-inset-bottom,0px) + 68px);font-size:.75rem;}
+  .toast{bottom:68px;font-size:.75rem;}
 
   /* ── Onboarding ── */
   #ob{padding:0;align-items:flex-end;}
@@ -1085,7 +1085,7 @@ html, body, #app {
     z-index: 800;
     background: var(--ink);
     color: var(--paper);
-    padding: .85rem 1rem calc(.85rem + env(safe-area-inset-bottom, 0px)) 1rem;
+    padding: .85rem 1rem .85rem 1rem;
     flex-direction: row;
     align-items: center;
     gap: .75rem;
@@ -1117,7 +1117,7 @@ html, body, #app {
     z-index: 800;
     background: var(--ink);
     color: var(--paper);
-    padding: 1rem 1.1rem calc(1rem + env(safe-area-inset-bottom, 0px)) 1.1rem;
+    padding: 1rem 1.1rem 1rem 1.1rem;
     border-radius: 20px 20px 0 0;
     box-shadow: 0 -4px 24px rgba(0,0,0,.3);
     animation: slideUp .35s cubic-bezier(.34,1.56,.64,1);
@@ -1151,7 +1151,7 @@ html, body, #app {
 
     /* Bottom nav: account for safe area */
     #bottom-nav {
-        padding-bottom: env(safe-area-inset-bottom, 0px);
+        padding-bottom: 0px;
         position: sticky;
         bottom: 0;
     }
@@ -1183,7 +1183,7 @@ html, body, #app {
     #mobile-qc-fab {
         display: flex;
         position: fixed;
-        bottom: calc(64px + env(safe-area-inset-bottom, 0px) + 12px);
+        bottom: calc(64px + 0px + 12px);
         right: 14px;
         width: 48px; height: 48px;
         border-radius: 50%;
@@ -1313,7 +1313,7 @@ html, body, #app {
 </div>
 
 <!-- ════ ONBOARDING ════ -->
-<div id="ob">
+<div id="ob" style="display:none;">
 <div class="ob-card">
   <div class="ob-logo">Men<span>mory</span> <span class="ob-logo-icon">📚</span></div>
 
@@ -2629,6 +2629,7 @@ function togSub(el,label){
   else obSubjects=obSubjects.filter(s=>s!==label);
 }
 function buildOBComps(){
+  document.getElementById('ob').style.display='flex';
   document.getElementById('ob-comp-grid').innerHTML=Object.values(CHARS).map(c=>`
     <div class="comp-card" onclick="pickComp('${c.id}',this)">
       <img class="comp-avi" src="${c.img}" alt="${c.name}"/>
