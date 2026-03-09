@@ -610,16 +610,16 @@ html,body{height:100%;overflow:hidden;font-family:'DM Sans',-apple-system,BlinkM
 .note-save-btn{background:var(--ink);color:var(--paper);border:none;border-radius:8px;padding:.4rem .9rem;font-family:'DM Sans',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:.78rem;font-weight:600;cursor:pointer;margin-left:auto;}
 .add-note-btn{display:flex;align-items:center;gap:.4rem;border:2px dashed var(--line);background:none;border-radius:var(--r);padding:.7rem 1rem;font-family:'DM Sans',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:.82rem;font-weight:500;color:var(--muted);cursor:pointer;width:100%;margin-bottom:1rem;transition:all .15s;}
 .add-note-btn:hover{border-color:var(--ink);color:var(--ink);}
-.note-card{background:var(--paper);border:1px solid var(--line);border-radius:var(--r);padding:.95rem 1rem;margin-bottom:.6rem;cursor:pointer;transition:all .18s;position:relative;}
+.note-card{background:var(--paper);border:1px solid var(--line);border-radius:var(--r);padding:.95rem 1rem;margin-bottom:.6rem;cursor:pointer;transition:all .18s;}
 .note-card:hover{border-color:var(--ink);transform:translateY(-1px);box-shadow:0 3px 12px rgba(0,0,0,.06);}
 .note-card-title{font-family:'DM Serif Display',Georgia,'Times New Roman',serif;font-size:.98rem;margin-bottom:.28rem;line-height:1.3;}
 .note-card-subject{display:inline-flex;align-items:center;border-radius:6px;padding:.18rem .5rem;font-size:.65rem;font-weight:700;margin-bottom:.45rem;letter-spacing:.02em;}
 .note-card-preview{font-size:.78rem;color:var(--muted);line-height:1.5;margin-bottom:.55rem;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;}
-.note-card-foot{display:flex;align-items:center;gap:.4rem;}
-.note-card-time{font-size:.62rem;color:var(--muted);margin-left:auto;}
-.note-card-actions{position:absolute;top:.7rem;right:.7rem;display:flex;gap:.25rem;opacity:0;transition:opacity .15s;}
-.note-card:hover .note-card-actions{opacity:1;}
-.nca-btn{background:var(--paper2);border:none;border-radius:6px;padding:.22rem .4rem;font-size:.65rem;cursor:pointer;font-family:'DM Sans',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;}
+.note-card-foot{display:flex;align-items:center;justify-content:space-between;gap:.4rem;margin-top:.4rem;}
+.note-card-time{font-size:.62rem;color:var(--muted);}
+.note-card-actions{display:flex;gap:.25rem;}
+
+.nca-btn{background:var(--paper2);border:none;border-radius:6px;padding:.32rem .55rem;font-size:.68rem;cursor:pointer;font-family:'DM Sans',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;touch-action:manipulation;}
 .nca-btn.del{color:var(--red);}
 .nca-btn.card{color:var(--purple);}
 
@@ -2050,9 +2050,6 @@ html, body, #app {
   </div>
 </div>
 
-<!-- Review Session Modal -->
-<div class="modal-bg" id="review-modal">
-
 <!-- Generate Prompt Modal (cards + quiz from note/cards) -->
 <div class="modal-bg" id="gen-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:9998;align-items:center;justify-content:center;padding:1.2rem;">
   <div class="modal" style="max-width:360px;width:100%;">
@@ -3196,11 +3193,6 @@ function renderNotes(){
   list.innerHTML=filtered.map(n=>{
     const col=SUBJECT_COLORS[n.subject||'General']||'#6b7280';
     return'<div class="note-card" onclick="openNoteEditor('+n.id+')">'+
-      '<div class="note-card-actions" onclick="event.stopPropagation()">'+
-        '<button class="nca-btn card" title="Generate cards" onclick="openGenModal(\'cards\','+n.id+')">📇 Cards</button>'+
-        '<button class="nca-btn card" title="Quiz me" style="background:var(--green-light);color:var(--green);" onclick="openGenModal(\'quiz\','+n.id+')">🧠 Quiz</button>'+
-        '<button class="nca-btn del" title="Delete" onclick="deleteNote('+n.id+')">🗑</button>'+
-      '</div>'+
       '<div class="note-card-subject" style="background:'+col+'18;color:'+col+';border:1px solid '+col+'33;">'+
         (n.subject||'General')+
       '</div>'+
@@ -3208,6 +3200,11 @@ function renderNotes(){
       '<div class="note-card-preview">'+(n.body||'(empty)')+'</div>'+
       '<div class="note-card-foot">'+
         '<span class="note-card-time">'+relTime(n.created)+'</span>'+
+        '<div class="note-card-actions">'+
+          '<button class="nca-btn card" onclick="event.stopPropagation();openGenModal(\'cards\','+n.id+')">📇 Cards</button>'+
+          '<button class="nca-btn card" style="background:var(--green-light);color:var(--green);" onclick="event.stopPropagation();openGenModal(\'quiz\','+n.id+')">🧠 Quiz</button>'+
+          '<button class="nca-btn del" onclick="event.stopPropagation();deleteNote('+n.id+')">🗑</button>'+
+        '</div>'+
       '</div>'+
     '</div>';
   }).join('');
