@@ -6,3 +6,14 @@
   from = "/api/ai"
   to = "/.netlify/functions/ai"
   status = 200
+
+[[redirects]]
+  from = "/api/send-reminders"
+  to = "/.netlify/functions/send-reminders"
+  status = 200
+
+[functions]
+  node_bundler = "esbuild"
+
+[functions."send-reminders"]
+  schedule = "* * * * *"
