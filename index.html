@@ -2511,6 +2511,54 @@ async function fbSyncData(){
       },{merge:true});
     }
   }catch(e){ console.warn('Sync failed',e); }
+  // Also sync push data for background notifications
+  syncPushData();
+}
+
+// ── PUSH SUBSCRIPTION — saves subscription + reminders to Firestore pushData collection ──
+const PUSH_VAPID_PUBLIC = 'BCTkEftgNa1f-rVf3ebgpoSNcjic7N-WfuDfBRt6_otPEZADDuxTZeLeRH97nFDm9-Ip7o3SkjRbWcK476xBLiY';
+
+async function subscribeToPush(){
+  if(!('serviceWorker' in navigator) || !('PushManager' in window)) return;
+  if(Notification.permission !== 'granted') return;
+  try{
+    const reg = await navigator.serviceWorker.ready;
+    let sub = await reg.pushManager.getSubscription();
+    if(!sub){
+      sub = await reg.pushManager.subscribe({
+        userVisibleOnly: true,
+        applicationServerKey: urlBase64ToUint8Array(PUSH_VAPID_PUBLIC)
+      });
+    }
+    localStorage.setItem('fn_push_sub', JSON.stringify(sub));
+    syncPushData();
+    return sub;
+  }catch(e){ console.warn('Push subscribe failed', e); }
+}
+
+function urlBase64ToUint8Array(base64String){
+  const padding = '='.repeat((4 - base64String.length % 4) % 4);
+  const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
+  const rawData = atob(base64);
+  const outputArray = new Uint8Array(rawData.length);
+  for(let i = 0; i < rawData.length; ++i) outputArray[i] = rawData.charCodeAt(i);
+  return outputArray;
+}
+
+async function syncPushData(){
+  const uid = localStorage.getItem('fn_current_user');
+  if(!uid || uid==='guest' || !window._fbDb) return;
+  const subStr = localStorage.getItem('fn_push_sub');
+  if(!subStr) return;
+  try{
+    const data = JSON.parse(localStorage.getItem('mb7_data')||'{}');
+    const reminders = JSON.stringify(data.reminders||[]);
+    await window._fbFns.setDoc(
+      window._fbFns.doc(window._fbDb,'pushData',uid),
+      { subscription: subStr, reminders, updatedAt: new Date().toISOString() },
+      { merge: true }
+    );
+  }catch(e){ console.warn('Push sync failed', e); }
 }
 
 function _fbErrMsg(e){
@@ -2695,6 +2743,10 @@ function startApp(){
   startNotifPoller();
   // Show permission prompts if not yet asked
   setTimeout(showStartupPermissions, 1500);
+  // Subscribe to push if already permitted
+  if(typeof Notification!=='undefined' && Notification.permission==='granted'){
+    setTimeout(subscribeToPush, 2000);
+  }
   // Register SW message listener for fired notifications
   if(navigator.serviceWorker){
     navigator.serviceWorker.addEventListener('message', function(e){
@@ -3996,6 +4048,7 @@ async function grantNotifFromModal(){
   document.getElementById('perm-modal').style.display='none';
   localStorage.setItem('fn_perm_notif_asked','1');
   await requestNotifPermission();
+  await subscribeToPush();
   showMicModal();
 }
 
