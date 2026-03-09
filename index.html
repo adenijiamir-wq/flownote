@@ -811,6 +811,8 @@ html,body{height:100%;overflow:hidden;font-family:'DM Sans',-apple-system,BlinkM
 .m-btns{display:flex;gap:.45rem;justify-content:flex-end;}
 .btn-c{background:var(--paper);color:var(--ink);border:1.5px solid var(--line);border-radius:8px;padding:.45rem .85rem;font-family:'DM Sans',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:.8rem;font-weight:600;cursor:pointer;}
 .btn-ok{background:var(--ink);color:var(--paper);border:none;border-radius:8px;padding:.45rem .85rem;font-family:'DM Sans',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:.8rem;font-weight:600;cursor:pointer;}
+.card-when-btn{background:var(--paper2);border:1.5px solid var(--line);border-radius:8px;padding:.4rem .3rem;font-family:'DM Sans',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:.68rem;font-weight:600;cursor:pointer;color:var(--muted);transition:all .15s;}
+.card-when-btn.active{background:var(--green);border-color:var(--green);color:#fff;}
 /* review modal */
 .review-modal-card{background:var(--paper2);border-radius:10px;padding:1.1rem;text-align:center;}
 .review-modal-q{font-family:'DM Serif Display',Georgia,'Times New Roman',serif;font-size:1.05rem;margin-bottom:.35rem;}
@@ -1428,7 +1430,7 @@ html, body, #app {
         <button class="nav-btn" id="nav-notes" onclick="navTo('notes',this)"><span class="nav-icon"><svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><line x1="10" y1="9" x2="8" y2="9"/></svg></span>Notes</button>
         <button class="nav-btn" id="nav-cards" onclick="navTo('cards',this)"><span class="nav-icon"><svg viewBox="0 0 24 24"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg></span>Study Cards</button>
         <button class="nav-btn" id="nav-reminders" onclick="navTo('home',document.getElementById('nav-home'));setTimeout(()=>{document.getElementById('home-reminders-section').scrollIntoView({behavior:'smooth'});toggleRemForm(true);},120)"><span class="nav-icon"><svg viewBox="0 0 24 24"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg></span>Reminders</button>
-        <button class="nav-btn" id="nav-gaps" onclick="navTo('gaps',this)"><span class="nav-icon"><svg viewBox="0 0 24 24"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg></span>Memory Gaps</button>
+        <button class="nav-btn" id="nav-gaps" onclick="navTo('gaps',this)"><span class="nav-icon"><svg viewBox="0 0 24 24"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg></span>Progress</button>
         <button class="nav-btn" id="nav-chat" onclick="navTo('chat',this)"><span class="nav-icon"><svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/><circle cx="9" cy="10" r="1" fill="currentColor"/><circle cx="12" cy="10" r="1" fill="currentColor"/><circle cx="15" cy="10" r="1" fill="currentColor"/></svg></span><span id="chat-nav-lbl">Coach</span><span class="nav-badge" id="review-badge" style="display:none">0</span></button>
         <div class="sb-section" style="margin-top:.5rem;">Subjects</div>
         <div id="sb-subjects"></div>
@@ -1488,14 +1490,6 @@ html, body, #app {
 
           <!-- Next action nudge -->
           <div class="full" id="home-next-action"></div>
-
-          <!-- Due for review -->
-          <div class="full" id="home-review-section" style="display:none;">
-            <div class="review-card">
-              <h4>⏰ Due for Review</h4>
-              <div id="home-review-list"></div>
-            </div>
-          </div>
 
           <!-- ── REMINDERS & TASKS ── -->
           <div class="full" id="home-reminders-section">
@@ -1616,13 +1610,16 @@ html, body, #app {
         <div class="study-header">
           <div style="font-family:'DM Serif Display',Georgia,'Times New Roman',serif;font-size:1.1rem;">Study Cards</div>
           <div style="display:flex;gap:.5rem;">
+            <button class="gen-card-btn" style="width:auto;padding:.42rem .85rem;font-size:.75rem;margin-bottom:0;background:var(--green-light);color:var(--green);border:1.5px solid var(--green);" onclick="openGenModal('quiz-cards')">🧠 Quiz me</button>
             <button class="gen-card-btn" style="width:auto;padding:.42rem .85rem;font-size:.75rem;margin-bottom:0;" onclick="openManualCardModal()">+ Add card</button>
           </div>
         </div>
         <div class="study-filters" id="cards-filter-chips">
           <div class="filter-chip active" data-subj="all" onclick="setCardFilter('all',this)">All</div>
-          <div class="filter-chip" data-subj="due" onclick="setCardFilter('due',this)">⏰ Due now</div>
+          <div class="filter-chip" data-subj="due" onclick="setCardFilter('due',this)">📅 Due today</div>
         </div>
+        <!-- Topic filter row — shown when a subject is active -->
+        <div class="study-filters" id="cards-topic-chips" style="display:none;padding-top:0;margin-top:-.3rem;"></div>
 
         <!-- Active flashcard -->
         <div id="fc-session" style="display:none;">
@@ -1663,10 +1660,6 @@ html, body, #app {
 
       <!-- ── MEMORY GAPS ── -->
       <div class="page" id="page-gaps">
-        <div class="card" style="margin-bottom:.85rem;">
-          <div class="section-head"><div class="section-title">Your Memory Gaps</div></div>
-          <p style="font-size:.8rem;color:var(--muted);line-height:1.6;">Based on your study card performance. Topics you keep getting wrong are highlighted. Your coach uses this to check in on you.</p>
-        </div>
         <div id="gaps-content"></div>
       </div>
 
@@ -2025,14 +2018,32 @@ html, body, #app {
 
 <!-- Manual Study Card Modal -->
 <div class="modal-bg" id="card-modal">
-  <div class="modal">
-    <h3>New Study Card</h3>
-    <label style="font-size:.68rem;font-weight:700;text-transform:uppercase;letter-spacing:.09em;color:var(--muted);">Question</label>
-    <textarea id="card-q" placeholder="What is the powerhouse of the cell?" rows="3"></textarea>
-    <label style="font-size:.68rem;font-weight:700;text-transform:uppercase;letter-spacing:.09em;color:var(--muted);">Answer</label>
-    <textarea id="card-a" placeholder="The mitochondria" rows="2"></textarea>
-    <select id="card-subj"></select>
-    <div class="m-btns">
+  <div class="modal" style="gap:.5rem;">
+    <h3 style="margin-bottom:.1rem;">New Study Card</h3>
+
+    <textarea id="card-q" placeholder="Question — e.g. What is the powerhouse of the cell?" rows="2" style="resize:none;"></textarea>
+    <textarea id="card-a" placeholder="Answer — e.g. The mitochondria" rows="2" style="resize:none;"></textarea>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:.4rem;">
+      <select id="card-subj" style="font-size:.78rem;padding:.45rem .7rem;"></select>
+      <input id="card-topic" placeholder="# Topic (optional)" style="font-size:.78rem;padding:.45rem .7rem;background:var(--paper2);border:1.5px solid var(--line);border-radius:9px;color:var(--ink);font-family:inherit;width:100%;box-sizing:border-box;"/>
+    </div>
+
+    <div>
+      <div style="font-size:.62rem;font-weight:700;text-transform:uppercase;letter-spacing:.09em;color:var(--muted);margin-bottom:.35rem;">When to start reviewing?</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:.3rem;margin-bottom:.35rem;" id="card-when-btns">
+        <button onclick="setCardWhen(this,1)"  class="card-when-btn">Tomorrow</button>
+        <button onclick="setCardWhen(this,3)"  class="card-when-btn">3 days</button>
+        <button onclick="setCardWhen(this,7)"  class="card-when-btn active">1 week</button>
+        <button onclick="setCardWhen(this,14)" class="card-when-btn">2 weeks</button>
+      </div>
+      <div style="display:flex;align-items:center;gap:.5rem;">
+        <input type="date" id="card-when-date" style="flex:1;background:var(--paper2);border:1.5px solid var(--line);border-radius:8px;padding:.38rem .6rem;font-family:inherit;font-size:.73rem;color:var(--ink);cursor:pointer;" onchange="setCardWhenDate(this.value)"/>
+        <span style="font-size:.63rem;color:var(--muted);white-space:nowrap;">Pick a date</span>
+      </div>
+    </div>
+
+    <div class="m-btns" style="margin-top:.1rem;">
       <button class="btn-c" onclick="closeCardModal()">Cancel</button>
       <button class="btn-ok" onclick="confirmAddCard()">Add Card</button>
     </div>
@@ -2040,6 +2051,65 @@ html, body, #app {
 </div>
 
 <!-- Review Session Modal -->
+<div class="modal-bg" id="review-modal">
+
+<!-- Generate Prompt Modal (cards + quiz from note/cards) -->
+<div class="modal-bg" id="gen-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:9998;align-items:center;justify-content:center;padding:1.2rem;">
+  <div class="modal" style="max-width:360px;width:100%;">
+    <h3 id="gen-modal-title">Generate Study Cards</h3>
+    <div style="font-size:.72rem;color:var(--muted);margin-bottom:1rem;" id="gen-modal-sub">Based on your note</div>
+
+    <label style="font-size:.68rem;font-weight:700;text-transform:uppercase;letter-spacing:.09em;color:var(--muted);display:block;margin-bottom:.4rem;">How many?</label>
+    <div style="display:flex;align-items:center;gap:.75rem;margin-bottom:1rem;">
+      <button onclick="adjGenCount(-1)" style="width:36px;height:36px;border-radius:50%;border:1.5px solid var(--line);background:var(--paper2);font-size:1.2rem;cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--ink);">−</button>
+      <span id="gen-count-display" style="font-size:1.4rem;font-weight:800;color:var(--green);min-width:32px;text-align:center;">5</span>
+      <button onclick="adjGenCount(1)" style="width:36px;height:36px;border-radius:50%;border:1.5px solid var(--line);background:var(--paper2);font-size:1.2rem;cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--ink);">+</button>
+      <span style="font-size:.72rem;color:var(--muted);">suggested based on note length</span>
+    </div>
+
+    <div id="gen-modal-type-row" style="display:none;">
+      <label style="font-size:.68rem;font-weight:700;text-transform:uppercase;letter-spacing:.09em;color:var(--muted);display:block;margin-bottom:.4rem;">Question type</label>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:.35rem;margin-bottom:1rem;">
+        <button onclick="setGenType(this,'mixed')" class="card-when-btn active" id="gtype-mixed">Mixed</button>
+        <button onclick="setGenType(this,'mcq')" class="card-when-btn" id="gtype-mcq">Multiple choice</button>
+        <button onclick="setGenType(this,'open')" class="card-when-btn" id="gtype-open">Open ended</button>
+      </div>
+    </div>
+
+    <label style="font-size:.68rem;font-weight:700;text-transform:uppercase;letter-spacing:.09em;color:var(--muted);display:block;margin-bottom:.4rem;">Topic <span style="font-weight:400;text-transform:none;">(optional)</span></label>
+    <input id="gen-topic-input" placeholder="e.g. Calculus — Derivatives" style="width:100%;box-sizing:border-box;background:var(--paper2);border:1.5px solid var(--line);border-radius:10px;padding:.55rem .8rem;font-family:inherit;font-size:.82rem;color:var(--ink);margin-bottom:1rem;"/>
+
+    <div class="m-btns">
+      <button class="btn-c" onclick="closeGenModal()">Cancel</button>
+      <button class="btn-ok" id="gen-modal-go" onclick="runGenModal()">Generate ✨</button>
+    </div>
+  </div>
+</div>
+
+<!-- Quiz Modal -->
+<div class="modal-bg" id="quiz-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:9999;align-items:center;justify-content:center;padding:1.2rem;">
+  <div class="modal" style="max-width:400px;width:100%;max-height:85vh;overflow-y:auto;">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.3rem;">
+      <div style="font-size:.72rem;color:var(--muted);" id="quiz-progress-label">Question 1 of 5</div>
+      <button onclick="closeQuizModal()" style="background:none;border:none;color:var(--muted);font-size:1.1rem;cursor:pointer;">✕</button>
+    </div>
+    <!-- Progress bar -->
+    <div style="background:var(--line);border-radius:4px;height:4px;margin-bottom:1rem;">
+      <div id="quiz-progress-bar" style="background:var(--green);height:4px;border-radius:4px;transition:width .3s;width:0%;"></div>
+    </div>
+    <div id="quiz-question-area"></div>
+    <div id="quiz-feedback-area" style="display:none;margin-top:.75rem;border-radius:10px;padding:.7rem .9rem;font-size:.8rem;line-height:1.5;"></div>
+    <div style="margin-top:.85rem;display:flex;gap:.5rem;" id="quiz-action-btns"></div>
+    <!-- Results screen -->
+    <div id="quiz-results" style="display:none;text-align:center;padding:.5rem 0;">
+      <div style="font-size:2.5rem;margin-bottom:.5rem;" id="quiz-result-emoji">🎉</div>
+      <div style="font-family:'DM Serif Display',Georgia,serif;font-size:1.2rem;margin-bottom:.3rem;" id="quiz-result-title">Quiz complete!</div>
+      <div style="font-size:.82rem;color:var(--muted);margin-bottom:1rem;" id="quiz-result-score"></div>
+      <div id="quiz-result-feedback" style="font-size:.78rem;color:var(--muted);line-height:1.6;margin-bottom:1rem;text-align:left;"></div>
+      <button onclick="closeQuizModal()" style="width:100%;background:var(--green);color:#fff;border:none;border-radius:10px;padding:.7rem;font-family:inherit;font-size:.88rem;font-weight:700;cursor:pointer;">Done</button>
+    </div>
+  </div>
+</div>
 <div class="modal-bg" id="review-modal">
   <div class="modal">
     <h3>📚 Review Session</h3>
@@ -2230,7 +2300,7 @@ let userName='', userEmail='', userStruggles=[], userSubjects=[], currentChar='z
 let anthropicApiKey='', aiBackend='anthropic';
 let reminders=[], notes=[], studyCards=[], streakDays=0;
 let reviewSession=[], reviewIndex=0, reviewMode=false;
-let currentNoteFilter='all', currentCardFilter='all';
+let currentNoteFilter='all', currentCardFilter='all', currentCardTopicFilter='all';
 let editingNoteId=null;
 let qcOpen=false;
 let chatHistory=[];
@@ -2314,8 +2384,26 @@ function scheduleCard(card, grade){
   next.setDate(next.getDate()+card.interval);
   card.nextReview=next.toISOString().split('T')[0];
   card.lastGrade=grade;
+
+  // Log daily study activity
+  logDailyStudy(grade);
+
   save();
   return card;
+}
+
+function logDailyStudy(grade){
+  const today=todayStr();
+  let log={};
+  try{ log=JSON.parse(localStorage.getItem('fn_study_log')||'{}'); }catch(e){}
+  if(!log[today]) log[today]={reviewed:0,correct:0,again:0};
+  log[today].reviewed++;
+  if(grade===0) log[today].again++;
+  else log[today].correct++;
+  // Keep only last 30 days
+  const keys=Object.keys(log).sort();
+  if(keys.length>30) keys.slice(0,keys.length-30).forEach(k=>delete log[k]);
+  localStorage.setItem('fn_study_log', JSON.stringify(log));
 }
 
 function getDueCards(){
@@ -2834,7 +2922,7 @@ function navTo(id,btn){
   if(pageEl) pageEl.classList.add('active');
   document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
   if(btn)btn.classList.add('active');
-  const titles={home:'Home',notes:'Notes',cards:'Study Cards',reminders:'Reminders',gaps:'Memory Gaps',chat:'Chat with '+CHARS[currentChar].name,profile:'Profile'};
+  const titles={home:'Home',notes:'Notes',cards:'Study Cards',reminders:'Reminders',gaps:'Progress',chat:'Chat with '+CHARS[currentChar].name,profile:'Profile'};
   document.getElementById('page-title').textContent=titles[id]||id;
   closeSidebar();
   if(id==='cards') renderCards();
@@ -2866,8 +2954,9 @@ function populateCardSubjectFilter(){
   const subjects=getAllSubjects();
   fc.innerHTML=
     '<div class="filter-chip active" data-subj="all" onclick="setCardFilter(\'all\',this)">All</div>'+
-    '<div class="filter-chip" data-subj="due" onclick="setCardFilter(\'due\',this)">⏰ Due now</div>'+
+    '<div class="filter-chip" data-subj="due" onclick="setCardFilter(\'due\',this)">📅 Due today</div>'+
     subjects.map(s=>`<div class="filter-chip" data-subj="${s}" onclick="setCardFilter('${s}',this)">${s}</div>`).join('');
+  renderTopicChips();
 }
 function setNoteFilter(subj,el){
   currentNoteFilter=subj;
@@ -2881,13 +2970,43 @@ function setNoteFilter(subj,el){
 }
 function setCardFilter(subj,el){
   currentCardFilter=subj;
+  currentCardTopicFilter='all';
   document.querySelectorAll('#cards-filter-chips .filter-chip').forEach(c=>c.classList.remove('active'));
   if(el)el.classList.add('active');
+  renderTopicChips();
   renderCards();
+}
+function setCardTopicFilter(topic, el){
+  currentCardTopicFilter = topic;
+  document.querySelectorAll('#cards-topic-chips .filter-chip').forEach(c=>c.classList.remove('active'));
+  if(el) el.classList.add('active');
+  renderCards();
+}
+function renderTopicChips(){
+  const row = document.getElementById('cards-topic-chips');
+  if(!row) return;
+  // Only show topic row when a real subject is selected
+  if(currentCardFilter==='all'||currentCardFilter==='due'){
+    row.style.display='none'; return;
+  }
+  const topics=[...new Set(
+    studyCards
+      .filter(c=>(c.subject||'General')===currentCardFilter && c.topic && c.topic.trim())
+      .map(c=>c.topic.trim())
+  )].sort();
+  if(!topics.length){ row.style.display='none'; return; }
+  row.style.display='flex';
+  row.innerHTML=
+    `<div class="filter-chip ${currentCardTopicFilter==='all'?'active':''}" onclick="setCardTopicFilter('all',this)" style="font-size:.68rem;">All topics</div>`+
+    topics.map(t=>`<div class="filter-chip ${currentCardTopicFilter===t?'active':''}" onclick="setCardTopicFilter('${t.replace(/'/g,"\\'")}',this)" style="font-size:.68rem;">${t}</div>`).join('');
 }
 function subjectTag(subj){
   const col=SUBJECT_COLORS[subj||'General']||'#6b7280';
   return`<span class="tag" style="background:${col}22;color:${col};">${subj||'General'}</span>`;
+}
+function topicTag(topic){
+  if(!topic||!topic.trim()) return '';
+  return`<span style="background:var(--paper2);border:1px solid var(--line);border-radius:5px;padding:.1rem .4rem;font-size:.6rem;color:var(--muted);font-weight:600;"># ${topic}</span>`;
 }
 
 // ══════════════════════════════════════════════════════
@@ -2954,6 +3073,11 @@ function openNoteEditor(noteId){
   } else {
     document.getElementById('note-title').value='';
     document.getElementById('note-body').value='';
+    // Auto-select subject to match current filter
+    const sel=document.getElementById('note-subj-sel');
+    if(sel && currentNoteFilter && currentNoteFilter!=='all'){
+      sel.value=currentNoteFilter;
+    }
   }
   setTimeout(()=>document.getElementById('note-title').focus(),100);
 }
@@ -3000,26 +3124,30 @@ RULES:
 - If the note is a to-do list, personal journal, random thoughts, short reminders, or anything NOT educational → return exactly: []
 - If the note contains facts, definitions, concepts, processes, or knowledge worth memorising → create 2-5 flashcards
 - Cards must test SPECIFIC knowledge, not vague questions
-- Return ONLY a JSON array: [{"q":"question","a":"answer"}] or []
-- No explanation, no markdown, just the array`,
+- Also identify a short topic name (2-5 words) that best describes what this note is about
+- Return ONLY a JSON object: {"topic":"topic name","cards":[{"q":"question","a":"answer"}]} or []
+- No explanation, no markdown, just the JSON`,
       body.substring(0,1500), 400
     );
-    let cards;
-    try{cards=JSON.parse(raw.replace(/```json|```/g,'').trim());}catch{return;}
-    if(!Array.isArray(cards)||cards.length===0){
-      // AI decided not worth it — silently do nothing
-      return;
-    }
+    let parsed;
+    try{
+      const cleaned=raw.replace(/```json|```/g,'').trim();
+      parsed=JSON.parse(cleaned);
+    }catch{return;}
+    // Handle both old [] format and new {topic,cards} format
+    const cards=Array.isArray(parsed)?parsed:(parsed.cards||[]);
+    const topic=parsed.topic||'';
+    if(!Array.isArray(cards)||cards.length===0) return;
     let added=0;
     cards.forEach(c=>{
       if(c.q&&c.a){
-        studyCards.push({id:Date.now()+Math.random(),question:c.q,answer:c.a,subject,sourceNoteId:noteId,created:new Date().toISOString(),reps:0,lapses:0,ease:2.5,interval:1,nextReview:todayStr()});
+        studyCards.push({id:Date.now()+Math.random(),question:c.q,answer:c.a,subject,topic,sourceNoteId:noteId,created:new Date().toISOString(),reps:0,lapses:0,ease:2.5,interval:1,nextReview:tomorrowStr()});
         added++;
       }
     });
     if(added){
       save();renderCards();populateCardSubjectFilter();checkReviewBadge();
-      toast('🃏 '+added+' study card'+(added>1?'s':'')+' generated from your note!');
+      toast('🃏 '+added+' card'+(added>1?'s':'')+' generated'+(topic?' · Topic: '+topic:'')+'!');
     }
   }catch(e){console.warn('Card gen failed',e);}
 }
@@ -3069,7 +3197,8 @@ function renderNotes(){
     const col=SUBJECT_COLORS[n.subject||'General']||'#6b7280';
     return'<div class="note-card" onclick="openNoteEditor('+n.id+')">'+
       '<div class="note-card-actions" onclick="event.stopPropagation()">'+
-        '<button class="nca-btn card" title="Generate cards" onclick="autoGenCardsFromNote('+n.id+',\''+encodeURIComponent(n.body||'')+'\',\''+(n.subject||'General')+'\')">🃏 Cards</button>'+
+        '<button class="nca-btn card" title="Generate cards" onclick="openGenModal(\'cards\','+n.id+')">📇 Cards</button>'+
+        '<button class="nca-btn card" title="Quiz me" style="background:var(--green-light);color:var(--green);" onclick="openGenModal(\'quiz\','+n.id+')">🧠 Quiz</button>'+
         '<button class="nca-btn del" title="Delete" onclick="deleteNote('+n.id+')">🗑</button>'+
       '</div>'+
       '<div class="note-card-subject" style="background:'+col+'18;color:'+col+';border:1px solid '+col+'33;">'+
@@ -3085,12 +3214,388 @@ function renderNotes(){
 }
 
 // ══════════════════════════════════════════════════════
-// STUDY CARDS
+// GENERATE PROMPT MODAL — cards + quiz from note or cards
 // ══════════════════════════════════════════════════════
+let _genMode = null; // 'cards' | 'quiz' | 'quiz-cards'
+let _genNoteId = null;
+let _genCount = 5;
+let _genType = 'mixed';
+
+function suggestCount(text){
+  const words = (text||'').trim().split(/\s+/).length;
+  if(words < 80) return 3;
+  if(words < 200) return 5;
+  if(words < 400) return 7;
+  return 10;
+}
+
+function openGenModal(mode, noteId){
+  _genMode = mode;
+  _genNoteId = noteId || null;
+  _genType = 'mixed';
+
+  const modal = document.getElementById('gen-modal');
+  const title = document.getElementById('gen-modal-title');
+  const sub = document.getElementById('gen-modal-sub');
+  const typeRow = document.getElementById('gen-modal-type-row');
+  const topicInp = document.getElementById('gen-topic-input');
+
+  if(mode === 'cards'){
+    title.textContent = '📇 Generate Study Cards';
+    sub.textContent = 'AI will create flashcards from this note';
+    typeRow.style.display = 'none';
+  } else if(mode === 'quiz'){
+    title.textContent = '🧠 Quiz Me';
+    sub.textContent = 'AI will quiz you on this note';
+    typeRow.style.display = 'block';
+  } else {
+    // quiz-cards: respect subject AND topic filter
+    let pool = currentCardFilter==='all'?studyCards:currentCardFilter==='due'?getDueCards():studyCards.filter(c=>(c.subject||'General')===currentCardFilter);
+    if(currentCardTopicFilter!=='all') pool = pool.filter(c=>(c.topic||'').trim()===currentCardTopicFilter);
+    const filterLabel = currentCardTopicFilter!=='all'
+      ? currentCardTopicFilter+' ('+currentCardFilter+')'
+      : currentCardFilter==='all'?'all cards':currentCardFilter==='due'?'due today':currentCardFilter+' cards';
+    sub.textContent = 'Quizzing on: '+filterLabel;
+    typeRow.style.display = 'block';
+  }
+
+  // Suggest count
+  let suggested = 5;
+  if(noteId){
+    const note = notes.find(n=>n.id===noteId);
+    if(note) suggested = suggestCount(note.body||'');
+  } else if(mode==='quiz-cards'){
+    let pool = currentCardFilter==='all'?studyCards:currentCardFilter==='due'?getDueCards():studyCards.filter(c=>(c.subject||'General')===currentCardFilter);
+    if(currentCardTopicFilter!=='all') pool = pool.filter(c=>(c.topic||'').trim()===currentCardTopicFilter);
+    suggested = Math.min(pool.length, 8);
+  }
+  _genCount = suggested;
+  document.getElementById('gen-count-display').textContent = _genCount;
+
+  // Reset type buttons
+  ['mixed','mcq','open'].forEach(t=>{
+    const b = document.getElementById('gtype-'+t);
+    if(b) b.classList.toggle('active', t==='mixed');
+  });
+  _genType = 'mixed';
+
+  // Pre-fill topic from note subject
+  if(noteId){
+    const note = notes.find(n=>n.id===noteId);
+    if(note && topicInp) topicInp.value = note.subject !== 'General' ? (note.subject||'') : '';
+  } else {
+    if(topicInp) topicInp.value = currentCardFilter!=='all'&&currentCardFilter!=='due' ? currentCardFilter : '';
+  }
+
+  modal.style.display = 'flex';
+}
+
+function closeGenModal(){
+  document.getElementById('gen-modal').style.display = 'none';
+}
+
+function adjGenCount(delta){
+  _genCount = Math.max(1, Math.min(15, _genCount + delta));
+  document.getElementById('gen-count-display').textContent = _genCount;
+}
+
+function setGenType(btn, type){
+  _genType = type;
+  ['mixed','mcq','open'].forEach(t=>{
+    const b = document.getElementById('gtype-'+t);
+    if(b) b.classList.toggle('active', t===type);
+  });
+}
+
+async function runGenModal(){
+  closeGenModal();
+  const topic = (document.getElementById('gen-topic-input').value||'').trim();
+  if(_genMode === 'cards'){
+    const note = notes.find(n=>n.id===_genNoteId);
+    if(note) await genCardsFromNote(_genNoteId, note.body||'', note.subject||'General', _genCount, topic);
+  } else if(_genMode === 'quiz'){
+    const note = notes.find(n=>n.id===_genNoteId);
+    if(note) await genQuizFromNote(note, _genCount, _genType, topic);
+  } else {
+    let pool = currentCardFilter==='all'?studyCards:currentCardFilter==='due'?getDueCards():studyCards.filter(c=>(c.subject||'General')===currentCardFilter);
+    if(currentCardTopicFilter!=='all') pool = pool.filter(c=>(c.topic||'').trim()===currentCardTopicFilter);
+    await genQuizFromCards(pool, _genCount, _genType, topic);
+  }
+}
+
+// ══════════════════════════════════════════════════════
+// CARD GENERATION FROM NOTE (with count + topic)
+// ══════════════════════════════════════════════════════
+async function genCardsFromNote(noteId, body, subject, count, topic){
+  if(!body||body.length<30){toast('Note is too short to generate cards from.');return;}
+  toast('✨ Generating '+count+' cards…');
+  try{
+    const raw = await askAI(
+      `You are a study card generator. Create exactly ${count} flashcards from the note below.
+${topic?'Topic: '+topic:''}
+Subject: ${subject}
+
+Rules:
+- Return ONLY a JSON array: [{"q":"question","a":"answer","topic":"specific topic"}]
+- Each card must test specific, memorable knowledge
+- Questions should be clear and unambiguous
+- Answers concise (1-2 sentences max)
+- No markdown, no explanation, just the array`,
+      body.substring(0,2000), 800
+    );
+    let cards;
+    try{cards=JSON.parse(raw.replace(/```json|```/g,'').trim());}catch{toast('AI response error — try again');return;}
+    if(!Array.isArray(cards)||!cards.length){toast('Could not generate cards from this note');return;}
+    let added=0;
+    cards.forEach(c=>{
+      if(c.q&&c.a){
+        studyCards.push({
+          id:Date.now()+Math.random(),
+          question:c.q, answer:c.a,
+          subject, topic:c.topic||topic||'',
+          sourceNoteId:noteId,
+          created:new Date().toISOString(),
+          reps:0,lapses:0,ease:2.5,interval:1,
+          nextReview:tomorrowStr()
+        });
+        added++;
+      }
+    });
+    if(added){
+      save();renderCards();populateCardSubjectFilter();checkReviewBadge();
+      toast('📇 '+added+' card'+(added>1?'s':'')+' added!'+(topic?' ['+topic+']':''));
+    }
+  }catch(e){toast('Generation failed — check connection');console.warn(e);}
+}
+
+// ══════════════════════════════════════════════════════
+// QUIZ ENGINE
+// ══════════════════════════════════════════════════════
+let _quizQuestions = [];
+let _quizIdx = 0;
+let _quizScore = 0;
+let _quizTotal = 0;
+let _quizAnswered = false;
+
+async function genQuizFromNote(note, count, type, topic){
+  toast('🧠 Generating quiz…');
+  try{
+    const typeInstr = type==='mcq'?'multiple choice only':type==='open'?'open ended only':'mix of multiple choice and open ended';
+    const raw = await askAI(
+      `You are a quiz generator. Create exactly ${count} quiz questions (${typeInstr}) from the note below.
+${topic?'Topic: '+topic:''}
+
+Return ONLY a JSON array. Each item:
+- Multiple choice: {"type":"mcq","q":"question","options":["A","B","C","D"],"answer":"correct option text","explanation":"brief why"}
+- Open ended: {"type":"open","q":"question","answer":"model answer","explanation":"key points to include"}
+
+No markdown, no explanation, just the array.`,
+      (note.title?note.title+'\n\n':'')+(note.body||'').substring(0,2000), 1200
+    );
+    let qs;
+    try{qs=JSON.parse(raw.replace(/```json|```/g,'').trim());}catch{toast('AI response error — try again');return;}
+    if(!Array.isArray(qs)||!qs.length){toast('Could not generate quiz');return;}
+    startQuiz(qs, topic||note.subject||'Quiz');
+  }catch(e){toast('Quiz generation failed');console.warn(e);}
+}
+
+async function genQuizFromCards(pool, count, type, topic){
+  if(!pool.length){toast('No cards in this filter to quiz on!');return;}
+  toast('🧠 Generating quiz…');
+  const sample = pool.slice(0,20).map(c=>'Q: '+c.question+'\nA: '+c.answer).join('\n\n');
+  try{
+    const typeInstr = type==='mcq'?'multiple choice only':type==='open'?'open ended only':'mix of multiple choice and open ended';
+    const raw = await askAI(
+      `You are a quiz generator. Create exactly ${count} quiz questions (${typeInstr}) based on these flashcards.
+${topic?'Topic: '+topic:''}
+
+Return ONLY a JSON array. Each item:
+- Multiple choice: {"type":"mcq","q":"question","options":["A","B","C","D"],"answer":"correct option text","explanation":"brief why"}
+- Open ended: {"type":"open","q":"question","answer":"model answer","explanation":"key points to include"}
+
+No markdown, no explanation, just the array.`,
+      sample, 1200
+    );
+    let qs;
+    try{qs=JSON.parse(raw.replace(/```json|```/g,'').trim());}catch{toast('AI response error — try again');return;}
+    if(!Array.isArray(qs)||!qs.length){toast('Could not generate quiz');return;}
+    startQuiz(qs, topic||'Cards Quiz');
+  }catch(e){toast('Quiz generation failed');console.warn(e);}
+}
+
+function startQuiz(questions, title){
+  _quizQuestions = questions;
+  _quizIdx = 0;
+  _quizScore = 0;
+  _quizTotal = questions.length;
+  _quizAnswered = false;
+
+  const modal = document.getElementById('quiz-modal');
+  document.getElementById('quiz-results').style.display = 'none';
+  document.getElementById('quiz-question-area').style.display = 'block';
+  document.getElementById('quiz-feedback-area').style.display = 'none';
+  modal.style.display = 'flex';
+  showQuizQuestion();
+}
+
+function showQuizQuestion(){
+  if(_quizIdx >= _quizTotal){ showQuizResults(); return; }
+  const q = _quizQuestions[_quizIdx];
+  _quizAnswered = false;
+
+  const prog = document.getElementById('quiz-progress-label');
+  const bar = document.getElementById('quiz-progress-bar');
+  const area = document.getElementById('quiz-question-area');
+  const feedback = document.getElementById('quiz-feedback-area');
+  const actions = document.getElementById('quiz-action-btns');
+
+  if(prog) prog.textContent = 'Question '+(_quizIdx+1)+' of '+_quizTotal;
+  if(bar) bar.style.width = ((_quizIdx/_quizTotal)*100)+'%';
+  feedback.style.display = 'none';
+  feedback.textContent = '';
+
+  if(q.type === 'mcq'){
+    area.innerHTML = `
+      <div style="font-size:.88rem;font-weight:600;color:var(--ink);line-height:1.55;margin-bottom:.9rem;">${q.q}</div>
+      <div style="display:flex;flex-direction:column;gap:.45rem;" id="mcq-options">
+        ${(q.options||[]).map((opt,i)=>`
+          <button onclick="answerMCQ(this,'${opt.replace(/'/g,"\\'")}','${(q.answer||'').replace(/'/g,"\\'")}','${(q.explanation||'').replace(/'/g,"\\'")}',${i})"
+            style="background:var(--paper2);border:1.5px solid var(--line);border-radius:10px;padding:.6rem .85rem;font-family:inherit;font-size:.8rem;text-align:left;cursor:pointer;color:var(--ink);transition:all .15s;">
+            ${opt}
+          </button>`).join('')}
+      </div>`;
+    actions.innerHTML = '';
+  } else {
+    area.innerHTML = `
+      <div style="font-size:.88rem;font-weight:600;color:var(--ink);line-height:1.55;margin-bottom:.75rem;">${q.q}</div>
+      <textarea id="open-answer" placeholder="Type your answer…" rows="3"
+        style="width:100%;box-sizing:border-box;background:var(--paper2);border:1.5px solid var(--line);border-radius:10px;padding:.6rem .8rem;font-family:inherit;font-size:.82rem;color:var(--ink);resize:none;"></textarea>`;
+    actions.innerHTML = `<button onclick="checkOpenAnswer('${(q.answer||'').replace(/'/g,"\\'")}','${(q.explanation||'').replace(/'/g,"\\'")}',this)"
+      style="flex:1;background:var(--green);color:#fff;border:none;border-radius:10px;padding:.6rem;font-family:inherit;font-size:.85rem;font-weight:700;cursor:pointer;">Check answer →</button>`;
+  }
+}
+
+function answerMCQ(btn, chosen, correct, explanation, idx){
+  if(_quizAnswered) return;
+  _quizAnswered = true;
+  const isCorrect = chosen.trim() === correct.trim();
+  if(isCorrect) _quizScore++;
+
+  // Color all options
+  const opts = document.querySelectorAll('#mcq-options button');
+  opts.forEach(b=>{
+    const txt = b.textContent.trim();
+    if(txt === correct) b.style.background = '#dcfce7', b.style.borderColor = 'var(--green)', b.style.color = 'var(--green)';
+    else if(b === btn && !isCorrect) b.style.background = '#fee2e2', b.style.borderColor = 'var(--red)', b.style.color = 'var(--red)';
+    b.style.cursor = 'default';
+  });
+
+  const feedback = document.getElementById('quiz-feedback-area');
+  feedback.style.display = 'block';
+  feedback.style.background = isCorrect ? '#dcfce7' : '#fee2e2';
+  feedback.style.color = isCorrect ? 'var(--green)' : 'var(--red)';
+  feedback.textContent = (isCorrect ? '✅ Correct! ' : '❌ Incorrect. Correct answer: '+correct+'. ') + (explanation||'');
+
+  const actions = document.getElementById('quiz-action-btns');
+  actions.innerHTML = `<button onclick="nextQuizQuestion()" style="flex:1;background:var(--ink);color:var(--paper);border:none;border-radius:10px;padding:.6rem;font-family:inherit;font-size:.85rem;font-weight:700;cursor:pointer;">${_quizIdx+1 < _quizTotal ? 'Next →' : 'Finish'}</button>`;
+}
+
+async function checkOpenAnswer(modelAnswer, explanation, btn){
+  if(_quizAnswered) return;
+  _quizAnswered = true;
+  const userAnswer = (document.getElementById('open-answer')?.value||'').trim();
+  if(!userAnswer){ toast('Write your answer first!'); _quizAnswered=false; return; }
+
+  btn.textContent = 'Grading…'; btn.disabled = true;
+
+  try{
+    const verdict = await askAI(
+      `Grade this open ended answer. Be fair and encouraging.
+Question: ${_quizQuestions[_quizIdx].q}
+Model answer: ${modelAnswer}
+Student answer: ${userAnswer}
+
+Reply with ONLY: {"correct":true/false,"feedback":"1 sentence feedback"}`,
+      '', 200
+    );
+    let result;
+    try{ result = JSON.parse(verdict.replace(/```json|```/g,'').trim()); }
+    catch{ result = {correct: userAnswer.length>10, feedback:'Good attempt!'}; }
+
+    if(result.correct) _quizScore++;
+    const feedback = document.getElementById('quiz-feedback-area');
+    feedback.style.display = 'block';
+    feedback.style.background = result.correct ? '#dcfce7' : '#fef9c3';
+    feedback.style.color = result.correct ? 'var(--green)' : '#92400e';
+    feedback.textContent = (result.correct?'✅ ':'💡 ') + (result.feedback||'') + (explanation?' · '+explanation:'');
+
+    const actions = document.getElementById('quiz-action-btns');
+    actions.innerHTML = `<button onclick="nextQuizQuestion()" style="flex:1;background:var(--ink);color:var(--paper);border:none;border-radius:10px;padding:.6rem;font-family:inherit;font-size:.85rem;font-weight:700;cursor:pointer;">${_quizIdx+1 < _quizTotal ? 'Next →' : 'Finish'}</button>`;
+  }catch(e){
+    btn.textContent = 'Check answer →'; btn.disabled = false; _quizAnswered = false;
+    toast('Grading failed — try again');
+  }
+}
+
+function nextQuizQuestion(){
+  _quizIdx++;
+  showQuizQuestion();
+}
+
+function showQuizResults(){
+  const pct = _quizTotal > 0 ? Math.round((_quizScore/_quizTotal)*100) : 0;
+  const emoji = pct>=80?'🎉':pct>=60?'👍':pct>=40?'💪':'📚';
+  const title = pct>=80?'Excellent work!':pct>=60?'Good job!':pct>=40?'Keep going!':'More practice needed';
+
+  document.getElementById('quiz-question-area').style.display = 'none';
+  document.getElementById('quiz-feedback-area').style.display = 'none';
+  document.getElementById('quiz-action-btns').innerHTML = '';
+  document.getElementById('quiz-progress-bar').style.width = '100%';
+  document.getElementById('quiz-progress-label').textContent = 'Quiz complete';
+
+  document.getElementById('quiz-result-emoji').textContent = emoji;
+  document.getElementById('quiz-result-title').textContent = title;
+  document.getElementById('quiz-result-score').textContent = _quizScore+' / '+_quizTotal+' correct ('+pct+'%)';
+  document.getElementById('quiz-results').style.display = 'block';
+}
+
+function closeQuizModal(){
+  document.getElementById('quiz-modal').style.display = 'none';
+}
+let _cardWhenDays = 7;
+let _cardWhenExact = null; // specific date override
+function setCardWhen(btn, days){
+  _cardWhenDays = days;
+  _cardWhenExact = null;
+  document.querySelectorAll('.card-when-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  const dateInp = document.getElementById('card-when-date');
+  if(dateInp) dateInp.value = '';
+}
+function setCardWhenDate(val){
+  if(!val) return;
+  _cardWhenExact = val;
+  _cardWhenDays = null;
+  document.querySelectorAll('.card-when-btn').forEach(b=>b.classList.remove('active'));
+}
 function openManualCardModal(){
   buildSubjectSelects();
   document.getElementById('card-q').value='';
   document.getElementById('card-a').value='';
+  // Auto-select subject to match current filter
+  const sel = document.getElementById('card-subj');
+  if(sel && currentCardFilter && currentCardFilter!=='all' && currentCardFilter!=='due'){
+    sel.value = currentCardFilter;
+  }
+  // Pre-fill topic from active topic filter
+  const topicInp2 = document.getElementById('card-topic');
+  if(topicInp2) topicInp2.value = currentCardTopicFilter!=='all' ? currentCardTopicFilter : '';
+  // Reset to default 1 week
+  _cardWhenDays = 7;
+  _cardWhenExact = null;
+  document.querySelectorAll('.card-when-btn').forEach((b,i)=>b.classList.toggle('active',i===2));
+  const dateInp = document.getElementById('card-when-date');
+  if(dateInp){ dateInp.value=''; dateInp.min=tomorrowStr(); }
   (document.getElementById('card-modal')||document.createElement('div')).classList.add('open');
 }
 function closeCardModal(){(document.getElementById('card-modal')||document.createElement('div')).classList.remove('open');}
@@ -3099,16 +3604,28 @@ function confirmAddCard(){
   const a=document.getElementById('card-a').value.trim();
   const subj=document.getElementById('card-subj').value||'General';
   if(!q||!a){toast('Fill in both question and answer!');return;}
-  studyCards.push({id:Date.now(),question:q,answer:a,subject:subj,created:new Date().toISOString(),reps:0,lapses:0,ease:2.5,interval:1,nextReview:todayStr()});
-  save();closeCardModal();renderCards();checkReviewBadge();
+  let reviewDate;
+  if(_cardWhenExact){
+    reviewDate = _cardWhenExact;
+  } else {
+    const days = _cardWhenDays||7;
+    const d=new Date(); d.setDate(d.getDate()+days);
+    reviewDate=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+  }
+  studyCards.push({id:Date.now(),question:q,answer:a,subject:subj,topic:(document.getElementById('card-topic')?.value||'').trim(),created:new Date().toISOString(),reps:0,lapses:0,ease:2.5,interval:1,nextReview:reviewDate});
+  save();closeCardModal();renderTopicChips();renderCards();checkReviewBadge();
   populateCardSubjectFilter();buildSidebarSubjects();
-  toast('🃏 Card added!');
+  const labels={1:'Tomorrow',3:'In 3 days',7:'In 1 week',14:'In 2 weeks'};
+  const whenLabel=_cardWhenExact?'on '+_cardWhenExact:(labels[_cardWhenDays]||'In '+_cardWhenDays+' days');
+  toast('🃏 Card added! First review: '+whenLabel);
 }
 function renderCards(){
   const list=document.getElementById('cards-list');
   let filtered=studyCards;
   if(currentCardFilter==='due') filtered=getDueCards();
   else if(currentCardFilter!=='all') filtered=studyCards.filter(c=>(c.subject||'General')===currentCardFilter);
+  // Apply topic filter
+  if(currentCardTopicFilter!=='all') filtered=filtered.filter(c=>(c.topic||'').trim()===currentCardTopicFilter);
 
   const due=getDueCards().length;
   const btn=document.getElementById('study-btn');
@@ -3137,6 +3654,7 @@ function renderCards(){
         <div class="ci-a">${c.answer}</div>
         <div class="ci-foot">
           ${subjectTag(c.subject||'General')}
+          ${topicTag(c.topic||'')}
           ${isDue?'<span class="pill pill-amber">⏰ Due</span>':'<span class="pill pill-green">✓ '+daysUntil(c.nextReview)+'</span>'}
           <div class="ci-actions">
             <button class="ci-del" onclick="deleteCard(${c.id})">🗑</button>
@@ -3249,52 +3767,130 @@ function checkReviewBadge(){
     if(badge)badge.style.display='none';
     if(banner)banner.style.display='none';
   }
-  const homeReview=document.getElementById('home-review-section');
-  const homeList=document.getElementById('home-review-list');
-  if(due>0){
-    homeReview.style.display='block';
-    const topDue=getDueCards().slice(0,3);
-    homeList.innerHTML=topDue.map(c=>`
-      <div class="review-item">
-        <div><div class="review-q">${c.question}</div><div class="review-subj">${c.subject||'General'}</div></div>
-        <button class="review-btn" onclick="startReviewSession()">Review</button>
-      </div>`).join('');
-  } else {
-    homeReview.style.display='none';
-  }
 }
 
 // Memory Gaps
 function renderGaps(){
   const el=document.getElementById('gaps-content');
+  if(!el) return;
   const gaps=getMemoryGaps();
-  if(!Object.keys(gaps).length){
-    el.innerHTML=`<div class="card"><div class="empty-state"><div class="es-icon">📊</div><p>No study data yet.<br/>Start studying cards to see your memory gaps.</p></div></div>`;
-    return;
+  const hasCards=Object.keys(gaps).length>0;
+
+  // ── Study log (last 7 days) ──
+  let log={};
+  try{ log=JSON.parse(localStorage.getItem('fn_study_log')||'{}'); }catch(e){}
+  const days=7;
+  const dayLabels=[];
+  const dayData=[];
+  for(let i=days-1;i>=0;i--){
+    const d=new Date(); d.setDate(d.getDate()-i);
+    const key=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+    const lbl=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'][d.getDay()];
+    dayLabels.push(i===0?'Today':lbl);
+    dayData.push(log[key]?.reviewed||0);
   }
-  el.innerHTML=Object.entries(gaps).map(([subj,data])=>{
+  const maxDay=Math.max(...dayData,1);
+  const totalReviewed=dayData.reduce((a,b)=>a+b,0);
+  const totalCards=studyCards.length;
+  const masteredCards=studyCards.filter(c=>(c.reps||0)>=1&&(c.lapses||0)===0).length;
+  const dueCards=getDueCards().length;
+
+  // ── Bar chart SVG ──
+  const barW=28, barGap=10, chartH=80, chartW=(barW+barGap)*days-barGap;
+  const bars=dayData.map((v,i)=>{
+    const h=maxDay>0?Math.round((v/maxDay)*chartH):0;
+    const x=i*(barW+barGap);
+    const isToday=i===days-1;
+    const col=isToday?'var(--green)':'var(--green-light)';
+    const opacity=isToday?1:0.5;
+    return`<g>
+      <rect x="${x}" y="${chartH-h}" width="${barW}" height="${h||2}" rx="5" fill="${col}" opacity="${opacity}"/>
+      ${v>0?`<text x="${x+barW/2}" y="${chartH-h-4}" text-anchor="middle" font-size="8" fill="var(--muted)">${v}</text>`:''}
+      <text x="${x+barW/2}" y="${chartH+13}" text-anchor="middle" font-size="9" fill="var(--muted)">${dayLabels[i]}</text>
+    </g>`;
+  }).join('');
+
+  // ── Subject mastery bars ──
+  const subjectBars=hasCards?Object.entries(gaps).map(([subj,data])=>{
     const score=data.total?Math.round((data.mastered/data.total)*100):0;
-    const reviewedPct=data.total?Math.round((data.reviewed/data.total)*100):0;
     const col=SUBJECT_COLORS[subj]||'#6b7280';
     const barCol=score>=70?'var(--green)':score>=40?'var(--amber)':'var(--red)';
-    const notReviewed=data.total-data.reviewed;
-    return`<div class="gap-subject-card">
-      <div class="gap-subject-head">
-        <div class="gap-dot" style="background:${col}"></div>
-        <div class="gap-subj-name">${subj}</div>
-        <div class="gap-score" style="color:${barCol}">${score}%</div>
+    const struggling=data.struggling.length;
+    return`<div style="margin-bottom:.9rem;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.3rem;">
+        <div style="display:flex;align-items:center;gap:.4rem;">
+          <span style="width:8px;height:8px;border-radius:50%;background:${col};display:inline-block;flex-shrink:0;"></span>
+          <span style="font-size:.8rem;font-weight:600;color:var(--ink);">${subj}</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:.6rem;">
+          ${struggling>0?`<span style="font-size:.65rem;color:var(--red);font-weight:600;">⚠ ${struggling} weak</span>`:''}
+          <span style="font-size:.8rem;font-weight:700;color:${barCol};">${score}%</span>
+        </div>
       </div>
-      <div class="gap-bar-bg">
-        <div class="gap-bar-fill" style="width:${score}%;background:${barCol}"></div>
+      <div style="background:var(--paper2);border-radius:6px;height:7px;overflow:hidden;">
+        <div style="height:100%;width:${score}%;background:${barCol};border-radius:6px;transition:width .6s cubic-bezier(.22,1,.36,1);"></div>
       </div>
-      <div class="gap-topics">
-        ${notReviewed>0?'<div class="gap-topic"><span style="color:var(--muted);font-size:.7rem;">○</span><span class="gap-topic-name" style="color:var(--muted)">'+notReviewed+' card'+(notReviewed>1?'s':'')+' not yet studied</span></div>':''}
-        ${data.struggling.slice(0,3).map(q=>'<div class="gap-topic"><span style="color:var(--red);font-size:.7rem;">⚠</span><span class="gap-topic-name">'+q.substring(0,60)+(q.length>60?'…':'')+'</span><span class="gap-topic-status" style="color:var(--red)">Struggling</span></div>').join('')}
-        ${data.struggling.length===0&&data.reviewed>0?'<div class="gap-topic"><span style="color:var(--green);font-size:.7rem;">✓</span><span class="gap-topic-name">No gaps detected — great work!</span></div>':''}
-        <div class="gap-topic" style="color:var(--muted);font-size:.7rem;margin-top:.2rem;">${data.mastered}/${data.total} cards mastered · ${data.reviewed} reviewed</div>
-      </div>
+      <div style="font-size:.65rem;color:var(--muted);margin-top:.25rem;">${data.mastered}/${data.total} mastered · ${data.reviewed} reviewed${data.total-data.reviewed>0?' · '+(data.total-data.reviewed)+' not started':''}</div>
+      ${struggling>0?`<div style="margin-top:.35rem;">${data.struggling.slice(0,2).map(q=>`<div style="font-size:.65rem;color:var(--muted);padding:.2rem 0;border-left:2px solid var(--red);padding-left:.45rem;margin-top:.2rem;">⚠ ${q.substring(0,55)}${q.length>55?'…':''}</div>`).join('')}</div>`:''}
     </div>`;
-  }).join('');
+  }).join(''):'<div style="font-size:.8rem;color:var(--muted);text-align:center;padding:1rem 0;">No study cards yet — create some cards to track your progress.</div>';
+
+  el.innerHTML=`
+    <!-- Stats row -->
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:.55rem;margin-bottom:.85rem;">
+      <div style="background:var(--paper);border:1px solid var(--line);border-radius:12px;padding:.7rem .6rem;text-align:center;">
+        <div style="font-size:1.3rem;font-weight:800;color:var(--green);font-family:'DM Serif Display',Georgia,serif;">${streakDays}</div>
+        <div style="font-size:.62rem;color:var(--muted);margin-top:.1rem;">Day streak 🔥</div>
+      </div>
+      <div style="background:var(--paper);border:1px solid var(--line);border-radius:12px;padding:.7rem .6rem;text-align:center;">
+        <div style="font-size:1.3rem;font-weight:800;color:var(--green);font-family:'DM Serif Display',Georgia,serif;">${masteredCards}</div>
+        <div style="font-size:.62rem;color:var(--muted);margin-top:.1rem;">Cards mastered</div>
+      </div>
+      <div style="background:var(--paper);border:1px solid var(--line);border-radius:12px;padding:.7rem .6rem;text-align:center;">
+        <div style="font-size:1.3rem;font-weight:800;color:${dueCards>0?'var(--amber)':'var(--green)'};font-family:'DM Serif Display',Georgia,serif;">${dueCards}</div>
+        <div style="font-size:.62rem;color:var(--muted);margin-top:.1rem;">Due today</div>
+      </div>
+    </div>
+
+    <!-- Activity chart -->
+    <div style="background:var(--paper);border:1px solid var(--line);border-radius:14px;padding:1rem 1rem .6rem;margin-bottom:.85rem;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.8rem;">
+        <div style="font-size:.82rem;font-weight:700;color:var(--ink);">Cards reviewed — last 7 days</div>
+        <div style="font-size:.72rem;color:var(--muted);">${totalReviewed} total</div>
+      </div>
+      <div style="overflow-x:auto;">
+        <svg viewBox="0 0 ${chartW} ${chartH+20}" width="100%" height="${chartH+20}" style="display:block;">${bars}</svg>
+      </div>
+    </div>
+
+    <!-- Subject mastery -->
+    <div style="background:var(--paper);border:1px solid var(--line);border-radius:14px;padding:1rem;margin-bottom:.85rem;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.85rem;">
+        <div style="font-size:.82rem;font-weight:700;color:var(--ink);">Subject mastery</div>
+        <div style="font-size:.68rem;color:var(--muted);">${totalCards} cards total</div>
+      </div>
+      ${subjectBars}
+    </div>
+
+    <!-- Overall progress ring -->
+    ${hasCards?`<div style="background:var(--paper);border:1px solid var(--line);border-radius:14px;padding:1rem;text-align:center;">
+      <div style="font-size:.82rem;font-weight:700;color:var(--ink);margin-bottom:.75rem;">Overall mastery</div>
+      ${(()=>{
+        const pct=totalCards?Math.round((masteredCards/totalCards)*100):0;
+        const r=38,circ=2*Math.PI*r;
+        const dash=circ*(pct/100);
+        const col=pct>=70?'var(--green)':pct>=40?'var(--amber)':'var(--red)';
+        return`<svg viewBox="0 0 100 100" width="100" height="100" style="display:block;margin:0 auto .5rem;">
+          <circle cx="50" cy="50" r="${r}" fill="none" stroke="var(--line)" stroke-width="8"/>
+          <circle cx="50" cy="50" r="${r}" fill="none" stroke="${col}" stroke-width="8"
+            stroke-dasharray="${dash} ${circ}" stroke-dashoffset="${circ/4}" stroke-linecap="round"/>
+          <text x="50" y="46" text-anchor="middle" font-size="18" font-weight="800" fill="${col}">${pct}%</text>
+          <text x="50" y="60" text-anchor="middle" font-size="9" fill="var(--muted)">mastered</text>
+        </svg>
+        <div style="font-size:.72rem;color:var(--muted);">${masteredCards} of ${totalCards} cards mastered across all subjects</div>`;
+      })()}
+    </div>`:''}
+  `;
 }
 
 // ══════════════════════════════════════════════════════
@@ -3958,7 +4554,7 @@ Q: [question]|A: [answer]
         const a=getField('A');
         const subject=getField('SUBJECT')||userSubjects[0]||'General';
         if(q&&a){
-          studyCards.push({id:Date.now(),question:q,answer:a,subject,created:new Date().toISOString(),reps:0,lapses:0,ease:2.5,interval:1,nextReview:todayStr()});
+          studyCards.push({id:Date.now(),question:q,answer:a,subject,created:new Date().toISOString(),reps:0,lapses:0,ease:2.5,interval:1,nextReview:tomorrowStr()});
           save(); renderCards(); checkReviewBadge();
           toast('🃏 Card added by coach!');
         }
@@ -3974,7 +4570,7 @@ Q: [question]|A: [answer]
         if(parts.length===2){
           const q=parts[0].trim(), a=parts[1].trim();
           if(q&&a){
-            studyCards.push({id:Date.now()+Math.random(),question:q,answer:a,subject:userSubjects[0]||'General',created:new Date().toISOString(),reps:0,lapses:0,ease:2.5,interval:1,nextReview:todayStr()});
+            studyCards.push({id:Date.now()+Math.random(),question:q,answer:a,subject:userSubjects[0]||'General',created:new Date().toISOString(),reps:0,lapses:0,ease:2.5,interval:1,nextReview:tomorrowStr()});
             added++;
           }
         }
@@ -4798,6 +5394,7 @@ async function callAI(sys, msg, maxT = 500) {
   }
 }
 
+async function askAI(sys, msg, maxT=600){ return callAI(sys, msg, maxT); }
 async function callAIWithHistory(sys, history, maxT=600){
   const response=await fetch(getAIUrl(),{
     method:'POST',
@@ -5017,7 +5614,7 @@ function renderNextAction(){
   const daysSinceNote=notes.length?Math.floor((Date.now()-new Date(notes[0].created))/(1000*60*60*24)):999;
   let action=null;
   if(due.length>0){
-    action={icon:'🃏',label:'Review due',text:`${due.length} card${due.length>1?'s':''} waiting for review`,onclick:`startStudySession()`};
+    action={icon:'🃏',label:'Review due',text:`${due.length} card${due.length>1?'s':''} waiting for review`,onclick:`navTo('cards',document.getElementById('nav-cards'));setTimeout(startStudySession,120);`};
   } else if(upcomingR.length>0){
     const r=upcomingR[0];
     const raw=r.time||r.startTime||'';
