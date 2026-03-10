@@ -1525,49 +1525,35 @@ html, body, #app {
             </div>
           </div>
 
-          <!-- Next action nudge -->
-          <div class="full" id="home-next-action"></div>
-
-          <!-- Streak + study nudge row -->
-          <div class="full" id="home-study-row"></div>
-
-          <!-- ── COUNTDOWN + GOAL ROW ── -->
-          <div class="full" style="display:grid;grid-template-columns:1fr 1fr;gap:.75rem;">
-
-            <!-- Countdown chip -->
-            <div id="home-countdown-chip" onclick="openCountdownManager()" style="background:var(--paper);border:1px solid var(--line);border-radius:14px;padding:.85rem .9rem;cursor:pointer;position:relative;overflow:hidden;display:flex;flex-direction:column;gap:.35rem;border-left:3px solid var(--green);" id="cd-chip">
-              <div style="display:flex;align-items:center;justify-content:space-between;">
-                <span style="font-size:.62rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);">Countdown</span>
-                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="var(--muted)" stroke-width="2" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-              </div>
-              <div id="cd-days" style="font-size:1.9rem;font-weight:800;line-height:1;color:var(--green);">+</div>
-              <div id="cd-title" style="font-size:.72rem;font-weight:600;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">Add an event</div>
-              <div class="cd-bar-wrap" style="height:3px;background:var(--line);border-radius:99px;overflow:hidden;"><div id="cd-bar" style="height:100%;width:0%;background:var(--green);border-radius:99px;transition:width .6s;"></div></div>
-            </div>
-
-            <!-- Weekly goal chip -->
-            <div id="home-goal-chip" onclick="openGoalSettings()" style="background:var(--paper);border:1px solid var(--line);border-radius:14px;padding:.85rem .9rem;cursor:pointer;display:flex;flex-direction:column;gap:.35rem;">
-              <div style="display:flex;align-items:center;justify-content:space-between;">
-                <span style="font-size:.62rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);">Weekly Goal</span>
-                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="var(--muted)" stroke-width="2" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-              </div>
-              <div style="display:flex;align-items:center;gap:.5rem;">
-                <svg style="flex-shrink:0;transform:rotate(-90deg);" width="44" height="44" viewBox="0 0 44 44">
-                  <circle cx="22" cy="22" r="18" fill="none" stroke="var(--line)" stroke-width="4"/>
-                  <circle id="goal-ring-fg" cx="22" cy="22" r="18" fill="none" stroke="var(--green)" stroke-width="4" stroke-linecap="round" stroke-dasharray="113.1" stroke-dashoffset="113.1"/>
-                </svg>
-                <div>
-                  <div style="font-size:1.1rem;font-weight:800;line-height:1;color:var(--ink);"><span id="goal-done-n">0</span><span id="goal-total-n" style="font-size:.65rem;color:var(--muted);font-weight:500;">/—</span></div>
-                  <div id="goal-sub" style="font-size:.68rem;color:var(--muted);margin-top:.15rem;">cards this week</div>
+          <!-- Countdown + Weekly Goal -->
+          <div class="full">
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:.55rem;">
+              <div id="home-countdown-chip" onclick="openCountdownManager()" style="background:var(--paper);border:1px solid var(--line);border-radius:12px;padding:.75rem .9rem;display:flex;align-items:center;gap:.6rem;cursor:pointer;">
+                <span id="cd-icon" style="font-size:1.4rem;line-height:1;flex-shrink:0;">⏳</span>
+                <div style="min-width:0;flex:1;">
+                  <div id="cd-days" style="font-size:1.1rem;font-weight:800;color:var(--green);line-height:1;">+</div>
+                  <div id="cd-title" style="font-size:.62rem;color:var(--muted);margin-top:.1rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">Add a countdown to an event</div>
                 </div>
               </div>
-              <div id="goal-streak-row" style="display:none;align-items:center;gap:.25rem;">
-                <svg width="11" height="11" viewBox="0 0 24 24" fill="#f97316" stroke="none"><path d="M12 2c0 6-6 8-6 14a6 6 0 0 0 12 0c0-6-6-8-6-14z"/></svg>
-                <span id="goal-streak-txt" style="font-size:.65rem;color:#f97316;font-weight:600;"></span>
+              <div id="home-goal-chip" onclick="openGoalSettings()" style="background:var(--paper);border:1px solid var(--line);border-radius:12px;padding:.75rem .9rem;display:flex;align-items:center;gap:.6rem;cursor:pointer;">
+                <div style="position:relative;flex-shrink:0;">
+                  <svg style="transform:rotate(-90deg);display:block;" width="36" height="36" viewBox="0 0 36 36">
+                    <circle cx="18" cy="18" r="14" fill="none" stroke="var(--line)" stroke-width="3.5"/>
+                    <circle id="goal-ring-fg" cx="18" cy="18" r="14" fill="none" stroke="var(--green)" stroke-width="3.5" stroke-linecap="round" stroke-dasharray="87.96" stroke-dashoffset="87.96" style="transition:stroke-dashoffset .5s ease;"/>
+                  </svg>
+                </div>
+                <div style="min-width:0;flex:1;">
+                  <div style="font-size:1.1rem;font-weight:800;color:var(--green);line-height:1;"><span id="goal-done-n">0</span><span id="goal-total-n" style="font-size:.62rem;color:var(--muted);font-weight:500;">/—</span></div>
+                  <div id="goal-sub" style="font-size:.62rem;color:var(--muted);margin-top:.1rem;">Set a weekly card goal</div>
+                </div>
+                <div id="goal-streak-row" style="display:none;flex-shrink:0;">
+                  <span id="goal-streak-txt" style="font-size:.6rem;color:#f97316;font-weight:700;"></span>
+                </div>
               </div>
             </div>
-
           </div>
+          <div id="home-next-action" style="display:none;"></div>
+          <div id="home-study-row" style="display:none;"></div>
 
           <!-- ── REMINDERS & TASKS ── -->
           <div class="full" id="home-reminders-section">
@@ -3067,7 +3053,7 @@ function startApp(){
   // Re-render when app comes back to foreground
   document.addEventListener('visibilitychange', function(){
     if(document.visibilityState === 'visible'){
-      renderAll(); renderNotes(); renderCards(); renderNextAction(); renderCountdownWidget(); renderGoalWidget();
+      renderAll(); renderNotes(); renderCards(); renderNextAction();
       checkAndFireReminders();
     }
   });
@@ -4716,8 +4702,8 @@ function clearAllReminders(){
     'Clear all ' + reminders.length + ' task' + (reminders.length>1?'s':'') + '?',
     'This cannot be undone.',
     function(){
-      const ts=new Date().toISOString();
-      reminders.forEach(function(r){deletedReminders.unshift(Object.assign({},r,{deletedAt:ts}));});
+      const _ts=new Date().toISOString();
+      reminders.forEach(function(r){deletedReminders.unshift(Object.assign({},r,{deletedAt:_ts}));});
       if(deletedReminders.length>50)deletedReminders=deletedReminders.slice(0,50);
       localStorage.setItem('fn_trash',JSON.stringify(deletedReminders));
       reminders=[];
@@ -4731,8 +4717,8 @@ function clearAllReminders(){
 function clearCompletedReminders(){
   const done=reminders.filter(r=>r.done);
   if(!done.length){toast('No completed tasks!');return;}
-  const ts=new Date().toISOString();
-  done.forEach(function(r){deletedReminders.unshift(Object.assign({},r,{deletedAt:ts}));});
+  const _ts=new Date().toISOString();
+  done.forEach(function(r){deletedReminders.unshift(Object.assign({},r,{deletedAt:_ts}));});
   if(deletedReminders.length>50)deletedReminders=deletedReminders.slice(0,50);
   localStorage.setItem('fn_trash',JSON.stringify(deletedReminders));
   reminders=reminders.filter(r=>!r.done);
@@ -6431,89 +6417,8 @@ function populatePomoSubjects(){
 
 
 function renderNextAction(){
-  const el=document.getElementById('home-next-action');
-  if(!el)return;
-  const due=getDueCards();
-  const today=todayStr();
-  const now=new Date();
-  const nowMin=now.getHours()*60+now.getMinutes();
-
-  // Only show tasks that haven't been missed yet (time is in the future or no time set)
-  const upcomingR=reminders.filter(r=>{
-    if(r.done) return false;
-    if(r.date!==today&&r.date!=='everyday'&&r.date!=='everyweek') return false;
-    const raw=r.time||r.startTime||'';
-    if(!raw) return true; // no time = always show
-    const t24=timeTo24(raw); if(!t24) return true;
-    const p=t24.split(':'), rMin=parseInt(p[0])*60+parseInt(p[1]);
-    return rMin > nowMin; // only future tasks
-  }).sort((a,b)=>{
-    const getMin=r=>{ const raw=r.time||r.startTime||''; if(!raw) return 9999; const t=timeTo24(raw); if(!t) return 9999; const p=t.split(':'); return parseInt(p[0])*60+parseInt(p[1]); };
-    return getMin(a)-getMin(b);
-  });
-
-  const daysSinceNote=notes.length?Math.floor((Date.now()-new Date(notes[0].created))/(1000*60*60*24)):999;
-  let action=null;
-  if(due.length>0){
-    action={icon:'🃏',label:'Review due',text:`${due.length} card${due.length>1?'s':''} waiting for review`,onclick:`navTo('cards',document.getElementById('nav-cards'));setTimeout(startStudySession,120);`};
-  } else if(upcomingR.length>0){
-    const r=upcomingR[0];
-    const raw=r.time||r.startTime||'';
-    const timeLabel=raw?' · '+raw:'';
-    action={icon:r.emoji||'🔔',label:'Next reminder'+timeLabel,text:r.text,onclick:`navTo('tasks',document.getElementById('nav-tasks'))`};
-  } else if(notes.length===0){
-    action={icon:'📝',label:'Get started',text:'Write your first note to begin',onclick:`navTo('notes',document.getElementById('nav-notes'))`};
-  } else if(daysSinceNote>=2){
-    action={icon:'💡',label:'Keep the momentum',text:`You haven't written notes in ${daysSinceNote} days`,onclick:`navTo('notes',document.getElementById('nav-notes'))`};
-  }
-  if(!action){el.innerHTML='';return;}
-  el.innerHTML='<div class="next-action-card" id="na-card">'+
-    '<div class="na-icon">'+action.icon+'</div>'+
-    '<div class="na-body">'+
-    '<div class="na-label">'+action.label+'</div>'+
-    '<div class="na-text">'+action.text+'</div>'+
-    '</div>'+
-    '<div class="na-arrow">→</div>'+
-    '</div>';
-  const card=document.getElementById('na-card');
-  if(card) card.onclick=new Function(action.onclick);
-
-  // ── Streak + due cards row ──
-  const studyRow = document.getElementById('home-study-row');
-  if(studyRow){
-    const dueCount = getDueCards().length;
-    let studyLog={};
-    try{ studyLog=JSON.parse(localStorage.getItem('fn_study_log')||'{}'); }catch(e){}
-    const todayReviewed = studyLog[todayStr()]?.reviewed || 0;
-    const hasStreak = streakDays > 0;
-    const hasDue = dueCount > 0;
-    if(hasStreak || hasDue){
-      studyRow.innerHTML = `<div style="display:grid;grid-template-columns:${hasStreak&&hasDue?'1fr 1fr':'1fr'};gap:.55rem;margin-bottom:.1rem;">
-        ${hasStreak ? `<div style="background:var(--paper);border:1px solid var(--line);border-radius:12px;padding:.75rem .9rem;display:flex;align-items:center;gap:.6rem;cursor:pointer;" onclick="navTo('gaps',document.getElementById('nav-gaps'))">
-          <span style="font-size:1.4rem;line-height:1;">🔥</span>
-          <div>
-            <div style="font-size:1.1rem;font-weight:800;color:var(--green);line-height:1;">${streakDays}</div>
-            <div style="font-size:.6rem;color:var(--muted);margin-top:.1rem;">day streak</div>
-          </div>
-        </div>` : ''}
-        ${hasDue ? `<div style="background:var(--green-light);border:1.5px solid var(--green);border-radius:12px;padding:.75rem .9rem;display:flex;align-items:center;gap:.6rem;cursor:pointer;" onclick="navTo('cards',document.getElementById('nav-cards'));setTimeout(startStudySession,150);">
-          <span style="font-size:1.4rem;line-height:1;">🃏</span>
-          <div>
-            <div style="font-size:1.1rem;font-weight:800;color:var(--green);line-height:1;">${dueCount}</div>
-            <div style="font-size:.6rem;color:var(--green);margin-top:.1rem;">card${dueCount>1?'s':''} due</div>
-          </div>
-        </div>` : todayReviewed>0 ? `<div style="background:var(--paper);border:1px solid var(--line);border-radius:12px;padding:.75rem .9rem;display:flex;align-items:center;gap:.6rem;">
-          <span style="font-size:1.4rem;line-height:1;">✅</span>
-          <div>
-            <div style="font-size:1.1rem;font-weight:800;color:var(--green);line-height:1;">${todayReviewed}</div>
-            <div style="font-size:.6rem;color:var(--muted);margin-top:.1rem;">reviewed today</div>
-          </div>
-        </div>` : ''}
-      </div>`;
-    } else {
-      studyRow.innerHTML = '';
-    }
-  }
+  var el=document.getElementById('home-next-action');
+  if(el)el.innerHTML='';
 }
 
 // ══════════════════════════════════════════════════════
@@ -6960,9 +6865,6 @@ document.addEventListener('DOMContentLoaded', function(){
 </body>
 </html>
 <script>
-// ══════════════════════════════════════
-// COUNTDOWN
-// ══════════════════════════════════════
 function getCountdowns(){try{return JSON.parse(localStorage.getItem('fn_countdowns')||'[]');}catch(e){return[];}}
 function saveCountdowns(a){localStorage.setItem('fn_countdowns',JSON.stringify(a));}
 function daysUntilDate(s){var t=new Date();t.setHours(0,0,0,0);return Math.ceil((new Date(s+'T00:00:00')-t)/86400000);}
@@ -6973,36 +6875,30 @@ function renderCountdownWidget(){
   var chip=document.getElementById('home-countdown-chip');if(!chip)return;
   var items=getCountdowns().filter(function(c){return daysUntilDate(c.date)>=0;});
   items.sort(function(a,b){return daysUntilDate(a.date)-daysUntilDate(b.date);});
-  var daysEl=document.getElementById('cd-days');
-  var titleEl=document.getElementById('cd-title');
-  var barEl=document.getElementById('cd-bar');
+  var dEl=document.getElementById('cd-days'),tEl=document.getElementById('cd-title'),iEl=document.getElementById('cd-icon');
   if(!items.length){
-    if(daysEl)daysEl.textContent='+';
-    if(titleEl)titleEl.textContent='Add an event';
-    if(barEl)barEl.style.width='0%';
-    chip.style.borderLeftColor='var(--green)';
-    if(daysEl)daysEl.style.color='var(--green)';
+    if(dEl){dEl.textContent='+';dEl.style.color='var(--green)';}
+    if(tEl)tEl.textContent='Add a countdown to an event';
+    if(iEl)iEl.textContent='⏳';
     return;
   }
-  var c=items[0];var days=daysUntilDate(c.date);
-  var color=days<=3?'#ef4444':days<=10?'#f59e0b':'var(--green)';
-  chip.style.borderLeftColor=color;
-  if(daysEl){daysEl.textContent=days===0?'🎉':days;daysEl.style.color=color;}
-  if(titleEl)titleEl.textContent=(c.emoji||'📅')+' '+c.title;
-  var pct=c.totalDays?Math.max(0,Math.min(100,((c.totalDays-days)/c.totalDays)*100)):0;
-  if(barEl){barEl.style.width=pct+'%';barEl.style.background=color;}
+  var c=items[0],days=daysUntilDate(c.date);
+  var col=days<=3?'#ef4444':days<=10?'#f59e0b':'var(--green)';
+  if(dEl){dEl.textContent=days===0?'🎉':days;dEl.style.color=col;}
+  if(tEl)tEl.textContent=(c.emoji||'📅')+' '+c.title;
+  if(iEl)iEl.textContent=days<=3?'🔴':days<=10?'🟡':'⏳';
 }
 
 function buildCDList(){
   var items=getCountdowns();
   if(!items.length)return'<p style="font-size:.78rem;color:var(--muted);margin:.3rem 0 .8rem;">No countdowns yet.</p>';
   return items.map(function(c,i){
-    var d=daysUntilDate(c.date);var lbl=d<0?'passed':d===0?'Today!':d+'d left';
+    var d=daysUntilDate(c.date),lbl=d<0?'passed':d===0?'Today!':d+'d left';
     return'<div style="display:flex;align-items:center;gap:.6rem;padding:.6rem .7rem;background:var(--paper2);border-radius:10px;margin-bottom:.4rem;">'+
       '<div style="font-size:1.1rem;min-width:28px;text-align:center;">'+(c.emoji||'📅')+'</div>'+
       '<div style="flex:1;min-width:0;"><div style="font-size:.82rem;font-weight:600;color:var(--ink);">'+escH(c.title)+'</div>'+
       '<div style="font-size:.66rem;color:var(--muted);margin-top:.1rem;">'+new Date(c.date+'T00:00:00').toLocaleDateString(undefined,{weekday:'short',month:'short',day:'numeric',year:'numeric'})+' · '+lbl+'</div></div>'+
-      '<button onclick="deleteCountdown('+i+')" style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:.9rem;padding:.2rem .35rem;">✕</button>'+
+      '<button onclick="deleteCountdown('+i+')" style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:.9rem;padding:.2rem .4rem;">✕</button>'+
     '</div>';
   }).join('');
 }
@@ -7017,7 +6913,7 @@ function openCountdownManager(){
       '<div id="cd-list">'+buildCDList()+'</div>'+
       '<div style="border-top:1px solid var(--line);padding-top:.9rem;margin-top:.4rem;">'+
         '<p style="font-size:.68rem;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);margin-bottom:.5rem;">ADD NEW</p>'+
-        '<input class="fw-inp" id="cd-new-title" placeholder="e.g. Biology Exam, Job Interview…" maxlength="60"/>'+
+        '<input class="fw-inp" id="cd-new-title" placeholder="e.g. Biology Exam, Job Interview, Trip…" maxlength="60"/>'+
         '<div style="display:grid;grid-template-columns:1fr 1fr;gap:.5rem;">'+
           '<input class="fw-inp" id="cd-new-emoji" placeholder="Emoji (optional)" maxlength="4" style="margin-bottom:0"/>'+
           '<input class="fw-inp" type="date" id="cd-new-date" min="'+today+'" style="margin-bottom:0"/>'+
@@ -7029,18 +6925,15 @@ function openCountdownManager(){
       '</div>'+
     '</div></div>');
 }
-
 function addCountdown(){
   var title=(document.getElementById('cd-new-title').value||'').trim();
   var dateVal=document.getElementById('cd-new-date').value;
   var emoji=(document.getElementById('cd-new-emoji').value||'').trim()||'📅';
   if(!title){toast('Give it a name!');return;}
   if(!dateVal){toast('Pick a date!');return;}
-  var items=getCountdowns();
-  var days=daysUntilDate(dateVal);
+  var items=getCountdowns(),days=daysUntilDate(dateVal);
   items.push({id:Date.now(),title:title,date:dateVal,emoji:emoji,totalDays:Math.max(days,1)});
-  saveCountdowns(items);closeFWModal();renderCountdownWidget();
-  toast('Countdown added ✓');
+  saveCountdowns(items);closeFWModal();renderCountdownWidget();toast('Countdown added ✓');
 }
 function deleteCountdown(i){
   var items=getCountdowns();items.splice(i,1);saveCountdowns(items);
@@ -7048,60 +6941,30 @@ function deleteCountdown(i){
   renderCountdownWidget();
 }
 
-// ══════════════════════════════════════
-// WEEKLY STUDY GOAL
-// Tracks cards reviewed this week (Mon–Sun)
-// ══════════════════════════════════════
-function getWeekStart(){
-  var d=new Date();d.setHours(0,0,0,0);
-  var day=d.getDay();var diff=day===0?-6:1-day; // Mon=start
-  d.setDate(d.getDate()+diff);
-  return d.toISOString().slice(0,10);
-}
+function getWeekStart(){var d=new Date();d.setHours(0,0,0,0);var day=d.getDay();d.setDate(d.getDate()+(day===0?-6:1-day));return d.toISOString().slice(0,10);}
 function getGoalSettings(){try{return JSON.parse(localStorage.getItem('fn_goal')||'{}');}catch(e){return{};}}
 function saveGoalSettings(o){localStorage.setItem('fn_goal',JSON.stringify(o));}
-function getGoalWeek(){
-  try{
-    var d=JSON.parse(localStorage.getItem('fn_goal_week')||'{}');
-    var ws=getWeekStart();
-    if(d.week!==ws)return{week:ws,done:0};
-    return d;
-  }catch(e){return{week:getWeekStart(),done:0};}
-}
+function getGoalWeek(){try{var d=JSON.parse(localStorage.getItem('fn_goal_week')||'{}'),ws=getWeekStart();return d.week===ws?d:{week:ws,done:0};}catch(e){return{week:getWeekStart(),done:0};}}
 function saveGoalWeek(o){localStorage.setItem('fn_goal_week',JSON.stringify(o));}
 
 function renderGoalWidget(){
   var chip=document.getElementById('home-goal-chip');if(!chip)return;
-  var gs=getGoalSettings();
-  var gw=getGoalWeek();
-  var done=gw.done||0;
-  var target=gs.target||0;
-  var ring=document.getElementById('goal-ring-fg');
-  var circumference=113.1; // 2π×18
-  var doneEl=document.getElementById('goal-done-n');
-  var totEl=document.getElementById('goal-total-n');
-  var subEl=document.getElementById('goal-sub');
+  var gs=getGoalSettings(),gw=getGoalWeek();
+  var done=gw.done||0,target=gs.target||0;
+  var ring=document.getElementById('goal-ring-fg'),C=87.96;
+  var dEl=document.getElementById('goal-done-n'),tEl=document.getElementById('goal-total-n'),sEl=document.getElementById('goal-sub');
   if(!target){
-    if(ring)ring.style.strokeDashoffset=circumference;
-    if(doneEl)doneEl.textContent='0';
-    if(totEl)totEl.textContent='/—';
-    if(subEl)subEl.textContent='Tap to set a weekly target';
+    if(ring)ring.style.strokeDashoffset=C;
+    if(dEl)dEl.textContent='0';if(tEl)tEl.textContent='/—';
+    if(sEl)sEl.textContent='Set a weekly card goal';
     var sr=document.getElementById('goal-streak-row');if(sr)sr.style.display='none';
     return;
   }
-  var pct=Math.min(1,done/target);
-  if(ring)ring.style.strokeDashoffset=circumference*(1-pct);
-  if(doneEl)doneEl.textContent=done;
-  if(totEl)totEl.textContent='/'+target;
-  if(subEl){
-    if(done>=target)subEl.textContent='Week complete! 🎉';
-    else if(done===0)subEl.textContent='cards this week';
-    else subEl.textContent=(target-done)+' cards left this week';
-  }
-  // Streak
-  var sr=document.getElementById('goal-streak-row');
-  var st=document.getElementById('goal-streak-txt');
-  if(gs.weekStreak>1&&sr&&st){sr.style.display='flex';st.textContent=gs.weekStreak+' week streak';}
+  if(ring)ring.style.strokeDashoffset=C*(1-Math.min(1,done/target));
+  if(dEl)dEl.textContent=done;if(tEl)tEl.textContent='/'+target;
+  if(sEl)sEl.textContent=done>=target?'Week complete! 🎉':done===0?'cards this week':(target-done)+' cards to go';
+  var sr=document.getElementById('goal-streak-row'),st=document.getElementById('goal-streak-txt');
+  if(gs.weekStreak>1&&sr&&st){sr.style.display='flex';st.textContent='🔥'+gs.weekStreak+'wk';}
   else if(sr)sr.style.display='none';
 }
 
@@ -7109,41 +6972,37 @@ function recordCardReview(){
   var gs=getGoalSettings();if(!gs.target)return;
   var gw=getGoalWeek();gw.done=(gw.done||0)+1;saveGoalWeek(gw);
   if(gw.done===gs.target){
-    var ws=getWeekStart();
-    var lastWs=gs.lastGoalWeek||'';
-    // Check if last week was the previous week
-    var lastWeekDate=new Date(ws+'T00:00:00');lastWeekDate.setDate(lastWeekDate.getDate()-7);
-    var lastWeekStr=lastWeekDate.toISOString().slice(0,10);
-    if(lastWs===lastWeekStr){gs.weekStreak=(gs.weekStreak||0)+1;}
-    else if(lastWs!==ws){gs.weekStreak=1;}
+    var ws=getWeekStart(),prev=new Date(ws+'T00:00:00');prev.setDate(prev.getDate()-7);
+    if(gs.lastGoalWeek===prev.toISOString().slice(0,10))gs.weekStreak=(gs.weekStreak||0)+1;
+    else if(gs.lastGoalWeek!==ws)gs.weekStreak=1;
     gs.lastGoalWeek=ws;saveGoalSettings(gs);
-    setTimeout(function(){toast('🎉 Weekly goal hit! '+(gs.weekStreak>1?gs.weekStreak+' week streak!':'Amazing work!'));},400);
+    setTimeout(function(){toast('🎉 Weekly goal hit!'+(gs.weekStreak>1?' '+gs.weekStreak+' week streak!':''));},400);
   }
   renderGoalWidget();
 }
 
 function openGoalSettings(){
   closeFWModal();
-  var gs=getGoalSettings();var hasGoal=!!gs.target;
+  var gs=getGoalSettings(),has=!!gs.target;
   document.body.insertAdjacentHTML('beforeend',
     '<div class="fw-modal-bg" id="fw-modal-bg" onclick="if(event.target===this)closeFWModal()">'+
     '<div class="fw-modal">'+
       '<div class="fw-modal-title">🎯 Weekly Study Goal</div>'+
-      '<p style="font-size:.78rem;color:var(--muted);line-height:1.5;margin-bottom:1rem;">How many flashcards do you want to review this week? The ring fills as you go. Resets every Monday.</p>'+
+      '<p style="font-size:.78rem;color:var(--muted);line-height:1.5;margin-bottom:1rem;">How many flashcards do you want to review this week? The ring fills as you go — resets every Monday.</p>'+
       '<label style="font-size:.72rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.07em;display:block;margin-bottom:.35rem;">Cards per week</label>'+
-      '<input class="fw-inp" type="number" id="goal-target-inp" min="1" max="2000" value="'+(gs.target||100)+'" placeholder="100"/>'+
+      '<input class="fw-inp" type="number" id="goal-target-inp" min="1" max="2000" value="'+(gs.target||100)+'" placeholder="e.g. 50, 100, 200"/>'+
       '<div class="fw-btn-row">'+
-        '<button class="fw-btn fw-btn-ghost" onclick="'+(hasGoal?'removeGoal()':'closeFWModal()')+'">'+( hasGoal?'Remove goal':'Cancel')+'</button>'+
-        '<button class="fw-btn fw-btn-primary" onclick="saveGoal()">Save goal</button>'+
+        '<button class="fw-btn fw-btn-ghost" onclick="'+(has?'removeGoal()':'closeFWModal()')+'">'+( has?'Remove goal':'Cancel')+'</button>'+
+        '<button class="fw-btn fw-btn-primary" onclick="saveGoal()">Save</button>'+
       '</div>'+
     '</div></div>');
-  setTimeout(function(){var el=document.getElementById('goal-target-inp');if(el)el.select();},100);
+  setTimeout(function(){var el=document.getElementById('goal-target-inp');if(el)el.select();},80);
 }
 function saveGoal(){
   var val=parseInt(document.getElementById('goal-target-inp').value||'100');
   if(!val||val<1){toast('Enter a number greater than 0');return;}
   var gs=getGoalSettings();gs.target=val;saveGoalSettings(gs);
-  closeFWModal();renderGoalWidget();toast('Weekly goal set: '+val+' cards ✓');
+  closeFWModal();renderGoalWidget();toast('Goal set: '+val+' cards/week ✓');
 }
 function removeGoal(){
   if(!confirm('Remove your weekly goal?'))return;
@@ -7151,22 +7010,14 @@ function removeGoal(){
   closeFWModal();renderGoalWidget();toast('Goal removed');
 }
 
-// Modal CSS
 (function(){
   var s=document.createElement('style');
   s.textContent='.fw-modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:600;display:flex;align-items:flex-end;justify-content:center;}.fw-modal{background:var(--paper);border-radius:20px 20px 0 0;width:100%;max-width:480px;padding:1.4rem 1.3rem 2.4rem;max-height:85dvh;overflow-y:auto;}.fw-modal-title{font-size:1.05rem;font-weight:700;color:var(--ink);margin-bottom:1rem;}.fw-inp{width:100%;background:var(--paper2);border:1.5px solid var(--line);border-radius:10px;padding:.65rem .85rem;font-family:inherit;font-size:.9rem;color:var(--ink);box-sizing:border-box;margin-bottom:.6rem;}.fw-inp:focus{outline:none;border-color:var(--green);}.fw-btn-row{display:flex;gap:.5rem;margin-top:.5rem;}.fw-btn{flex:1;border:none;border-radius:10px;padding:.65rem;font-family:inherit;font-size:.85rem;font-weight:700;cursor:pointer;}.fw-btn-primary{background:var(--green);color:#fff;}.fw-btn-ghost{background:var(--paper2);color:var(--ink);}';
   document.head.appendChild(s);
 })();
-
-// Hook card grading
 (function(){
-  function tryHook(){
-    if(typeof gradeCard==='function'&&!gradeCard._hooked){
-      var _o=gradeCard;gradeCard=function(c,g){_o(c,g);recordCardReview();};gradeCard._hooked=true;return true;
-    }
-    return false;
-  }
-  if(!tryHook())document.addEventListener('DOMContentLoaded',tryHook);
+  function hook(){if(typeof gradeCard==='function'&&!gradeCard._hw){var o=gradeCard;gradeCard=function(c,g){o(c,g);recordCardReview();};gradeCard._hw=true;return true;}return false;}
+  if(!hook())document.addEventListener('DOMContentLoaded',hook);
   document.addEventListener('DOMContentLoaded',function(){renderCountdownWidget();renderGoalWidget();});
 })();
 </script>
