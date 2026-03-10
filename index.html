@@ -586,6 +586,26 @@ html,body{height:100%;overflow:hidden;font-family:'DM Sans',-apple-system,BlinkM
 /* Stats row */
 .stats-row{display:flex;gap:.55rem;}
 .stat-box{flex:1;background:var(--paper2);border-radius:9px;padding:.7rem .8rem;border:1px solid var(--line);text-align:center;}
+.pomo-mode-btn{background:none;border:1.5px solid var(--line);border-radius:6px;padding:.22rem .5rem;font-size:.62rem;font-weight:600;cursor:pointer;font-family:inherit;color:var(--muted);transition:all .15s;}
+.pomo-mode-btn.active{background:var(--green);color:#fff;border-color:var(--green);}
+.pomo-dot{width:10px;height:10px;border-radius:50%;background:var(--line);border:1.5px solid var(--line);display:inline-block;transition:background .3s;}
+.pomo-dot.done{background:var(--green);border-color:var(--green);}
+.pomo-dot.active{background:rgba(26,107,60,.35);border-color:var(--green);}
+.heat-cell{width:100%;aspect-ratio:1;border-radius:3px;cursor:default;}
+.heat-empty{background:transparent;}
+.heat-0{background:var(--paper2);border:1px solid var(--line);}
+.heat-1{background:rgba(26,107,60,.2);}
+.heat-2{background:rgba(26,107,60,.4);}
+.heat-3{background:rgba(26,107,60,.65);}
+.heat-4{background:var(--green);}
+.heat-today{outline:2px solid var(--green);outline-offset:1px;}
+[data-theme="dark"] .heat-0{background:#2a2a2a;border-color:#333;}
+[data-theme="dark"] .heat-1{background:rgba(26,107,60,.25);}
+[data-theme="dark"] .heat-2{background:rgba(26,107,60,.45);}
+[data-theme="dark"] .heat-3{background:rgba(26,107,60,.7);}
+[data-theme="dark"] .heat-4{background:var(--green);}
+[data-theme="dark"] .pomo-mode-btn{background:none;border-color:var(--line);color:var(--muted);}
+[data-theme="dark"] .pomo-mode-btn.active{background:var(--green);color:#fff;border-color:var(--green);}
 .stat-n{font-family:'DM Serif Display',Georgia,'Times New Roman',serif;font-size:1.6rem;line-height:1;}
 .stat-l{font-size:.58rem;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.06em;margin-top:.1rem;}
 
@@ -599,12 +619,24 @@ html,body{height:100%;overflow:hidden;font-family:'DM Sans',-apple-system,BlinkM
 .filter-chips{display:flex;gap:.35rem;flex-wrap:wrap;}
 .filter-chip{border:1.5px solid var(--line);background:var(--paper);border-radius:20px;padding:.25rem .65rem;font-size:.72rem;font-weight:500;cursor:pointer;transition:all .15s;white-space:nowrap;}
 .filter-chip.active{background:var(--ink);color:var(--paper);border-color:var(--ink);}
-.note-editor-area{background:var(--paper);border:1.5px solid var(--line);border-radius:var(--r);padding:1rem;margin-bottom:1rem;display:none;}
-.note-editor-area.open{display:block;}
+.note-editor-area{display:none !important;}
 .note-title-input{width:100%;border:none;outline:none;font-family:'DM Serif Display',Georgia,'Times New Roman',serif;font-size:1.25rem;font-weight:400;color:var(--ink);margin-bottom:.5rem;background:none;}
 .note-title-input::placeholder{color:var(--muted);}
 .note-body-input{width:100%;border:none;outline:none;font-family:'DM Sans',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:.88rem;color:var(--ink);resize:none;min-height:90px;line-height:1.65;background:none;}
 .note-body-input::placeholder{color:var(--muted);}
+.fmt-btn{background:none;border:1.5px solid transparent;border-radius:6px;padding:.28rem .55rem;font-size:.82rem;cursor:pointer;color:var(--ink);font-family:inherit;transition:all .12s;flex-shrink:0;line-height:1;}
+.fmt-btn:hover{background:var(--paper);border-color:var(--line);}
+.fmt-btn:active{background:var(--green-light);border-color:var(--green);color:var(--green);}
+/* Markdown rendered in note cards */
+.note-md h1{font-size:1rem;font-weight:700;margin:.3rem 0 .15rem;font-family:'DM Serif Display',Georgia,serif;}
+.note-md h2{font-size:.88rem;font-weight:700;margin:.25rem 0 .1rem;}
+.note-md strong{font-weight:700;}
+.note-md em{font-style:italic;}
+.note-md code{font-family:monospace;font-size:.82rem;background:var(--paper2);padding:.05rem .3rem;border-radius:3px;}
+.note-md blockquote{border-left:3px solid var(--green);padding-left:.6rem;margin:.2rem 0;color:var(--muted);}
+.note-md ul{padding-left:1.2rem;margin:.15rem 0;}
+.note-md ol{padding-left:1.4rem;margin:.15rem 0;}
+.note-md li{margin:.08rem 0;}
 .note-editor-foot{display:flex;align-items:center;gap:.5rem;padding-top:.75rem;border-top:1px solid var(--line);margin-top:.75rem;flex-wrap:wrap;}
 .note-subj-select{border:1.5px solid var(--line);border-radius:8px;padding:.38rem .6rem;font-family:'DM Sans',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:.78rem;outline:none;background:var(--paper);color:var(--ink);}
 .note-save-btn{background:var(--ink);color:var(--paper);border:none;border-radius:8px;padding:.4rem .9rem;font-family:'DM Sans',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:.78rem;font-weight:600;cursor:pointer;margin-left:auto;}
@@ -707,10 +739,15 @@ html,body{height:100%;overflow:hidden;font-family:'DM Sans',-apple-system,BlinkM
 .rb.done .rb-check{background:var(--green);border-color:var(--green);color:#fff;font-size:.75rem;transform:scale(1.1);}
 .rb.missed-time .rb-check,.rb.overdue .rb-check{border-color:rgba(239,68,68,.4);}
 /* Edit/delete — hidden until hover */
-.rb-del,.rb-edit{background:none;border:none;color:transparent;cursor:pointer;font-size:.75rem;padding:.25rem .3rem;border-radius:6px;transition:all .15s;flex-shrink:0;}
-.rb:hover .rb-del,.rb:hover .rb-edit{color:var(--muted);}
-.rb-del:hover{color:#ef4444!important;background:rgba(239,68,68,.1);}
-.rb-edit:hover{color:var(--ink)!important;background:var(--paper);}
+.rb-del,.rb-edit{background:none;border:none;cursor:pointer;padding:.3rem .38rem;border-radius:7px;transition:all .15s;flex-shrink:0;display:flex;align-items:center;justify-content:center;}
+.rb-edit{color:var(--muted);opacity:.55;}
+.rb-del{color:var(--muted);opacity:.45;font-size:.75rem;}
+.rb:hover .rb-edit{opacity:1;color:var(--ink);background:var(--paper2);}
+.rb:hover .rb-del{opacity:1;color:#ef4444;background:rgba(239,68,68,.08);}
+.rb-del:hover{color:#ef4444!important;background:rgba(239,68,68,.12)!important;opacity:1!important;}
+.rb-edit:hover{color:var(--ink)!important;background:var(--paper2)!important;opacity:1!important;}
+/* Separator between edit and delete */
+.rb-btn-sep{width:1px;height:18px;background:var(--line);flex-shrink:0;opacity:.6;}
 .home-r-item{display:flex;align-items:center;gap:.55rem;padding:.5rem .65rem;border-radius:8px;border:1px solid var(--line);margin-bottom:.35rem;cursor:pointer;background:var(--paper);transition:all .15s;}
 .home-r-item:hover{border-color:var(--ink);}
 .home-r-item.done{opacity:.4;}
@@ -1429,8 +1466,8 @@ html, body, #app {
         <button class="nav-btn active" id="nav-home" onclick="navTo('home',this)"><span class="nav-icon"><svg viewBox="0 0 24 24"><path d="M3 9.5L12 3l9 6.5V20a1 1 0 01-1 1H5a1 1 0 01-1-1V9.5z"/><path d="M9 21V12h6v9"/></svg></span>Home</button>
         <button class="nav-btn" id="nav-notes" onclick="navTo('notes',this)"><span class="nav-icon"><svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><line x1="10" y1="9" x2="8" y2="9"/></svg></span>Notes</button>
         <button class="nav-btn" id="nav-cards" onclick="navTo('cards',this)"><span class="nav-icon"><svg viewBox="0 0 24 24"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg></span>Study Cards</button>
-        <button class="nav-btn" id="nav-reminders" onclick="navTo('home',document.getElementById('nav-home'));setTimeout(()=>{document.getElementById('home-reminders-section').scrollIntoView({behavior:'smooth'});toggleRemForm(true);},120)"><span class="nav-icon"><svg viewBox="0 0 24 24"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg></span>Reminders</button>
         <button class="nav-btn" id="nav-gaps" onclick="navTo('gaps',this)"><span class="nav-icon"><svg viewBox="0 0 24 24"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg></span>Progress</button>
+        <button class="nav-btn" id="nav-timer" onclick="navTo('timer',this)"><span class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><polyline points="12 7 12 12 15 15"/></svg></span>Timer</button>
         <button class="nav-btn" id="nav-chat" onclick="navTo('chat',this)"><span class="nav-icon"><svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/><circle cx="9" cy="10" r="1" fill="currentColor"/><circle cx="12" cy="10" r="1" fill="currentColor"/><circle cx="15" cy="10" r="1" fill="currentColor"/></svg></span><span id="chat-nav-lbl">Coach</span><span class="nav-badge" id="review-badge" style="display:none">0</span></button>
         <div class="sb-section" style="margin-top:.5rem;">Subjects</div>
         <div id="sb-subjects"></div>
@@ -1491,6 +1528,47 @@ html, body, #app {
           <!-- Next action nudge -->
           <div class="full" id="home-next-action"></div>
 
+          <!-- Streak + study nudge row -->
+          <div class="full" id="home-study-row"></div>
+
+          <!-- ── COUNTDOWN + GOAL ROW ── -->
+          <div class="full" style="display:grid;grid-template-columns:1fr 1fr;gap:.75rem;">
+
+            <!-- Countdown chip -->
+            <div id="home-countdown-chip" onclick="openCountdownManager()" style="background:var(--paper);border:1px solid var(--line);border-radius:14px;padding:.85rem .9rem;cursor:pointer;position:relative;overflow:hidden;display:flex;flex-direction:column;gap:.35rem;border-left:3px solid var(--green);" id="cd-chip">
+              <div style="display:flex;align-items:center;justify-content:space-between;">
+                <span style="font-size:.62rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);">Countdown</span>
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="var(--muted)" stroke-width="2" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+              </div>
+              <div id="cd-days" style="font-size:1.9rem;font-weight:800;line-height:1;color:var(--green);">+</div>
+              <div id="cd-title" style="font-size:.72rem;font-weight:600;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">Add an event</div>
+              <div class="cd-bar-wrap" style="height:3px;background:var(--line);border-radius:99px;overflow:hidden;"><div id="cd-bar" style="height:100%;width:0%;background:var(--green);border-radius:99px;transition:width .6s;"></div></div>
+            </div>
+
+            <!-- Weekly goal chip -->
+            <div id="home-goal-chip" onclick="openGoalSettings()" style="background:var(--paper);border:1px solid var(--line);border-radius:14px;padding:.85rem .9rem;cursor:pointer;display:flex;flex-direction:column;gap:.35rem;">
+              <div style="display:flex;align-items:center;justify-content:space-between;">
+                <span style="font-size:.62rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);">Weekly Goal</span>
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="var(--muted)" stroke-width="2" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+              </div>
+              <div style="display:flex;align-items:center;gap:.5rem;">
+                <svg style="flex-shrink:0;transform:rotate(-90deg);" width="44" height="44" viewBox="0 0 44 44">
+                  <circle cx="22" cy="22" r="18" fill="none" stroke="var(--line)" stroke-width="4"/>
+                  <circle id="goal-ring-fg" cx="22" cy="22" r="18" fill="none" stroke="var(--green)" stroke-width="4" stroke-linecap="round" stroke-dasharray="113.1" stroke-dashoffset="113.1"/>
+                </svg>
+                <div>
+                  <div style="font-size:1.1rem;font-weight:800;line-height:1;color:var(--ink);"><span id="goal-done-n">0</span><span id="goal-total-n" style="font-size:.65rem;color:var(--muted);font-weight:500;">/—</span></div>
+                  <div id="goal-sub" style="font-size:.68rem;color:var(--muted);margin-top:.15rem;">cards this week</div>
+                </div>
+              </div>
+              <div id="goal-streak-row" style="display:none;align-items:center;gap:.25rem;">
+                <svg width="11" height="11" viewBox="0 0 24 24" fill="#f97316" stroke="none"><path d="M12 2c0 6-6 8-6 14a6 6 0 0 0 12 0c0-6-6-8-6-14z"/></svg>
+                <span id="goal-streak-txt" style="font-size:.65rem;color:#f97316;font-weight:600;"></span>
+              </div>
+            </div>
+
+          </div>
+
           <!-- ── REMINDERS & TASKS ── -->
           <div class="full" id="home-reminders-section">
             <div class="card" style="padding:1.1rem;">
@@ -1510,26 +1588,23 @@ html, body, #app {
               <div id="rem-expand-area" style="display:none;margin-bottom:.85rem;">
                 <div style="border-top:1px solid var(--line);padding-top:.9rem;">
                   <input class="rem-input" id="nr-text" placeholder="What do you need to do?" onkeydown="if(event.key==='Enter')doAddR()" style="margin-bottom:.6rem;font-size:.92rem;padding:.75rem .9rem;border-radius:10px;"/>
-                  <div style="margin-bottom:.65rem;">
-                    <label style="font-size:.65rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);display:block;margin-bottom:.3rem;">🔔 Remind me at</label>
-                    <input type="time" class="rem-sel" id="nr-time" style="width:100%;font-size:.95rem;padding:.6rem .8rem;"/>
-                    <input type="hidden" id="nr-emoji" value="📝"/>
-                  </div>
-                  <div class="rem-optional-times" style="margin-bottom:.6rem;">
-                    <div class="rem-opt-row">
-                      <label class="rem-opt-label">Start time <span>(optional)</span></label>
-                      <input type="time" class="rem-sel" id="nr-start-time"/>
+                  <input type="hidden" id="nr-emoji" value="📝"/>
+                  <div style="display:grid;grid-template-columns:1fr 1fr;gap:.5rem;margin-bottom:.65rem;">
+                    <div>
+                      <label style="font-size:.63rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);display:block;margin-bottom:.25rem;">🔔 Time</label>
+                      <input type="time" class="rem-sel" id="nr-time" style="width:100%;"/>
                     </div>
-                    <div class="rem-opt-row">
-                      <label class="rem-opt-label">Due time <span>(optional)</span></label>
-                      <input type="time" class="rem-sel" id="nr-due-time"/>
+                    <div>
+                      <label style="font-size:.63rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);display:block;margin-bottom:.25rem;">⏱ End time <span style="font-weight:400;">(opt)</span></label>
+                      <input type="time" class="rem-sel" id="nr-due-time" style="width:100%;"/>
                     </div>
                   </div>
+                  <input type="hidden" id="nr-start-time" value=""/>
                   <div class="due-date-wrap" id="nr-date-picker" style="margin-bottom:.6rem;">
                     <div class="due-date-label">When?</div>
                     <div class="date-presets">
                       <button class="date-preset-btn active" data-val="today"     onclick="setDatePreset('nr','today',this)"><svg style="width:11px;height:11px;vertical-align:middle;margin-right:3px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>Today</button>
-                      <button class="date-preset-btn"        data-val="tomorrow"  onclick="setDatePreset('nr','tomorrow',this)"><svg style="width:11px;height:11px;vertical-align:middle;margin-right:3px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>Tomorrow</button>
+                      <button class="date-preset-btn"        data-val="tomorrow"  onclick="setDatePreset('nr','tomorrow',this)"><svg style="width:11px;height:11px;vertical-align:middle;margin-right:3px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>Tomorrow</button><button class="date-preset-btn" data-val="nextweek" onclick="setDatePreset('nr','nextweek',this)"><svg style="width:11px;height:11px;vertical-align:middle;margin-right:3px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>Next week</button>
                       <button class="date-preset-btn recurring" data-val="everyday"  onclick="setDatePreset('nr','everyday',this)"><svg style="width:11px;height:11px;vertical-align:middle;margin-right:3px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;" viewBox="0 0 24 24"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 014-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 01-4 4H3"/></svg>Every day</button>
                       <button class="date-preset-btn recurring" data-val="everyweek" onclick="setDatePreset('nr','everyweek',this)"><svg style="width:11px;height:11px;vertical-align:middle;margin-right:3px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;" viewBox="0 0 24 24"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 014-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 01-4 4H3"/></svg>Every week</button>
                     </div>
@@ -1555,9 +1630,10 @@ html, body, #app {
 
               <div id="big-r-list"></div>
 
-              <!-- Subtle clear all at bottom -->
-              <div id="rem-clear-row" style="display:none;margin-top:1rem;padding-top:.75rem;border-top:1px solid var(--line);text-align:center;">
-                <button onclick="clearAllReminders()" style="background:none;border:none;color:var(--muted);font-size:.68rem;font-family:inherit;cursor:pointer;opacity:.7;">Clear all tasks</button>
+              <!-- Clear completed / clear all row -->
+              <div id="rem-clear-row" style="display:none;margin-top:1rem;padding-top:.75rem;border-top:1px solid var(--line);display:none;justify-content:space-between;align-items:center;">
+                <button id="rem-clear-done-btn" onclick="clearCompletedReminders()" style="background:var(--paper2);border:1.5px solid var(--line);color:var(--ink);font-size:.72rem;font-weight:600;font-family:inherit;cursor:pointer;border-radius:8px;padding:.35rem .75rem;display:none;"></button>
+                <button onclick="clearAllReminders()" style="background:none;border:none;color:var(--muted);font-size:.67rem;font-family:inherit;cursor:pointer;opacity:.6;text-decoration:underline;">Clear all</button>
               </div>
             </div>
           </div>
@@ -1575,19 +1651,6 @@ html, body, #app {
         </div>
 
         <!-- Editor -->
-        <div class="note-editor-area" id="note-editor">
-          <input class="note-title-input" id="note-title" placeholder="Note title…"/>
-          <textarea class="note-body-input" id="note-body" placeholder="Write your notes here. Your AI coach will automatically generate study cards from this…" rows="5"></textarea>
-          <div class="note-editor-foot">
-            <select class="note-subj-select" id="note-subj-sel"></select>
-            <button class="mic-btn" id="note-mic-btn" onclick="toggleVoice('note')" title="Dictate note">
-              <svg viewBox="0 0 24 24"><path d="M12 1a4 4 0 0 1 4 4v6a4 4 0 0 1-8 0V5a4 4 0 0 1 4-4zm-1 17.93V21h-2a1 1 0 0 0 0 2h6a1 1 0 0 0 0-2h-2v-2.07A8 8 0 0 0 20 11a1 1 0 0 0-2 0 6 6 0 0 1-12 0 1 1 0 0 0-2 0 8 8 0 0 0 7 7.93z"/></svg>
-            </button>
-            <button class="nca-btn" style="background:var(--paper2);border:none;border-radius:6px;padding:.3rem .6rem;cursor:pointer;font-size:.72rem;" onclick="closeNoteEditor()">Cancel</button>
-            <button class="note-save-btn" onclick="saveNote()">Save Note</button>
-          </div>
-        </div>
-
         <button class="add-note-btn" id="add-note-btn" onclick="openNoteEditor()">
           <span style="font-size:1.1rem;">+</span> New note
         </button>
@@ -1620,6 +1683,7 @@ html, body, #app {
         </div>
         <!-- Topic filter row — shown when a subject is active -->
         <div class="study-filters" id="cards-topic-chips" style="display:none;padding-top:0;margin-top:-.3rem;"></div>
+        <div class="search-box" style="margin-bottom:.6rem;"><span>🔍</span><input id="cards-search" placeholder="Search cards…" oninput="renderCards()"/></div>
 
         <!-- Active flashcard -->
         <div id="fc-session" style="display:none;">
@@ -1663,6 +1727,128 @@ html, body, #app {
         <div id="gaps-content"></div>
       </div>
 
+      <!-- ── TIMER ── -->
+      <div class="page" id="page-timer">
+
+        <!-- Header -->
+        <div style="padding:.2rem 0 1.1rem;display:flex;align-items:flex-start;justify-content:space-between;">
+          <div>
+            <div style="font-family:'DM Serif Display',Georgia,'Times New Roman',serif;font-size:1.35rem;margin-bottom:.15rem;">Study Timer</div>
+            <div style="font-size:.73rem;color:var(--muted);">Deep work in focused sessions</div>
+          </div>
+          <!-- Sound toggle -->
+          <button id="pomo-sound-btn" onclick="togglePomoSound()" style="background:var(--paper2);border:1.5px solid var(--line);border-radius:10px;padding:.4rem .7rem;font-size:.72rem;font-weight:600;cursor:pointer;color:var(--muted);font-family:inherit;display:flex;align-items:center;gap:.3rem;">
+            🔇 Sound
+          </button>
+        </div>
+
+        <!-- What are you studying? -->
+        <div class="card" style="padding:.9rem 1rem;margin-bottom:1rem;">
+          <div style="font-size:.65rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin-bottom:.5rem;">📚 What are you studying?</div>
+          <div style="display:flex;gap:.5rem;">
+            <input id="pomo-subject-input" type="text" placeholder="e.g. Biology chapter 4…" autocomplete="off"
+              style="flex:1;padding:.5rem .75rem;border:1.5px solid var(--line);border-radius:8px;background:var(--paper2);color:var(--ink);font-size:.85rem;font-family:inherit;"/>
+            <select id="pomo-subject-select" onchange="document.getElementById('pomo-subject-input').value=this.value;this.value=''"
+              style="padding:.5rem .6rem;border:1.5px solid var(--line);border-radius:8px;background:var(--paper2);color:var(--muted);font-size:.8rem;font-family:inherit;cursor:pointer;">
+              <option value="">My subjects</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Mode selector -->
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:.5rem;margin-bottom:1.4rem;">
+          <button id="pomo-mode-focus" onclick="setPomoMode('focus')" class="pomo-mode-btn active" style="padding:.65rem .4rem;border-radius:12px;text-align:center;line-height:1.4;">
+            🍅<div style="font-size:.68rem;margin-top:.15rem;font-weight:600;">Focus</div>
+            <div style="font-size:.6rem;opacity:.65;" id="pomo-lbl-focus">25 min</div>
+          </button>
+          <button id="pomo-mode-short" onclick="setPomoMode('short')" class="pomo-mode-btn" style="padding:.65rem .4rem;border-radius:12px;text-align:center;line-height:1.4;">
+            ☕<div style="font-size:.68rem;margin-top:.15rem;font-weight:600;">Short break</div>
+            <div style="font-size:.6rem;opacity:.65;" id="pomo-lbl-short">5 min</div>
+          </button>
+          <button id="pomo-mode-long" onclick="setPomoMode('long')" class="pomo-mode-btn" style="padding:.65rem .4rem;border-radius:12px;text-align:center;line-height:1.4;">
+            🌿<div style="font-size:.68rem;margin-top:.15rem;font-weight:600;">Long break</div>
+            <div style="font-size:.6rem;opacity:.65;" id="pomo-lbl-long">15 min</div>
+          </button>
+        </div>
+
+        <!-- Big timer ring -->
+        <div style="display:flex;flex-direction:column;align-items:center;margin-bottom:1.6rem;">
+          <div style="position:relative;width:210px;height:210px;">
+            <svg width="210" height="210" style="transform:rotate(-90deg);">
+              <circle cx="105" cy="105" r="92" fill="none" stroke="var(--line)" stroke-width="9"/>
+              <circle id="pomo-ring" cx="105" cy="105" r="92" fill="none" stroke="var(--green)" stroke-width="9"
+                stroke-dasharray="578" stroke-dashoffset="578"
+                stroke-linecap="round" style="transition:stroke-dashoffset .9s linear,stroke .4s;"/>
+            </svg>
+            <div style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:.1rem;">
+              <div id="pomo-mode-emoji" style="font-size:1.3rem;line-height:1;">🍅</div>
+              <div id="pomo-time" style="font-family:'DM Serif Display',Georgia,serif;font-size:3.2rem;font-weight:400;color:var(--ink);line-height:1;letter-spacing:-.03em;">25:00</div>
+              <div id="pomo-label" style="font-size:.68rem;color:var(--muted);text-align:center;max-width:110px;line-height:1.3;">Ready to focus</div>
+            </div>
+          </div>
+          <!-- Session dots -->
+          <div style="display:flex;gap:.55rem;margin-top:1rem;">
+            <span class="pomo-dot" id="pd0"></span>
+            <span class="pomo-dot" id="pd1"></span>
+            <span class="pomo-dot" id="pd2"></span>
+            <span class="pomo-dot" id="pd3"></span>
+          </div>
+          <div style="font-size:.63rem;color:var(--muted);margin-top:.35rem;">Session <span id="pomo-session-n">1</span> of 4 · then long break</div>
+        </div>
+
+        <!-- Controls -->
+        <div style="display:flex;justify-content:center;align-items:center;gap:.9rem;margin-bottom:1.6rem;">
+          <button onclick="resetPomo()" title="Reset" style="width:48px;height:48px;border-radius:50%;background:var(--paper2);border:1.5px solid var(--line);font-size:1.1rem;cursor:pointer;display:flex;align-items:center;justify-content:center;">↺</button>
+          <button onclick="togglePomo()" id="pomo-play-btn" style="width:72px;height:72px;border-radius:50%;background:var(--green);color:#fff;border:none;font-size:1.6rem;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 6px 24px rgba(26,107,60,.35);transition:transform .1s,box-shadow .1s;" onmousedown="this.style.transform='scale(.95)'" onmouseup="this.style.transform='scale(1)'">▶</button>
+          <button onclick="skipPomo()" title="Skip to next" style="width:48px;height:48px;border-radius:50%;background:var(--paper2);border:1.5px solid var(--line);font-size:1.1rem;cursor:pointer;display:flex;align-items:center;justify-content:center;">⏭</button>
+        </div>
+
+        <!-- Break tip (shown during breaks) -->
+        <div id="pomo-break-tip" style="display:none;background:var(--green-light);border-radius:12px;padding:.85rem 1rem;margin-bottom:1rem;border-left:3px solid var(--green);">
+          <div style="font-size:.68rem;font-weight:700;color:var(--green);margin-bottom:.2rem;">BREAK TIP</div>
+          <div id="pomo-break-tip-text" style="font-size:.8rem;color:var(--ink);line-height:1.5;"></div>
+        </div>
+
+        <!-- Today's focus stats + subject log -->
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:.6rem;margin-bottom:1rem;">
+          <div style="background:var(--green-light);border-radius:12px;padding:.9rem;text-align:center;">
+            <div id="pomo-stat-sessions" style="font-size:1.8rem;font-weight:700;color:var(--green);line-height:1;">0</div>
+            <div style="font-size:.63rem;color:var(--green);margin-top:.2rem;">sessions today</div>
+          </div>
+          <div style="background:var(--paper2);border-radius:12px;padding:.9rem;text-align:center;border:1px solid var(--line);">
+            <div id="pomo-stat-mins" style="font-size:1.8rem;font-weight:700;color:var(--ink);line-height:1;">0</div>
+            <div style="font-size:.63rem;color:var(--muted);margin-top:.2rem;">minutes focused</div>
+          </div>
+        </div>
+
+        <!-- Session history -->
+        <div class="card" style="padding:1rem 1.1rem;margin-bottom:1rem;">
+          <div style="font-size:.7rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:.6rem;">Recent sessions</div>
+          <div id="pomo-session-log" style="font-size:.78rem;color:var(--muted);font-style:italic;">No sessions yet today — start one above!</div>
+        </div>
+
+        <!-- Customise durations (collapsed by default) -->
+        <details style="margin-bottom:1.5rem;">
+          <summary style="font-size:.72rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;cursor:pointer;list-style:none;display:flex;align-items:center;gap:.4rem;padding:.5rem 0;">
+            <span>⚙️ Customise durations</span>
+          </summary>
+          <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:.6rem;margin-top:.7rem;">
+            <div>
+              <label style="font-size:.63rem;color:var(--muted);display:block;margin-bottom:.25rem;">Focus (min)</label>
+              <input type="number" id="pomo-custom-focus" min="1" max="90" value="25" oninput="updatePomoDurations()" style="width:100%;padding:.45rem .6rem;border:1.5px solid var(--line);border-radius:8px;background:var(--paper2);color:var(--ink);font-size:.88rem;font-family:inherit;text-align:center;"/>
+            </div>
+            <div>
+              <label style="font-size:.63rem;color:var(--muted);display:block;margin-bottom:.25rem;">Short (min)</label>
+              <input type="number" id="pomo-custom-short" min="1" max="30" value="5" oninput="updatePomoDurations()" style="width:100%;padding:.45rem .6rem;border:1.5px solid var(--line);border-radius:8px;background:var(--paper2);color:var(--ink);font-size:.88rem;font-family:inherit;text-align:center;"/>
+            </div>
+            <div>
+              <label style="font-size:.63rem;color:var(--muted);display:block;margin-bottom:.25rem;">Long (min)</label>
+              <input type="number" id="pomo-custom-long" min="1" max="60" value="15" oninput="updatePomoDurations()" style="width:100%;padding:.45rem .6rem;border:1.5px solid var(--line);border-radius:8px;background:var(--paper2);color:var(--ink);font-size:.88rem;font-family:inherit;text-align:center;"/>
+            </div>
+          </div>
+        </details>
+      </div>
+
       <!-- ── CHAT ── -->
       <div class="chat-wrap" id="page-chat">
         <div class="chat-header">
@@ -1682,14 +1868,19 @@ html, body, #app {
           <img id="t-avi" src="" class="msg-avi" alt=""/>
           <div class="typing-bubble"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div>
         </div>
-        <div class="chat-bar">
-          <button class="mic-btn" id="chat-mic-btn" onclick="toggleVoice('chat')" title="Speak to your coach">
-            <svg viewBox="0 0 24 24"><path d="M12 1a4 4 0 0 1 4 4v6a4 4 0 0 1-8 0V5a4 4 0 0 1 4-4zm-1 17.93V21h-2a1 1 0 0 0 0 2h6a1 1 0 0 0 0-2h-2v-2.07A8 8 0 0 0 20 11a1 1 0 0 0-2 0 6 6 0 0 1-12 0 1 1 0 0 0-2 0 8 8 0 0 0 7 7.93z"/></svg>
-          </button>
-          <textarea class="chat-input" id="chat-input" placeholder="Ask your coach anything…" rows="1"
-            onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendMsg();}"
-            oninput="this.style.height='auto';this.style.height=this.scrollHeight+'px'"></textarea>
-          <button class="send-btn" onclick="sendMsg()">→</button>
+        <div class="chat-bar" style="flex-direction:column;gap:.4rem;">
+          <div style="display:flex;align-items:center;justify-content:flex-end;padding:0 .1rem;">
+            <span id="chat-msg-counter" style="font-size:.62rem;color:var(--muted);"></span>
+          </div>
+          <div style="display:flex;align-items:flex-end;gap:.5rem;">
+            <button class="mic-btn" id="chat-mic-btn" onclick="toggleVoice('chat')" title="Speak to your coach">
+              <svg viewBox="0 0 24 24"><path d="M12 1a4 4 0 0 1 4 4v6a4 4 0 0 1-8 0V5a4 4 0 0 1 4-4zm-1 17.93V21h-2a1 1 0 0 0 0 2h6a1 1 0 0 0 0-2h-2v-2.07A8 8 0 0 0 20 11a1 1 0 0 0-2 0 6 6 0 0 1-12 0 1 1 0 0 0-2 0 8 8 0 0 0 7 7.93z"/></svg>
+            </button>
+            <textarea class="chat-input" id="chat-input" placeholder="Ask your coach anything…" rows="1"
+              onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendMsg();}"
+              oninput="this.style.height='auto';this.style.height=this.scrollHeight+'px'"></textarea>
+            <button class="send-btn" onclick="sendMsg()">→</button>
+          </div>
         </div>
       </div>
 
@@ -1875,11 +2066,52 @@ html, body, #app {
       <button class="bn-btn active" id="bn-home" onclick="navTo('home',document.getElementById('nav-home'));setBN('home')"><span class="bn-icon"><svg viewBox="0 0 24 24"><path d="M3 9.5L12 3l9 6.5V20a1 1 0 01-1 1H5a1 1 0 01-1-1V9.5z"/><path d="M9 21V12h6v9"/></svg></span>Home</button>
       <button class="bn-btn" id="bn-notes" onclick="navTo('notes',document.getElementById('nav-notes'));setBN('notes')"><span class="bn-icon"><svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><line x1="10" y1="9" x2="8" y2="9"/></svg></span>Notes</button>
       <button class="bn-btn" id="bn-cards" onclick="navTo('cards',document.getElementById('nav-cards'));setBN('cards')"><span class="bn-icon"><svg viewBox="0 0 24 24"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg></span>Cards</button>
-      <button class="bn-btn" id="bn-reminders" onclick="navTo('home',document.getElementById('nav-home'));setBN('home');setTimeout(()=>{document.getElementById('home-reminders-section').scrollIntoView({behavior:'smooth'});toggleRemForm(true);},150)"><span class="bn-icon"><svg viewBox="0 0 24 24"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg></span>Tasks</button>
+      <button class="bn-btn" id="bn-timer" onclick="navTo('timer',document.getElementById('nav-timer'));setBN('timer')"><span class="bn-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><polyline points="12 7 12 12 15 15"/></svg></span>Timer</button>
       <button class="bn-btn" id="bn-chat" onclick="navTo('chat',document.getElementById('nav-chat'));setBN('chat')"><span class="bn-icon"><svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/><circle cx="9" cy="10" r="1" fill="currentColor"/><circle cx="12" cy="10" r="1" fill="currentColor"/><circle cx="15" cy="10" r="1" fill="currentColor"/></svg></span>Coach</button>
     </div>
   </nav>
 </div><!-- end #app -->
+
+<!-- ── FULL-SCREEN NOTE EDITOR ── -->
+<div id="note-editor-overlay" style="display:none;position:fixed;inset:0;z-index:9000;background:var(--paper);flex-direction:column;">
+  <!-- Top bar -->
+  <div style="display:flex;align-items:center;gap:.6rem;padding:.75rem 1rem .65rem;border-bottom:1px solid var(--line);flex-shrink:0;background:var(--paper);">
+    <button onclick="closeNoteEditor()" style="background:none;border:none;padding:.3rem .5rem .3rem 0;cursor:pointer;color:var(--muted);display:flex;align-items:center;gap:.3rem;font-family:inherit;font-size:.82rem;font-weight:600;flex-shrink:0;">
+      <svg viewBox="0 0 24 24" style="width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:2.5;stroke-linecap:round;stroke-linejoin:round;"><polyline points="15 18 9 12 15 6"/></svg>
+      Notes
+    </button>
+    <select class="note-subj-select" id="note-subj-sel" style="flex:1;min-width:0;max-width:140px;font-size:.78rem;"></select>
+    <button class="mic-btn" id="note-mic-btn" onclick="toggleVoice('note')" title="Dictate" style="margin-left:auto;flex-shrink:0;">
+      <svg viewBox="0 0 24 24"><path d="M12 1a4 4 0 0 1 4 4v6a4 4 0 0 1-8 0V5a4 4 0 0 1 4-4zm-1 17.93V21h-2a1 1 0 0 0 0 2h6a1 1 0 0 0 0-2h-2v-2.07A8 8 0 0 0 20 11a1 1 0 0 0-2 0 6 6 0 0 1-12 0 1 1 0 0 0-2 0 8 8 0 0 0 7 7.93z"/></svg>
+    </button>
+    <button onclick="saveNote()" style="background:var(--green);color:#fff;border:none;border-radius:8px;padding:.38rem .9rem;font-size:.8rem;font-weight:700;cursor:pointer;font-family:inherit;flex-shrink:0;">Save</button>
+  </div>
+  <!-- Formatting toolbar -->
+  <div style="display:flex;align-items:center;gap:.25rem;padding:.45rem 1rem;border-bottom:1px solid var(--line);background:var(--paper2);flex-shrink:0;overflow-x:auto;">
+    <button onclick="fmtNote('bold')"     title="Bold"        class="fmt-btn"><b>B</b></button>
+    <button onclick="fmtNote('italic')"   title="Italic"      class="fmt-btn"><i>I</i></button>
+    <button onclick="fmtNote('h1')"       title="Heading 1"   class="fmt-btn" style="font-size:.8rem;font-weight:700;">H1</button>
+    <button onclick="fmtNote('h2')"       title="Heading 2"   class="fmt-btn" style="font-size:.78rem;font-weight:600;">H2</button>
+    <div style="width:1px;height:18px;background:var(--line);margin:0 .2rem;flex-shrink:0;"></div>
+    <button onclick="fmtNote('ul')"       title="Bullet list" class="fmt-btn">• List</button>
+    <button onclick="fmtNote('ol')"       title="Numbered list" class="fmt-btn">1. List</button>
+    <div style="width:1px;height:18px;background:var(--line);margin:0 .2rem;flex-shrink:0;"></div>
+    <button onclick="fmtNote('quote')"    title="Quote"       class="fmt-btn" style="font-size:1rem;line-height:1;">"</button>
+    <button onclick="fmtNote('code')"     title="Code"        class="fmt-btn" style="font-family:monospace;font-size:.8rem;">&lt;/&gt;</button>
+  </div>
+  <!-- Writing area — full height, scrollable -->
+  <div style="flex:1;overflow-y:auto;padding:1.25rem 1.1rem 2rem;display:flex;flex-direction:column;">
+    <input class="note-title-input" id="note-title" placeholder="Title…" style="font-size:1.5rem;margin-bottom:.75rem;"/>
+    <textarea class="note-body-input" id="note-body"
+      placeholder="Write your notes here…&#10;&#10;Your AI coach will automatically generate study cards from what you write."
+      style="flex:1;min-height:60vh;font-size:.95rem;line-height:1.75;resize:none;font-family:'DM Sans',sans-serif;"></textarea>
+  </div>
+  <!-- Word count bar -->
+  <div style="padding:.4rem 1.1rem;border-top:1px solid var(--line);background:var(--paper2);display:flex;align-items:center;justify-content:space-between;flex-shrink:0;">
+    <span id="note-word-count" style="font-size:.65rem;color:var(--muted);">0 words</span>
+    <span style="font-size:.65rem;color:var(--muted);" id="note-autosave-label"></span>
+  </div>
+</div>
 
 <!-- Permission prompt modal -->
 <div id="perm-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:99998;align-items:center;justify-content:center;padding:1.5rem;">
@@ -1920,35 +2152,35 @@ html, body, #app {
 <!-- Add Reminder Modal -->
 <div class="modal-bg" id="add-modal">
   <div class="modal">
-    <h3>New Reminder</h3>
+    <h3>New Task</h3>
     <input type="text" id="m-text" placeholder="What do you need to do?" autocomplete="off"/>
-    <div class="m-row">
-      <input type="time" id="m-time"/>
-      <select id="m-ampm"><option>AM</option><option>PM</option></select>
-      <select id="m-emoji">
-        <option value="💊">💊 Meds</option><option value="📞">📞 Call</option>
-        <option value="📝" selected>📝 Task</option><option value="🏃">🏃 Exercise</option>
-        <option value="💧">💧 Water</option><option value="📚">📚 Study</option>
-        <option value="🔔">🔔 Reminder</option><option value="🎯">🎯 Goal</option>
-      </select>
-    </div>
-    <div class="rem-optional-times" style="margin-bottom:.6rem;">
-      <div class="rem-opt-row">
-        <label class="rem-opt-label">Start time <span>(optional)</span></label>
-        <input type="time" class="rem-sel" id="m-start-time"/>
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:.4rem;margin-bottom:.5rem;">
+      <div>
+        <label style="font-size:.62rem;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);display:block;margin-bottom:.2rem;">🔔 Time</label>
+        <input type="time" class="rem-sel" id="m-time" style="width:100%;"/>
       </div>
-      <div class="rem-opt-row">
-        <label class="rem-opt-label">Due time <span>(optional)</span></label>
-        <input type="time" class="rem-sel" id="m-due-time"/>
+      <div>
+        <label style="font-size:.62rem;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);display:block;margin-bottom:.2rem;">⏱ End time</label>
+        <input type="time" class="rem-sel" id="m-due-time" style="width:100%;"/>
+      </div>
+      <div>
+        <label style="font-size:.62rem;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);display:block;margin-bottom:.2rem;">Icon</label>
+        <select id="m-emoji" style="width:100%;">
+          <option value="💊">💊</option><option value="📞">📞</option>
+          <option value="📝" selected>📝</option><option value="🏃">🏃</option>
+          <option value="💧">💧</option><option value="📚">📚</option>
+          <option value="🔔">🔔</option><option value="🎯">🎯</option>
+        </select>
       </div>
     </div>
-    <!-- SwiftUI-style date picker -->
+    <input type="hidden" id="m-start-time" value=""/>
     <div class="due-date-wrap" id="m-date-picker">
-      <div class="due-date-label">Due Date</div>
+      <div class="due-date-label">When?</div>
       <div class="date-presets">
         <button class="date-preset-btn active" data-val="today"     onclick="setDatePreset('m','today',this)"><svg style="width:11px;height:11px;vertical-align:middle;margin-right:3px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>Today</button>
-        <button class="date-preset-btn"        data-val="tomorrow"  onclick="setDatePreset('m','tomorrow',this)"><svg style="width:11px;height:11px;vertical-align:middle;margin-right:3px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>Tomorrow</button>
-        <button class="date-preset-btn recurring" data-val="everyday"  onclick="setDatePreset('m','everyday',this)"><svg style="width:11px;height:11px;vertical-align:middle;margin-right:3px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;" viewBox="0 0 24 24"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 014-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 01-4 4H3"/></svg>Every day</button>
+        <button class="date-preset-btn" data-val="tomorrow" onclick="setDatePreset('m','tomorrow',this)"><svg style="width:11px;height:11px;vertical-align:middle;margin-right:3px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>Tomorrow</button>
+        <button class="date-preset-btn" data-val="nextweek" onclick="setDatePreset('m','nextweek',this)"><svg style="width:11px;height:11px;vertical-align:middle;margin-right:3px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>Next week</button>
+        <button class="date-preset-btn recurring" data-val="everyday" onclick="setDatePreset('m','everyday',this)"><svg style="width:11px;height:11px;vertical-align:middle;margin-right:3px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;" viewBox="0 0 24 24"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 014-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 01-4 4H3"/></svg>Every day</button>
         <button class="date-preset-btn recurring" data-val="everyweek" onclick="setDatePreset('m','everyweek',this)"><svg style="width:11px;height:11px;vertical-align:middle;margin-right:3px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;" viewBox="0 0 24 24"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 014-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 01-4 4H3"/></svg>Every week</button>
       </div>
       <div class="date-calendar-trigger" id="m-cal-trigger" onclick="toggleCalendar('m')">
@@ -1960,7 +2192,7 @@ html, body, #app {
     </div>
     <div class="m-btns">
       <button class="btn-c" onclick="closeAddModal()">Cancel</button>
-      <button class="btn-ok" onclick="confirmAdd()">Add it!</button>
+      <button class="btn-ok" onclick="confirmAdd()">Add Task</button>
     </div>
   </div>
 </div>
@@ -1970,30 +2202,31 @@ html, body, #app {
   <div class="modal">
     <h3>Edit Task</h3>
     <input type="text" id="er-text" placeholder="Task description" autocomplete="off"/>
-    <div class="m-row">
-      <input type="time" id="er-time"/>
-      <select id="er-emoji">
-        <option value="💊">💊</option><option value="📞">📞</option>
-        <option value="📝" selected>📝</option><option value="🏃">🏃</option>
-        <option value="💧">💧</option><option value="📚">📚</option>
-        <option value="🔔">🔔</option><option value="🎯">🎯</option>
-      </select>
-    </div>
-    <div class="rem-optional-times" style="margin-bottom:.6rem;">
-      <div class="rem-opt-row">
-        <label class="rem-opt-label">Start time <span>(optional)</span></label>
-        <input type="time" class="rem-sel" id="er-start-time"/>
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:.4rem;margin-bottom:.5rem;">
+      <div>
+        <label style="font-size:.62rem;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);display:block;margin-bottom:.2rem;">🔔 Time</label>
+        <input type="time" class="rem-sel" id="er-time" style="width:100%;"/>
       </div>
-      <div class="rem-opt-row">
-        <label class="rem-opt-label">Due time <span>(optional)</span></label>
-        <input type="time" class="rem-sel" id="er-due-time"/>
+      <div>
+        <label style="font-size:.62rem;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);display:block;margin-bottom:.2rem;">⏱ End time</label>
+        <input type="time" class="rem-sel" id="er-due-time" style="width:100%;"/>
+      </div>
+      <div>
+        <label style="font-size:.62rem;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);display:block;margin-bottom:.2rem;">Icon</label>
+        <select id="er-emoji" style="width:100%;">
+          <option value="💊">💊</option><option value="📞">📞</option>
+          <option value="📝" selected>📝</option><option value="🏃">🏃</option>
+          <option value="💧">💧</option><option value="📚">📚</option>
+          <option value="🔔">🔔</option><option value="🎯">🎯</option>
+        </select>
       </div>
     </div>
+    <input type="hidden" id="er-start-time" value=""/>
     <div class="due-date-wrap" id="er-date-picker">
       <div class="due-date-label">Date</div>
       <div class="date-presets">
         <button class="date-preset-btn" data-val="today"     onclick="setDatePreset('er','today',this)"><svg style="width:11px;height:11px;vertical-align:middle;margin-right:3px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>Today</button>
-        <button class="date-preset-btn" data-val="tomorrow"  onclick="setDatePreset('er','tomorrow',this)"><svg style="width:11px;height:11px;vertical-align:middle;margin-right:3px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>Tomorrow</button>
+        <button class="date-preset-btn" data-val="tomorrow"  onclick="setDatePreset('er','tomorrow',this)"><svg style="width:11px;height:11px;vertical-align:middle;margin-right:3px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>Tomorrow</button><button class="date-preset-btn" data-val="nextweek" onclick="setDatePreset('er','nextweek',this)"><svg style="width:11px;height:11px;vertical-align:middle;margin-right:3px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>Next week</button>
         <button class="date-preset-btn recurring" data-val="everyday"  onclick="setDatePreset('er','everyday',this)"><svg style="width:11px;height:11px;vertical-align:middle;margin-right:3px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;" viewBox="0 0 24 24"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 014-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 01-4 4H3"/></svg>Every day</button>
         <button class="date-preset-btn recurring" data-val="everyweek" onclick="setDatePreset('er','everyweek',this)"><svg style="width:11px;height:11px;vertical-align:middle;margin-right:3px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;" viewBox="0 0 24 24"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 014-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 01-4 4H3"/></svg>Every week</button>
       </div>
@@ -2403,6 +2636,21 @@ function logDailyStudy(grade){
   localStorage.setItem('fn_study_log', JSON.stringify(log));
 }
 
+function logQuizResult(subject, topic, score, total){
+  let ql=[];
+  try{ ql=JSON.parse(localStorage.getItem('fn_quiz_log')||'[]'); }catch(e){}
+  ql.unshift({
+    ts: Date.now(),
+    date: todayStr(),
+    subject: subject||'General',
+    topic: topic||'',
+    score, total,
+    pct: total>0?Math.round((score/total)*100):0
+  });
+  if(ql.length>100) ql=ql.slice(0,100);
+  localStorage.setItem('fn_quiz_log', JSON.stringify(ql));
+}
+
 function getDueCards(){
   const today=todayStr();
   return studyCards.filter(c=>!c.nextReview||c.nextReview<=today);
@@ -2780,6 +3028,16 @@ function finishOB(){
 // APP START
 // ══════════════════════════════════════════════════════
 function startApp(){
+  // Migrate any reminders that stored literal 'today'/'tomorrow'/'nextweek' strings
+  const _t=todayStr(), _tm=tomorrowStr();
+  const _nw=new Date(); _nw.setDate(_nw.getDate()+7);
+  const _nwStr=_nw.toISOString().split('T')[0];
+  reminders.forEach(r=>{
+    if(r.date==='today') r.date=_t;
+    else if(r.date==='tomorrow') r.date=_tm;
+    else if(r.date==='nextweek') r.date=_nwStr;
+  });
+  save();
   const c=CHARS[currentChar];
   document.getElementById('sb-avi').src=c.img;
   document.getElementById('sb-cname').textContent=c.name;
@@ -2792,8 +3050,9 @@ function startApp(){
   document.getElementById('prof-struggles').textContent=userStruggles.slice(0,3).join(' · ')||'No struggles set';
   buildProfList(); buildChatSwitcher(); buildSidebarSubjects();
   buildSubjectFilters(); buildSubjectSelects(); populateCardSubjectFilter();
-  initChat(); renderAll(); renderNotes(); renderCards(); renderGaps(); checkReviewBadge(); renderNextAction();
+  initChat(); renderAll(); renderNotes(); renderCards(); renderGaps(); checkReviewBadge(); renderNextAction(); renderCountdownWidget(); renderGoalWidget();
   checkChatLimitOnLoad();
+  updateChatCounter();
   updatePermUI();
   _initSwipe();
   initFAB();
@@ -2808,7 +3067,7 @@ function startApp(){
   // Re-render when app comes back to foreground
   document.addEventListener('visibilitychange', function(){
     if(document.visibilityState === 'visible'){
-      renderAll(); renderNotes(); renderCards(); renderNextAction();
+      renderAll(); renderNotes(); renderCards(); renderNextAction(); renderCountdownWidget(); renderGoalWidget();
       checkAndFireReminders();
     }
   });
@@ -2919,11 +3178,12 @@ function navTo(id,btn){
   if(pageEl) pageEl.classList.add('active');
   document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
   if(btn)btn.classList.add('active');
-  const titles={home:'Home',notes:'Notes',cards:'Study Cards',reminders:'Reminders',gaps:'Progress',chat:'Chat with '+CHARS[currentChar].name,profile:'Profile'};
+  const titles={home:'Home',notes:'Notes',cards:'Study Cards',reminders:'Reminders',gaps:'Progress',timer:'Study Timer',chat:'Chat with '+CHARS[currentChar].name,profile:'Profile'};
   document.getElementById('page-title').textContent=titles[id]||id;
   closeSidebar();
   if(id==='cards') renderCards();
   if(id==='gaps') renderGaps();
+  if(id==='timer') populatePomoSubjects();
   if(id==='profile'){ renderProfileSubjects(); updateNotifBtn(); renderAccountTab(); }
 }
 
@@ -3056,9 +3316,13 @@ async function saveCapture(){
 // ══════════════════════════════════════════════════════
 function openNoteEditor(noteId){
   editingNoteId=noteId||null;
-  const editor=document.getElementById('note-editor');
-  editor.classList.add('open');
-  document.getElementById('add-note-btn').style.display='none';
+  buildSubjectSelects();
+  const overlay=document.getElementById('note-editor-overlay');
+  overlay.style.display='flex';
+  history.pushState({noteEditor:true},'',location.href);
+  // Prevent body scroll while editor open
+  document.body.style.overflow='hidden';
+
   if(noteId){
     const n=notes.find(x=>x.id===noteId);
     if(n){
@@ -3070,18 +3334,135 @@ function openNoteEditor(noteId){
   } else {
     document.getElementById('note-title').value='';
     document.getElementById('note-body').value='';
-    // Auto-select subject to match current filter
     const sel=document.getElementById('note-subj-sel');
-    if(sel && currentNoteFilter && currentNoteFilter!=='all'){
-      sel.value=currentNoteFilter;
-    }
+    if(sel && currentNoteFilter && currentNoteFilter!=='all') sel.value=currentNoteFilter;
   }
-  setTimeout(()=>document.getElementById('note-title').focus(),100);
+
+  // Word count live update
+  const body=document.getElementById('note-body');
+  const wc=document.getElementById('note-word-count');
+  const updateWC=()=>{
+    const words=(body.value.trim().match(/\S+/g)||[]).length;
+    if(wc) wc.textContent=words+' word'+(words===1?'':'s');
+  };
+  updateWC();
+  body.oninput=updateWC;
+
+  setTimeout(()=>{
+    const titleEl=document.getElementById('note-title');
+    if(titleEl) titleEl.focus();
+  },120);
 }
+
+function fmtNote(type){
+  const ta = document.getElementById('note-body');
+  if(!ta) return;
+  const start = ta.selectionStart, end = ta.selectionEnd;
+  const sel = ta.value.substring(start, end);
+  const before = ta.value.substring(0, start);
+  const after = ta.value.substring(end);
+  let insert = '';
+  let cursorOffset = 0;
+
+  switch(type){
+    case 'bold':
+      insert = sel ? `**${sel}**` : '**bold text**';
+      cursorOffset = sel ? insert.length : 2;
+      break;
+    case 'italic':
+      insert = sel ? `*${sel}*` : '*italic text*';
+      cursorOffset = sel ? insert.length : 1;
+      break;
+    case 'h1':
+      // Add at start of line
+      const lineStartH1 = before.lastIndexOf('\n') + 1;
+      const lineBeforeH1 = before.substring(lineStartH1);
+      const cleanH1 = lineBeforeH1.replace(/^#+\s*/, '');
+      ta.value = before.substring(0, lineStartH1) + '# ' + cleanH1 + (sel||'Heading') + after;
+      ta.selectionStart = ta.selectionEnd = lineStartH1 + 2 + cleanH1.length + (sel||'Heading').length;
+      ta.focus(); ta.dispatchEvent(new Event('input')); return;
+    case 'h2':
+      const lineStartH2 = before.lastIndexOf('\n') + 1;
+      const lineBeforeH2 = before.substring(lineStartH2);
+      const cleanH2 = lineBeforeH2.replace(/^#+\s*/, '');
+      ta.value = before.substring(0, lineStartH2) + '## ' + cleanH2 + (sel||'Subheading') + after;
+      ta.selectionStart = ta.selectionEnd = lineStartH2 + 3 + cleanH2.length + (sel||'Subheading').length;
+      ta.focus(); ta.dispatchEvent(new Event('input')); return;
+    case 'ul':
+      insert = sel
+        ? sel.split('\n').map(l=>'- '+l).join('\n')
+        : '- Item';
+      cursorOffset = insert.length;
+      if(!before.endsWith('\n') && before.length > 0) insert = '\n' + insert;
+      break;
+    case 'ol':
+      insert = sel
+        ? sel.split('\n').map((l,i)=>`${i+1}. `+l).join('\n')
+        : '1. Item';
+      cursorOffset = insert.length;
+      if(!before.endsWith('\n') && before.length > 0) insert = '\n' + insert;
+      break;
+    case 'quote':
+      insert = sel ? `> ${sel}` : '> Quote';
+      cursorOffset = insert.length;
+      if(!before.endsWith('\n') && before.length > 0) insert = '\n' + insert;
+      break;
+    case 'code':
+      insert = sel ? `\`${sel}\`` : '`code`';
+      cursorOffset = sel ? insert.length : 1;
+      break;
+  }
+  ta.value = before + insert + after;
+  ta.selectionStart = start + cursorOffset;
+  ta.selectionEnd = start + cursorOffset;
+  ta.focus();
+  ta.dispatchEvent(new Event('input'));
+}
+
+function renderMarkdown(text){
+  if(!text) return '';
+  // Escape HTML first
+  let s = text.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  // Block elements (process line by line)
+  const lines = s.split('\n');
+  let html = '';
+  let inUl = false, inOl = false;
+  for(let i=0; i<lines.length; i++){
+    let line = lines[i];
+    // Headings
+    if(/^### (.+)/.test(line))     { if(inUl){html+='</ul>';inUl=false;} if(inOl){html+='</ol>';inOl=false;} html+=`<h2>${line.replace(/^### /,'')}</h2>`; continue; }
+    if(/^## (.+)/.test(line))      { if(inUl){html+='</ul>';inUl=false;} if(inOl){html+='</ol>';inOl=false;} html+=`<h2>${line.replace(/^## /,'')}</h2>`; continue; }
+    if(/^# (.+)/.test(line))       { if(inUl){html+='</ul>';inUl=false;} if(inOl){html+='</ol>';inOl=false;} html+=`<h1>${line.replace(/^# /,'')}</h1>`; continue; }
+    // Blockquote
+    if(/^> (.+)/.test(line))       { if(inUl){html+='</ul>';inUl=false;} if(inOl){html+='</ol>';inOl=false;} html+=`<blockquote>${line.replace(/^> /,'')}</blockquote>`; continue; }
+    // UL
+    if(/^[-*] (.+)/.test(line))    { if(inOl){html+='</ol>';inOl=false;} if(!inUl){html+='<ul>';inUl=true;} html+=`<li>${line.replace(/^[-*] /,'')}</li>`; continue; }
+    // OL
+    if(/^\d+\. (.+)/.test(line))   { if(inUl){html+='</ul>';inUl=false;} if(!inOl){html+='<ol>';inOl=true;} html+=`<li>${line.replace(/^\d+\. /,'')}</li>`; continue; }
+    // Close open lists
+    if(inUl){html+='</ul>';inUl=false;}
+    if(inOl){html+='</ol>';inOl=false;}
+    // Empty line = paragraph break
+    if(line.trim()===''){html+='<br>'; continue;}
+    // Inline: bold, italic, code
+    line = line
+      .replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>')
+      .replace(/\*(.+?)\*/g,'<em>$1</em>')
+      .replace(/`(.+?)`/g,'<code>$1</code>');
+    html += line + '<br>';
+  }
+  if(inUl) html+='</ul>';
+  if(inOl) html+='</ol>';
+  return html;
+}
+
 function closeNoteEditor(){
-  (document.getElementById('note-editor')||document.createElement('div')).classList.remove('open');
-  document.getElementById('add-note-btn').style.display='flex';
+  const overlay=document.getElementById('note-editor-overlay');
+  if(overlay) overlay.style.display='none';
+  document.body.style.overflow='';
   editingNoteId=null;
+  const autosave=document.getElementById('note-autosave-label');
+  if(autosave) autosave.textContent='';
 }
 async function saveNote(){
   const title=document.getElementById('note-title').value.trim()||'Untitled Note';
@@ -3197,7 +3578,7 @@ function renderNotes(){
         (n.subject||'General')+
       '</div>'+
       '<div class="note-card-title">'+(n.title||'Untitled')+'</div>'+
-      '<div class="note-card-preview">'+(n.body||'(empty)')+'</div>'+
+      '<div class="note-card-preview note-md">'+renderMarkdown((n.body||'(empty)').substring(0,300))+'</div>'+
       '<div class="note-card-foot">'+
         '<span class="note-card-time">'+relTime(n.created)+'</span>'+
         '<div class="note-card-actions">'+
@@ -3392,7 +3773,7 @@ No markdown, no explanation, just the array.`,
     let qs;
     try{qs=JSON.parse(raw.replace(/```json|```/g,'').trim());}catch{toast('AI response error — try again');return;}
     if(!Array.isArray(qs)||!qs.length){toast('Could not generate quiz');return;}
-    startQuiz(qs, topic||note.subject||'Quiz');
+    startQuiz(qs, topic||note.subject||'Quiz', note.subject||'General', topic||'');
   }catch(e){toast('Quiz generation failed');console.warn(e);}
 }
 
@@ -3416,16 +3797,21 @@ No markdown, no explanation, just the array.`,
     let qs;
     try{qs=JSON.parse(raw.replace(/```json|```/g,'').trim());}catch{toast('AI response error — try again');return;}
     if(!Array.isArray(qs)||!qs.length){toast('Could not generate quiz');return;}
-    startQuiz(qs, topic||'Cards Quiz');
+    startQuiz(qs, topic||'Cards Quiz', currentCardFilter!=='all'&&currentCardFilter!=='due'?currentCardFilter:'General', topic||currentCardTopicFilter!=='all'?currentCardTopicFilter:'');
   }catch(e){toast('Quiz generation failed');console.warn(e);}
 }
 
-function startQuiz(questions, title){
+let _quizSubject = 'General';
+let _quizTopic = '';
+
+function startQuiz(questions, title, subject, topic){
   _quizQuestions = questions;
   _quizIdx = 0;
   _quizScore = 0;
   _quizTotal = questions.length;
   _quizAnswered = false;
+  _quizSubject = subject || title || 'General';
+  _quizTopic = topic || '';
 
   const modal = document.getElementById('quiz-modal');
   document.getElementById('quiz-results').style.display = 'none';
@@ -3544,6 +3930,11 @@ function showQuizResults(){
   const emoji = pct>=80?'🎉':pct>=60?'👍':pct>=40?'💪':'📚';
   const title = pct>=80?'Excellent work!':pct>=60?'Good job!':pct>=40?'Keep going!':'More practice needed';
 
+  // Log each question to daily study
+  for(let i=0;i<_quizTotal;i++) logDailyStudy(i < _quizScore ? 2 : 0);
+  // Log full quiz result
+  logQuizResult(_quizSubject, _quizTopic, _quizScore, _quizTotal);
+
   document.getElementById('quiz-question-area').style.display = 'none';
   document.getElementById('quiz-feedback-area').style.display = 'none';
   document.getElementById('quiz-action-btns').innerHTML = '';
@@ -3618,11 +4009,14 @@ function confirmAddCard(){
 }
 function renderCards(){
   const list=document.getElementById('cards-list');
+  const q=(document.getElementById('cards-search')?.value||'').toLowerCase().trim();
   let filtered=studyCards;
   if(currentCardFilter==='due') filtered=getDueCards();
   else if(currentCardFilter!=='all') filtered=studyCards.filter(c=>(c.subject||'General')===currentCardFilter);
   // Apply topic filter
   if(currentCardTopicFilter!=='all') filtered=filtered.filter(c=>(c.topic||'').trim()===currentCardTopicFilter);
+  // Apply search
+  if(q) filtered=filtered.filter(c=>(c.q||'').toLowerCase().includes(q)||(c.a||'').toLowerCase().includes(q)||(c.topic||'').toLowerCase().includes(q));
 
   const due=getDueCards().length;
   const btn=document.getElementById('study-btn');
@@ -3770,122 +4164,284 @@ function checkReviewBadge(){
 function renderGaps(){
   const el=document.getElementById('gaps-content');
   if(!el) return;
-  const gaps=getMemoryGaps();
-  const hasCards=Object.keys(gaps).length>0;
 
-  // ── Study log (last 7 days) ──
-  let log={};
-  try{ log=JSON.parse(localStorage.getItem('fn_study_log')||'{}'); }catch(e){}
-  const days=7;
-  const dayLabels=[];
-  const dayData=[];
-  for(let i=days-1;i>=0;i--){
-    const d=new Date(); d.setDate(d.getDate()-i);
-    const key=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
-    const lbl=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'][d.getDay()];
-    dayLabels.push(i===0?'Today':lbl);
-    dayData.push(log[key]?.reviewed||0);
-  }
-  const maxDay=Math.max(...dayData,1);
-  const totalReviewed=dayData.reduce((a,b)=>a+b,0);
+  // ── Load data ──
+  let studyLog={};
+  try{ studyLog=JSON.parse(localStorage.getItem('fn_study_log')||'{}'); }catch(e){}
+  let quizLog=[];
+  try{ quizLog=JSON.parse(localStorage.getItem('fn_quiz_log')||'[]'); }catch(e){}
+
+  const today=todayStr();
+  const gaps=getMemoryGaps();
   const totalCards=studyCards.length;
-  const masteredCards=studyCards.filter(c=>(c.reps||0)>=1&&(c.lapses||0)===0).length;
+  const masteredCards=studyCards.filter(c=>(c.reps||0)>=3&&(c.lapses||0)===0).length;
   const dueCards=getDueCards().length;
 
-  // ── Bar chart SVG ──
-  const barW=28, barGap=10, chartH=80, chartW=(barW+barGap)*days-barGap;
-  const bars=dayData.map((v,i)=>{
-    const h=maxDay>0?Math.round((v/maxDay)*chartH):0;
-    const x=i*(barW+barGap);
-    const isToday=i===days-1;
-    const col=isToday?'var(--green)':'var(--green-light)';
-    const opacity=isToday?1:0.5;
-    return`<g>
-      <rect x="${x}" y="${chartH-h}" width="${barW}" height="${h||2}" rx="5" fill="${col}" opacity="${opacity}"/>
-      ${v>0?`<text x="${x+barW/2}" y="${chartH-h-4}" text-anchor="middle" font-size="8" fill="var(--muted)">${v}</text>`:''}
-      <text x="${x+barW/2}" y="${chartH+13}" text-anchor="middle" font-size="9" fill="var(--muted)">${dayLabels[i]}</text>
+  // ── 7-day accuracy ──
+  const acc7=[]; let acc7sum=0, acc7n=0;
+  for(let i=6;i>=0;i--){
+    const d=new Date(); d.setDate(d.getDate()-i);
+    const k=d.toISOString().split('T')[0];
+    const entry=studyLog[k]||{reviewed:0,correct:0,again:0};
+    const pct=entry.reviewed>0?Math.round((entry.correct/entry.reviewed)*100):null;
+    acc7.push({k,reviewed:entry.reviewed,correct:entry.correct,pct,isToday:i===0});
+    if(pct!==null){acc7sum+=pct;acc7n++;}
+  }
+  const avgAcc=acc7n>0?Math.round(acc7sum/acc7n):null;
+
+  // ── Quizzes this week ──
+  const weekAgo=new Date(); weekAgo.setDate(weekAgo.getDate()-7);
+  const weekAgoStr=weekAgo.toISOString().split('T')[0];
+  const quizzesThisWeek=quizLog.filter(q=>q.date>=weekAgoStr).length;
+  const quizAvgPct=quizLog.length>0?Math.round(quizLog.slice(0,10).reduce((a,q)=>a+q.pct,0)/Math.min(quizLog.length,10)):null;
+
+  // ── 10-week heatmap ──
+  const heatDays=70;
+  const heatData={};
+  for(let i=0;i<heatDays;i++){
+    const d=new Date(); d.setDate(d.getDate()-i);
+    const k=d.toISOString().split('T')[0];
+    heatData[k]=(studyLog[k]?.reviewed||0);
+  }
+  const maxHeat=Math.max(...Object.values(heatData),1);
+  // Build grid: 7 rows (Mon-Sun), 10 cols (weeks)
+  const dayNames=['M','T','W','T','F','S','S'];
+  let heatGrid=[];
+  // Start from 10 weeks ago Monday
+  const heatStart=new Date();
+  heatStart.setDate(heatStart.getDate()-(heatDays-1));
+  // Align to Monday
+  const startDow=heatStart.getDay(); // 0=Sun
+  const daysBack=startDow===0?6:startDow-1;
+  heatStart.setDate(heatStart.getDate()-daysBack);
+  for(let col=0;col<10;col++){
+    heatGrid.push([]);
+    for(let row=0;row<7;row++){
+      const d=new Date(heatStart);
+      d.setDate(d.getDate()+col*7+row);
+      const k=d.toISOString().split('T')[0];
+      const v=studyLog[k]?.reviewed||0;
+      const isFuture=k>today;
+      heatGrid[col].push({k,v,isFuture,isToday:k===today});
+    }
+  }
+  const heatCells=heatGrid.map((week,col)=>
+    week.map((day,row)=>{
+      if(day.isFuture) return `<div class="heat-cell heat-empty"></div>`;
+      const intensity=day.v===0?0:day.v<=1?1:day.v<=3?2:day.v<=6?3:4;
+      const cls=`heat-cell heat-${intensity}${day.isToday?' heat-today':''}`;
+      return `<div class="${cls}" title="${day.k}: ${day.v} reviews"></div>`;
+    }).join('')
+  ).join('');
+
+  // ── Accuracy bar chart (7d) ──
+  const accBarW=32, accBarGap=6, accChartH=64;
+  const accBars=acc7.map((d,i)=>{
+    const h=d.pct!==null?Math.max(4,Math.round((d.pct/100)*accChartH)):2;
+    const x=i*(accBarW+accBarGap);
+    const col=d.pct===null?'var(--line)':d.pct>=80?'var(--green)':d.pct>=50?'var(--amber)':'var(--red)';
+    const lbl=['Mon','Tue','Wed','Thu','Fri','Sat','Sun'][(new Date(d.k+'T12:00:00').getDay()+6)%7];
+    return `<g>
+      <rect x="${x}" y="${accChartH-h}" width="${accBarW}" height="${h}" rx="5" fill="${col}" opacity="${d.isToday?1:.65}"/>
+      ${d.pct!==null?`<text x="${x+accBarW/2}" y="${accChartH-h-3}" text-anchor="middle" font-size="8" fill="var(--muted)">${d.pct}%</text>`:''}
+      <text x="${x+accBarW/2}" y="${accChartH+13}" text-anchor="middle" font-size="9" fill="var(--muted)">${d.isToday?'Today':lbl}</text>
     </g>`;
   }).join('');
+  const accChartW=(accBarW+accBarGap)*7-accBarGap;
 
-  // ── Subject mastery bars ──
-  const subjectBars=hasCards?Object.entries(gaps).map(([subj,data])=>{
-    const score=data.total?Math.round((data.mastered/data.total)*100):0;
-    const col=SUBJECT_COLORS[subj]||'#6b7280';
-    const barCol=score>=70?'var(--green)':score>=40?'var(--amber)':'var(--red)';
-    const struggling=data.struggling.length;
-    return`<div style="margin-bottom:.9rem;">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.3rem;">
-        <div style="display:flex;align-items:center;gap:.4rem;">
-          <span style="width:8px;height:8px;border-radius:50%;background:${col};display:inline-block;flex-shrink:0;"></span>
-          <span style="font-size:.8rem;font-weight:600;color:var(--ink);">${subj}</span>
+  // ── Quiz history (last 8) ──
+  const recentQuizzes=quizLog.slice(0,8);
+  const quizHistoryHTML=recentQuizzes.length===0
+    ? '<div style="font-size:.78rem;color:var(--muted);font-style:italic;padding:.5rem 0;">No quizzes yet — take one from any note or cards page!</div>'
+    : recentQuizzes.map((q,i)=>{
+        const prev=recentQuizzes[i+1];
+        const trend=prev?q.pct>prev.pct?'↑':q.pct<prev.pct?'↓':'→':null;
+        const trendCol=trend==='↑'?'var(--green)':trend==='↓'?'var(--red)':'var(--muted)';
+        const pctCol=q.pct>=80?'var(--green)':q.pct>=50?'var(--amber)':'var(--red)';
+        const dLabel=q.date===today?'Today':q.date===new Date(Date.now()-86400000).toISOString().split('T')[0]?'Yesterday':q.date;
+        return`<div style="display:flex;align-items:center;gap:.6rem;padding:.5rem 0;border-bottom:1px solid var(--line);">
+          <div style="width:36px;height:36px;border-radius:10px;background:${q.pct>=80?'var(--green-light)':q.pct>=50?'#fef3c7':'#fee2e2'};display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+            <span style="font-size:.8rem;font-weight:800;color:${pctCol};">${q.pct}%</span>
+          </div>
+          <div style="flex:1;min-width:0;">
+            <div style="font-size:.8rem;font-weight:600;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${q.subject}${q.topic?' · '+q.topic:''}</div>
+            <div style="font-size:.63rem;color:var(--muted);">${q.score}/${q.total} correct · ${dLabel}</div>
+          </div>
+          ${trend?`<span style="font-size:1rem;color:${trendCol};font-weight:700;">${trend}</span>`:''}
+        </div>`;
+      }).join('');
+
+  // ── Subject mastery with quiz overlay ──
+  const subjectQuizPct={};
+  quizLog.forEach(q=>{
+    if(!subjectQuizPct[q.subject]) subjectQuizPct[q.subject]={total:0,sum:0};
+    subjectQuizPct[q.subject].sum+=q.pct;
+    subjectQuizPct[q.subject].total++;
+  });
+  const subjectBarsHTML=Object.keys(gaps).length===0
+    ? '<div style="font-size:.78rem;color:var(--muted);text-align:center;padding:1rem 0;">Add study cards to track subject mastery</div>'
+    : Object.entries(gaps).map(([subj,data])=>{
+        const cardPct=data.total?Math.round((data.mastered/data.total)*100):0;
+        const cardCol=cardPct>=70?'var(--green)':cardPct>=40?'var(--amber)':'var(--red)';
+        const qData=subjectQuizPct[subj];
+        const quizPct=qData&&qData.total>0?Math.round(qData.sum/qData.total):null;
+        const quizCol=quizPct===null?'var(--muted)':quizPct>=80?'var(--green)':quizPct>=50?'var(--amber)':'var(--red)';
+        const dotCol=SUBJECT_COLORS[subj]||'#6b7280';
+        return`<div style="margin-bottom:1rem;">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.3rem;">
+            <div style="display:flex;align-items:center;gap:.4rem;">
+              <span style="width:8px;height:8px;border-radius:50%;background:${dotCol};display:inline-block;flex-shrink:0;"></span>
+              <span style="font-size:.82rem;font-weight:600;color:var(--ink);">${subj}</span>
+            </div>
+            <div style="display:flex;align-items:center;gap:.6rem;">
+              ${quizPct!==null?`<span style="font-size:.65rem;font-weight:600;color:${quizCol};background:${quizPct>=80?'var(--green-light)':quizPct>=50?'#fef3c7':'#fee2e2'};padding:.15rem .4rem;border-radius:4px;">🧠 ${quizPct}%</span>`:''}
+              <span style="font-size:.82rem;font-weight:700;color:${cardCol};">🃏 ${cardPct}%</span>
+            </div>
+          </div>
+          <div style="background:var(--paper2);border-radius:6px;height:6px;overflow:hidden;position:relative;">
+            <div style="height:100%;width:${cardPct}%;background:${cardCol};border-radius:6px;transition:width .6s;"></div>
+          </div>
+          <div style="display:flex;justify-content:space-between;font-size:.62rem;color:var(--muted);margin-top:.22rem;">
+            <span>${data.mastered}/${data.total} cards mastered</span>
+            ${quizPct!==null?`<span>${qData.total} quiz${qData.total>1?'zes':''} taken</span>`:'<span style="color:var(--amber);">No quizzes yet</span>'}
+          </div>
+          ${data.struggling.length>0?`<div style="margin-top:.3rem;">${data.struggling.slice(0,2).map(q=>`<div style="font-size:.63rem;color:var(--muted);border-left:2px solid var(--red);padding-left:.4rem;margin-top:.18rem;">⚠ ${q.substring(0,58)}${q.length>58?'…':''}</div>`).join('')}</div>`:''}
+        </div>`;
+      }).join('');
+
+  // ── Weak spots (cards with most lapses or never reviewed) ──
+  const weakCards=studyCards
+    .filter(c=>(c.lapses||0)>0||(c.reps||0)===0)
+    .sort((a,b)=>((b.lapses||0)+(b.reps===0?2:0))-((a.lapses||0)+(a.reps===0?2:0)))
+    .slice(0,5);
+  const weakHTML=weakCards.length===0
+    ? '<div style="font-size:.78rem;color:var(--green);text-align:center;padding:.5rem 0;">🎉 No weak spots! Keep reviewing to stay sharp.</div>'
+    : weakCards.map(c=>`<div style="display:flex;align-items:flex-start;gap:.5rem;padding:.45rem 0;border-bottom:1px solid var(--line);">
+        <span style="font-size:.75rem;padding:.15rem .4rem;border-radius:5px;background:#fee2e2;color:var(--red);font-weight:700;flex-shrink:0;">${c.reps===0?'New':c.lapses+'✗'}</span>
+        <div style="min-width:0;">
+          <div style="font-size:.78rem;font-weight:600;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${c.question||c.q||''}</div>
+          <div style="font-size:.62rem;color:var(--muted);">${c.subject||'General'}${c.topic?' · '+c.topic:''}</div>
         </div>
-        <div style="display:flex;align-items:center;gap:.6rem;">
-          ${struggling>0?`<span style="font-size:.65rem;color:var(--red);font-weight:600;">⚠ ${struggling} weak</span>`:''}
-          <span style="font-size:.8rem;font-weight:700;color:${barCol};">${score}%</span>
-        </div>
-      </div>
-      <div style="background:var(--paper2);border-radius:6px;height:7px;overflow:hidden;">
-        <div style="height:100%;width:${score}%;background:${barCol};border-radius:6px;transition:width .6s cubic-bezier(.22,1,.36,1);"></div>
-      </div>
-      <div style="font-size:.65rem;color:var(--muted);margin-top:.25rem;">${data.mastered}/${data.total} mastered · ${data.reviewed} reviewed${data.total-data.reviewed>0?' · '+(data.total-data.reviewed)+' not started':''}</div>
-      ${struggling>0?`<div style="margin-top:.35rem;">${data.struggling.slice(0,2).map(q=>`<div style="font-size:.65rem;color:var(--muted);padding:.2rem 0;border-left:2px solid var(--red);padding-left:.45rem;margin-top:.2rem;">⚠ ${q.substring(0,55)}${q.length>55?'…':''}</div>`).join('')}</div>`:''}
-    </div>`;
-  }).join(''):'<div style="font-size:.8rem;color:var(--muted);text-align:center;padding:1rem 0;">No study cards yet — create some cards to track your progress.</div>';
+      </div>`).join('');
+
+  // ── Overall mastery ring ──
+  const overallPct=totalCards>0?Math.round((masteredCards/totalCards)*100):0;
+  const ringR=42, ringC=2*Math.PI*ringR;
+  const ringDash=ringC*(overallPct/100);
+  const ringCol=overallPct>=70?'var(--green)':overallPct>=40?'var(--amber)':'var(--red)';
+
+  // ── Insight message ──
+  let insight='';
+  if(quizLog.length>0){
+    const bestSubj=Object.entries(subjectQuizPct).sort((a,b)=>(b[1].sum/b[1].total)-(a[1].sum/a[1].total))[0];
+    const worstSubj=Object.entries(subjectQuizPct).filter(e=>e[1].total>=1).sort((a,b)=>(a[1].sum/a[1].total)-(b[1].sum/b[1].total))[0];
+    if(bestSubj&&worstSubj&&bestSubj[0]!==worstSubj[0]){
+      insight=`You're strongest in <strong>${bestSubj[0]}</strong> (${Math.round(bestSubj[1].sum/bestSubj[1].total)}% avg). Focus more on <strong>${worstSubj[0]}</strong> (${Math.round(worstSubj[1].sum/worstSubj[1].total)}% avg).`;
+    } else if(bestSubj){
+      insight=`Your quiz average is ${avgAcc!==null?avgAcc+'%':quizAvgPct+'%'}. Keep going — consistency builds memory!`;
+    }
+  } else if(totalCards>0){
+    insight=`You have ${totalCards} cards ready. Try a quiz to see how well you know them!`;
+  } else {
+    insight=`Start by writing notes and creating study cards — your progress will show up here.`;
+  }
 
   el.innerHTML=`
-    <!-- Stats row -->
-    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:.55rem;margin-bottom:.85rem;">
-      <div style="background:var(--paper);border:1px solid var(--line);border-radius:12px;padding:.7rem .6rem;text-align:center;">
-        <div style="font-size:1.3rem;font-weight:800;color:var(--green);font-family:'DM Serif Display',Georgia,serif;">${streakDays}</div>
-        <div style="font-size:.62rem;color:var(--muted);margin-top:.1rem;">Day streak 🔥</div>
+    <!-- Page header -->
+    <div style="padding:.2rem 0 1rem;">
+      <div style="font-family:'DM Serif Display',Georgia,serif;font-size:1.35rem;margin-bottom:.15rem;">Progress</div>
+      <div style="font-size:.73rem;color:var(--muted);">Your study journey at a glance</div>
+    </div>
+
+    <!-- Insight banner -->
+    ${insight?`<div style="background:var(--green-light);border-radius:12px;padding:.75rem 1rem;margin-bottom:1rem;font-size:.8rem;color:var(--ink);line-height:1.5;border-left:3px solid var(--green);">💡 ${insight}</div>`:''}
+
+    <!-- 4 hero stats -->
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:.55rem;margin-bottom:1rem;">
+      <div style="background:var(--paper);border:1px solid var(--line);border-radius:14px;padding:.85rem .8rem;text-align:center;">
+        <div style="font-size:1.5rem;font-weight:800;color:var(--green);font-family:'DM Serif Display',Georgia,serif;line-height:1;">${streakDays}</div>
+        <div style="font-size:.63rem;color:var(--muted);margin-top:.2rem;">Day streak 🔥</div>
       </div>
-      <div style="background:var(--paper);border:1px solid var(--line);border-radius:12px;padding:.7rem .6rem;text-align:center;">
-        <div style="font-size:1.3rem;font-weight:800;color:var(--green);font-family:'DM Serif Display',Georgia,serif;">${masteredCards}</div>
-        <div style="font-size:.62rem;color:var(--muted);margin-top:.1rem;">Cards mastered</div>
+      <div style="background:var(--paper);border:1px solid var(--line);border-radius:14px;padding:.85rem .8rem;text-align:center;">
+        <div style="font-size:1.5rem;font-weight:800;color:${avgAcc===null?'var(--muted)':avgAcc>=70?'var(--green)':'var(--amber)'};font-family:'DM Serif Display',Georgia,serif;line-height:1;">${avgAcc!==null?avgAcc+'%':'—'}</div>
+        <div style="font-size:.63rem;color:var(--muted);margin-top:.2rem;">7-day accuracy</div>
       </div>
-      <div style="background:var(--paper);border:1px solid var(--line);border-radius:12px;padding:.7rem .6rem;text-align:center;">
-        <div style="font-size:1.3rem;font-weight:800;color:${dueCards>0?'var(--amber)':'var(--green)'};font-family:'DM Serif Display',Georgia,serif;">${dueCards}</div>
-        <div style="font-size:.62rem;color:var(--muted);margin-top:.1rem;">Due today</div>
+      <div style="background:var(--paper);border:1px solid var(--line);border-radius:14px;padding:.85rem .8rem;text-align:center;">
+        <div style="font-size:1.5rem;font-weight:800;color:var(--green);font-family:'DM Serif Display',Georgia,serif;line-height:1;">${masteredCards}</div>
+        <div style="font-size:.63rem;color:var(--muted);margin-top:.2rem;">Cards mastered</div>
+      </div>
+      <div style="background:var(--paper);border:1px solid var(--line);border-radius:14px;padding:.85rem .8rem;text-align:center;">
+        <div style="font-size:1.5rem;font-weight:800;color:${dueCards>0?'var(--amber)':'var(--green)'};font-family:'DM Serif Display',Georgia,serif;line-height:1;">${dueCards}</div>
+        <div style="font-size:.63rem;color:var(--muted);margin-top:.2rem;">Due today</div>
       </div>
     </div>
 
-    <!-- Activity chart -->
-    <div style="background:var(--paper);border:1px solid var(--line);border-radius:14px;padding:1rem 1rem .6rem;margin-bottom:.85rem;">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.8rem;">
-        <div style="font-size:.82rem;font-weight:700;color:var(--ink);">Cards reviewed — last 7 days</div>
-        <div style="font-size:.72rem;color:var(--muted);">${totalReviewed} total</div>
-      </div>
+    <!-- Activity heatmap -->
+    ${Object.values(studyLog).some(d=>d.reviewed>0) ? `
+    <div style="background:var(--paper);border:1px solid var(--line);border-radius:14px;padding:1rem;margin-bottom:1rem;">
+      <div style="font-size:.8rem;font-weight:700;color:var(--ink);margin-bottom:.75rem;">Study activity — last 10 weeks</div>
       <div style="overflow-x:auto;">
-        <svg viewBox="0 0 ${chartW} ${chartH+20}" width="100%" height="${chartH+20}" style="display:block;">${bars}</svg>
+        <div style="display:inline-grid;grid-template-columns:repeat(10,1fr);gap:3px;min-width:200px;width:100%;">
+          ${heatCells}
+        </div>
       </div>
+      <div style="display:flex;align-items:center;gap:.35rem;margin-top:.6rem;justify-content:flex-end;">
+        <span style="font-size:.6rem;color:var(--muted);">Less</span>
+        <div class="heat-cell heat-0" style="width:10px;height:10px;border-radius:2px;"></div>
+        <div class="heat-cell heat-1" style="width:10px;height:10px;border-radius:2px;"></div>
+        <div class="heat-cell heat-2" style="width:10px;height:10px;border-radius:2px;"></div>
+        <div class="heat-cell heat-3" style="width:10px;height:10px;border-radius:2px;"></div>
+        <div class="heat-cell heat-4" style="width:10px;height:10px;border-radius:2px;"></div>
+        <span style="font-size:.6rem;color:var(--muted);">More</span>
+      </div>
+    </div>` : ''}
+
+    <!-- Accuracy trend -->
+    <div style="background:var(--paper);border:1px solid var(--line);border-radius:14px;padding:1rem;margin-bottom:1rem;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.75rem;">
+        <div style="font-size:.8rem;font-weight:700;color:var(--ink);">Accuracy — last 7 days</div>
+        ${avgAcc!==null?`<div style="font-size:.72rem;color:var(--muted);">${avgAcc}% avg</div>`:''}
+      </div>
+      <svg viewBox="0 0 ${accChartW} ${accChartH+20}" width="100%" height="${accChartH+20}" style="display:block;">${accBars}</svg>
     </div>
 
-    <!-- Subject mastery -->
-    <div style="background:var(--paper);border:1px solid var(--line);border-radius:14px;padding:1rem;margin-bottom:.85rem;">
+    <!-- Quiz history -->
+    <div style="background:var(--paper);border:1px solid var(--line);border-radius:14px;padding:1rem;margin-bottom:1rem;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.75rem;">
+        <div style="font-size:.8rem;font-weight:700;color:var(--ink);">Recent quizzes</div>
+        <div style="font-size:.68rem;color:var(--muted);">${quizzesThisWeek} this week</div>
+      </div>
+      ${quizHistoryHTML}
+    </div>
+
+    <!-- Subject mastery + quiz overlay -->
+    <div style="background:var(--paper);border:1px solid var(--line);border-radius:14px;padding:1rem;margin-bottom:1rem;">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.85rem;">
-        <div style="font-size:.82rem;font-weight:700;color:var(--ink);">Subject mastery</div>
-        <div style="font-size:.68rem;color:var(--muted);">${totalCards} cards total</div>
+        <div style="font-size:.8rem;font-weight:700;color:var(--ink);">Subject breakdown</div>
+        <div style="display:flex;gap:.5rem;font-size:.6rem;color:var(--muted);">
+          <span>🃏 cards</span><span>🧠 quizzes</span>
+        </div>
       </div>
-      ${subjectBars}
+      ${subjectBarsHTML}
     </div>
 
-    <!-- Overall progress ring -->
-    ${hasCards?`<div style="background:var(--paper);border:1px solid var(--line);border-radius:14px;padding:1rem;text-align:center;">
-      <div style="font-size:.82rem;font-weight:700;color:var(--ink);margin-bottom:.75rem;">Overall mastery</div>
-      ${(()=>{
-        const pct=totalCards?Math.round((masteredCards/totalCards)*100):0;
-        const r=38,circ=2*Math.PI*r;
-        const dash=circ*(pct/100);
-        const col=pct>=70?'var(--green)':pct>=40?'var(--amber)':'var(--red)';
-        return`<svg viewBox="0 0 100 100" width="100" height="100" style="display:block;margin:0 auto .5rem;">
-          <circle cx="50" cy="50" r="${r}" fill="none" stroke="var(--line)" stroke-width="8"/>
-          <circle cx="50" cy="50" r="${r}" fill="none" stroke="${col}" stroke-width="8"
-            stroke-dasharray="${dash} ${circ}" stroke-dashoffset="${circ/4}" stroke-linecap="round"/>
-          <text x="50" y="46" text-anchor="middle" font-size="18" font-weight="800" fill="${col}">${pct}%</text>
-          <text x="50" y="60" text-anchor="middle" font-size="9" fill="var(--muted)">mastered</text>
-        </svg>
-        <div style="font-size:.72rem;color:var(--muted);">${masteredCards} of ${totalCards} cards mastered across all subjects</div>`;
-      })()}
+    <!-- Weak spots -->
+    <div style="background:var(--paper);border:1px solid var(--line);border-radius:14px;padding:1rem;margin-bottom:1rem;">
+      <div style="font-size:.8rem;font-weight:700;color:var(--ink);margin-bottom:.75rem;">⚠ Needs work</div>
+      ${weakHTML}
+    </div>
+
+    <!-- Overall mastery ring -->
+    ${totalCards>0?`<div style="background:var(--paper);border:1px solid var(--line);border-radius:14px;padding:1rem;text-align:center;margin-bottom:1.5rem;">
+      <div style="font-size:.8rem;font-weight:700;color:var(--ink);margin-bottom:.75rem;">Overall mastery</div>
+      <svg viewBox="0 0 110 110" width="110" height="110" style="display:block;margin:0 auto .5rem;">
+        <circle cx="55" cy="55" r="${ringR}" fill="none" stroke="var(--line)" stroke-width="9"/>
+        <circle cx="55" cy="55" r="${ringR}" fill="none" stroke="${ringCol}" stroke-width="9"
+          stroke-dasharray="${ringDash} ${ringC}" stroke-dashoffset="${ringC/4}" stroke-linecap="round" style="transition:stroke-dasharray .8s;"/>
+        <text x="55" y="50" text-anchor="middle" font-size="20" font-weight="800" fill="${ringCol}">${overallPct}%</text>
+        <text x="55" y="64" text-anchor="middle" font-size="9" fill="var(--muted)">mastered</text>
+      </svg>
+      <div style="font-size:.72rem;color:var(--muted);">${masteredCards} of ${totalCards} cards across all subjects</div>
     </div>`:''}
   `;
 }
@@ -3903,15 +4459,14 @@ function doAddR(){
     if(!text){toast('Type your task first!');return;}
     const date=getSelectedDate('nr');
     const timeVal=document.getElementById('nr-time').value;
-    const startVal=document.getElementById('nr-start-time').value;
     const dueVal=document.getElementById('nr-due-time').value;
     const newR={
       id:Date.now()+Math.random(),
       text,
-      time:timeVal?fmt12(timeVal):startVal?fmt12(startVal):'',
+      time:timeVal?fmt12(timeVal):'',
       emoji:document.getElementById('nr-emoji').value||'📝',
       date,done:false,
-      startTime:startVal?fmt12(startVal):'',
+      startTime:timeVal?fmt12(timeVal):'',
       dueTime:dueVal?fmt12(dueVal):''
     };
     reminders.push(newR);
@@ -3919,7 +4474,6 @@ function doAddR(){
     renderAll();
     document.getElementById('nr-text').value='';
     document.getElementById('nr-time').value='';
-    document.getElementById('nr-start-time').value='';
     document.getElementById('nr-due-time').value='';
     resetDatePicker('nr');
     toggleRemForm(false);
@@ -3938,27 +4492,28 @@ function confirmAdd(){
   const text=document.getElementById('m-text').value.trim();
   if(!text){toast('Add some text!');return;}
   const date=getSelectedDate('m');
+  const timeVal=document.getElementById('m-time').value;
+  const dueVal=document.getElementById('m-due-time').value;
   const newR={
     id:Date.now()+Math.random(),
     text,
-    time:document.getElementById('m-time').value?fmt12(document.getElementById('m-time').value):'',
+    time:timeVal?fmt12(timeVal):'',
     emoji:document.getElementById('m-emoji').value,
     date,done:false,
-    startTime:document.getElementById('m-start-time').value?fmt12(document.getElementById('m-start-time').value):'',
-    dueTime:document.getElementById('m-due-time').value?fmt12(document.getElementById('m-due-time').value):''
+    startTime:timeVal?fmt12(timeVal):'',
+    dueTime:dueVal?fmt12(dueVal):''
   };
   const overlap=checkReminderOverlap(newR);
   if(overlap){
     closeAddModal();
     showOverlapSuggestion(newR,overlap);
   } else {
-    reminders.push(newR);save();
+    reminders.push(newR);save();renderAll();
     document.getElementById('m-text').value='';
     document.getElementById('m-time').value='';
-    document.getElementById('m-start-time').value='';
     document.getElementById('m-due-time').value='';
     resetDatePicker('m');
-    closeAddModal();toast('🔔 Reminder added!');
+    closeAddModal();toast('✓ Task added!');
   }
 }
 // ── Overlap detection ──
@@ -4047,8 +4602,7 @@ function openEditR(id){
   document.getElementById('er-emoji').value=r.emoji||'📝';
   // Convert fmt12 time back to HH:MM for input
   function to24(t){if(!t)return'';const m=t.match(/(\d+):(\d+)\s*(AM|PM)/i);if(!m)return t;let h=parseInt(m[1]);const ap=m[3].toUpperCase();if(ap==='PM'&&h<12)h+=12;if(ap==='AM'&&h===12)h=0;return String(h).padStart(2,'0')+':'+m[2];}
-  document.getElementById('er-time').value=to24(r.time);
-  document.getElementById('er-start-time').value=to24(r.startTime);
+  document.getElementById('er-time').value=to24(r.time||r.startTime||'');
   document.getElementById('er-due-time').value=to24(r.dueTime);
   // Set date picker
   const dateVal=r.date||'today';
@@ -4086,10 +4640,9 @@ function saveEditR(){
   r.text=text;
   r.emoji=document.getElementById('er-emoji').value||'📝';
   const timeVal=document.getElementById('er-time').value;
-  const startVal=document.getElementById('er-start-time').value;
   const dueVal=document.getElementById('er-due-time').value;
-  r.time=timeVal?fmt12(timeVal):startVal?fmt12(startVal):'';
-  r.startTime=startVal?fmt12(startVal):'';
+  r.time=timeVal?fmt12(timeVal):'';
+  r.startTime=timeVal?fmt12(timeVal):'';
   r.dueTime=dueVal?fmt12(dueVal):'';
   r.date=getSelectedDate('er');
   save();renderAll();closeEditR();
@@ -4163,14 +4716,28 @@ function clearAllReminders(){
     'Clear all ' + reminders.length + ' task' + (reminders.length>1?'s':'') + '?',
     'This cannot be undone.',
     function(){
+      const ts=new Date().toISOString();
+      reminders.forEach(function(r){deletedReminders.unshift(Object.assign({},r,{deletedAt:ts}));});
+      if(deletedReminders.length>50)deletedReminders=deletedReminders.slice(0,50);
+      localStorage.setItem('fn_trash',JSON.stringify(deletedReminders));
       reminders=[];
       save();renderAll();
-      // Clear all scheduled timers
       Object.values(_scheduledTimers||{}).forEach(function(t){ clearTimeout(t); });
       _scheduledTimers={};
       toast('All tasks cleared.');
     }
   );
+}
+function clearCompletedReminders(){
+  const done=reminders.filter(r=>r.done);
+  if(!done.length){toast('No completed tasks!');return;}
+  const ts=new Date().toISOString();
+  done.forEach(function(r){deletedReminders.unshift(Object.assign({},r,{deletedAt:ts}));});
+  if(deletedReminders.length>50)deletedReminders=deletedReminders.slice(0,50);
+  localStorage.setItem('fn_trash',JSON.stringify(deletedReminders));
+  reminders=reminders.filter(r=>!r.done);
+  save();renderAll();
+  toast('Moved '+done.length+' task'+(done.length>1?'s':'')+' to Recently Deleted ✓');
 }
 function renderAll(){
   const today=todayStr();
@@ -4246,8 +4813,9 @@ function renderAll(){
         <div class="rb-time" style="margin-top:.18rem;"><span style="font-size:.67rem;color:#ef4444;">📅 ${dLbl(r.date)}${r.time?' · ⏰ '+r.time:''}</span></div>
       </div>
       <div class="rb-check" style="border-color:rgba(239,68,68,.5);">${r.done?'✓':''}</div>
-      <button class="rb-edit" onclick="event.stopPropagation();openEditR(${r.id})"><svg viewBox="0 0 24 24" style="width:13px;height:13px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>
-      <button class="rb-del" onclick="event.stopPropagation();deleteR(${r.id})">✕</button>
+      <button class="rb-edit" onclick="event.stopPropagation();openEditR(${r.id})" title="Edit"><svg viewBox="0 0 24 24" style="width:13px;height:13px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>
+      <div class="rb-btn-sep"></div>
+      <button class="rb-del" onclick="event.stopPropagation();deleteR(${r.id})" title="Delete"><svg viewBox="0 0 24 24" style="width:13px;height:13px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4h6v2"/></svg></button>
     </div>`).join('');
   }
 
@@ -4259,14 +4827,14 @@ function renderAll(){
       let timeStr;
       if(r.done) timeStr='<span style="color:var(--green);font-size:.65rem;">✓ Completed — tap to undo</span>';
       else if(missed){
-        const t=r.startTime&&r.dueTime?r.startTime+'–'+r.dueTime:r.time||r.startTime||'';
-        timeStr='<span style="color:#ef4444;font-size:.67rem;">⏰ '+t+' · missed</span>';
+        const t=r.time||r.startTime||'';
+        const end=r.dueTime?'–'+r.dueTime:'';
+        timeStr='<span style="color:#ef4444;font-size:.67rem;">⏰ '+t+end+' · missed</span>';
       }
-      else if(r.startTime&&r.dueTime) timeStr='<span style="font-size:.67rem;">⏰ '+r.startTime+'–'+r.dueTime+'</span>';
-      else if(r.startTime) timeStr='<span style="font-size:.67rem;">⏰ '+r.startTime+'</span>';
-      else if(r.dueTime) timeStr='<span style="font-size:.67rem;">⏰ Due '+r.dueTime+'</span>';
+      else if(r.time&&r.dueTime) timeStr='<span style="font-size:.67rem;">⏰ '+r.time+' – '+r.dueTime+'</span>';
       else if(r.time) timeStr='<span style="font-size:.67rem;">⏰ '+r.time+'</span>';
-      else timeStr='<span style="font-size:.67rem;color:var(--muted);">No time set</span>';
+      else if(r.dueTime) timeStr='<span style="font-size:.67rem;">⏰ ends '+r.dueTime+'</span>';
+      else timeStr='';
 
       const checkStyle = missed&&!r.done
         ? 'width:22px;height:22px;border-radius:50%;border:2px solid rgba(239,68,68,.6);display:flex;align-items:center;justify-content:center;font-size:.6rem;flex-shrink:0;'
@@ -4279,14 +4847,27 @@ function renderAll(){
           <div class="rb-time" style="margin-top:.18rem;">${timeStr}</div>
         </div>
         <div class="rb-check" style="${checkStyle}">${r.done?'✓':''}</div>
-        <button class="rb-edit" onclick="event.stopPropagation();openEditR(${r.id})"><svg viewBox="0 0 24 24" style="width:13px;height:13px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>
-        <button class="rb-del" onclick="event.stopPropagation();deleteR(${r.id})">✕</button>
+        <button class="rb-edit" onclick="event.stopPropagation();openEditR(${r.id})" title="Edit"><svg viewBox="0 0 24 24" style="width:13px;height:13px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>
+        <div class="rb-btn-sep"></div>
+        <button class="rb-del" onclick="event.stopPropagation();deleteR(${r.id})" title="Delete"><svg viewBox="0 0 24 24" style="width:13px;height:13px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4h6v2"/></svg></button>
       </div>`;
     }).join('')}`).join('');
 
   bl.innerHTML=html;
   const clearRow=document.getElementById('rem-clear-row');
-  if(clearRow) clearRow.style.display=reminders.filter(r=>!r.done).length>1?'block':'none';
+  const clearDoneBtn=document.getElementById('rem-clear-done-btn');
+  if(clearRow){
+    const hasAny = reminders.length > 0;
+    clearRow.style.display = hasAny ? 'flex' : 'none';
+    if(clearDoneBtn){
+      if(doneCount > 0){
+        clearDoneBtn.style.display = 'block';
+        clearDoneBtn.textContent = `✓ Clear completed (${doneCount})`;
+      } else {
+        clearDoneBtn.style.display = 'none';
+      }
+    }
+  }
   const sDone=document.getElementById('s-done'); if(sDone) sDone.textContent=reminders.filter(r=>r.done).length;
   const sNotes=document.getElementById('s-notes'); if(sNotes) sNotes.textContent=notes.length;
   const sCards=document.getElementById('s-cards'); if(sCards) sCards.textContent=studyCards.length;
@@ -4415,6 +4996,7 @@ async function sendMsg(){
   // Check daily limit
   if(getChatCount() >= DAILY_MSG_LIMIT){ showChatLimitUI(); return; }
   incChatCount();
+  updateChatCounter();
   inp.value='';inp.style.height='auto';
   appendMsg('user',text);
   // Add to history
@@ -4774,6 +5356,26 @@ function showChatLimitUI(){
   const btn = document.querySelector('.send-btn');
   if(inp){ inp.disabled = true; inp.placeholder = 'Daily limit reached — resets at midnight'; }
   if(btn){ btn.disabled = true; btn.style.opacity = '.4'; }
+}
+function updateChatCounter(){
+  const el = document.getElementById('chat-msg-counter');
+  if(!el) return;
+  const used = getChatCount();
+  const left = DAILY_MSG_LIMIT - used;
+  if(left <= 0){ el.textContent = ''; return; }
+  if(left <= 5){
+    el.textContent = `⚠ ${left} message${left===1?'':'s'} left today`;
+    el.style.color = 'var(--amber)';
+    el.style.fontWeight = '600';
+  } else if(left <= 10){
+    el.textContent = `${left} messages left today`;
+    el.style.color = 'var(--muted)';
+    el.style.fontWeight = 'normal';
+  } else {
+    el.textContent = `${used}/${DAILY_MSG_LIMIT} today`;
+    el.style.color = 'var(--muted)';
+    el.style.fontWeight = 'normal';
+  }
 }
 function checkChatLimitOnLoad(){
   if(getChatCount() >= DAILY_MSG_LIMIT) showChatLimitUI();
@@ -5199,9 +5801,12 @@ function timeTo24(timeStr){
 }
 function tomorrowStr(){const d=new Date();d.setDate(d.getDate()+1);return d.toISOString().split('T')[0];}
 function dLbl(d){
-  if(!d) return'📅 Today';
+  if(!d||d==='today') return'📅 Today';
   if(d==='everyday') return'🔁 Every day';
   if(d==='everyweek') return'🔁 Every week';
+  // Resolve legacy/literal strings to actual dates
+  if(d==='tomorrow'){ d=tomorrowStr(); }
+  else if(d==='nextweek'){ const nd=new Date(); nd.setDate(nd.getDate()+7); d=nd.toISOString().split('T')[0]; }
   const t=todayStr(), tm=tomorrowStr();
   if(d===t) return'📅 Today';
   if(d===tm) return'📅 Tomorrow';
@@ -5413,6 +6018,7 @@ function getSelectedDate(prefix) {
   const val = el ? el.value : 'today';
   if (val === 'today') return todayStr();
   if (val === 'tomorrow') return tomorrowStr();
+  if (val === 'nextweek') { const d=new Date(); d.setDate(d.getDate()+7); return d.toISOString().split('T')[0]; }
   if (val === 'everyday' || val === 'everyweek') return val;
   if (val && val.match(/^\d{4}-\d{2}-\d{2}$/)) return val;
   return todayStr();
@@ -5586,6 +6192,244 @@ function removeSubjectFromProfile(subj){
 // ══════════════════════════════════════════════════════
 // CHANGE 6: "WHAT TO DO NEXT" HOME CARD
 // ══════════════════════════════════════════════════════
+// STUDY TIMER (Pomodoro)
+// ══════════════════════════════════════════════════════
+let POMO_MODES = { focus:25*60, short:5*60, long:15*60 };
+const POMO_RING_C = 2 * Math.PI * 92; // r=92
+const POMO_EMOJIS  = { focus:'🍅', short:'☕', long:'🌿' };
+const POMO_COLORS  = { focus:'var(--green)', short:'#3b82f6', long:'#8b5cf6' };
+
+const BREAK_TIPS = [
+  'Stand up and stretch — your spine will thank you 🧘',
+  'Look at something 20 feet away for 20 seconds 👀',
+  'Drink a glass of water — hydration = better memory 💧',
+  'Take 5 slow deep breaths to reset your focus 🌬️',
+  'Walk around for 2 minutes — movement boosts retention 🚶',
+  'Tidy your desk — a clear space = a clearer mind ✨',
+  'Roll your shoulders 5 times each direction 💪',
+  'Step outside if you can — fresh air helps memory 🌤️',
+  'Eat a small snack — your brain runs on glucose 🍎',
+  'Write one thing you just learned — recall strengthens memory ✍️',
+];
+
+let _pomoMode = 'focus';
+let _pomoTotal = POMO_MODES.focus;
+let _pomoLeft  = POMO_MODES.focus;
+let _pomoRunning  = false;
+let _pomoInterval = null;
+let _pomoSessions = 0;
+let _pomoTodaySessions = 0;
+let _pomoTodayMins = 0;
+let _pomoSessionLog = [];
+let _pomoSoundOn = false;
+let _pomoAudioCtx = null;
+let _pomoSoundNode = null;
+
+function togglePomoSound(){
+  _pomoSoundOn = !_pomoSoundOn;
+  const btn = document.getElementById('pomo-sound-btn');
+  if(_pomoSoundOn){
+    if(btn) btn.innerHTML = '🔊 Sound';
+    if(_pomoRunning && _pomoMode==='focus') startPomoSound();
+  } else {
+    if(btn) btn.innerHTML = '🔇 Sound';
+    stopPomoSound();
+  }
+}
+
+function startPomoSound(){
+  if(!_pomoSoundOn) return;
+  try{
+    if(!_pomoAudioCtx) _pomoAudioCtx = new (window.AudioContext||window.webkitAudioContext)();
+    stopPomoSound();
+    const bufSize = _pomoAudioCtx.sampleRate * 2;
+    const buf = _pomoAudioCtx.createBuffer(1, bufSize, _pomoAudioCtx.sampleRate);
+    const data = buf.getChannelData(0);
+    let last = 0;
+    for(let i=0;i<bufSize;i++){
+      const white = Math.random()*2-1;
+      data[i] = last = (last + 0.02*white) / 1.02;
+    }
+    const src = _pomoAudioCtx.createBufferSource();
+    src.buffer = buf; src.loop = true;
+    const gain = _pomoAudioCtx.createGain();
+    gain.gain.value = 0.08;
+    src.connect(gain); gain.connect(_pomoAudioCtx.destination);
+    src.start();
+    _pomoSoundNode = {src, gain};
+  } catch(e){ console.warn('Audio not supported'); }
+}
+
+function stopPomoSound(){
+  try{ if(_pomoSoundNode){ _pomoSoundNode.src.stop(); _pomoSoundNode=null; } }catch(e){}
+}
+
+function setPomoMode(mode, silent){
+  if(_pomoRunning && !silent) return;
+  _pomoMode = mode;
+  _pomoTotal = POMO_MODES[mode];
+  _pomoLeft  = _pomoTotal;
+  _pomoRunning = false;
+  clearInterval(_pomoInterval);
+  stopPomoSound();
+  document.querySelectorAll('.pomo-mode-btn').forEach(b=>b.classList.remove('active'));
+  const mBtn = document.getElementById('pomo-mode-'+mode);
+  if(mBtn) mBtn.classList.add('active');
+  const playBtn = document.getElementById('pomo-play-btn');
+  if(playBtn) playBtn.innerHTML = '▶';
+  const lbl = document.getElementById('pomo-label');
+  if(lbl) lbl.textContent = mode==='focus' ? 'Ready — tap to start' : 'Enjoy your break!';
+  const tipEl = document.getElementById('pomo-break-tip');
+  if(tipEl) tipEl.style.display = mode!=='focus' ? 'block' : 'none';
+  if(mode!=='focus'){
+    const tip = document.getElementById('pomo-break-tip-text');
+    if(tip) tip.textContent = BREAK_TIPS[Math.floor(Math.random()*BREAK_TIPS.length)];
+    if(!silent) startPomo();
+  }
+  const emoji = document.getElementById('pomo-mode-emoji');
+  if(emoji) emoji.textContent = POMO_EMOJIS[mode];
+  updatePomoDisplay();
+}
+
+function updatePomoDurations(){
+  const f = parseInt(document.getElementById('pomo-custom-focus')?.value)||25;
+  const s = parseInt(document.getElementById('pomo-custom-short')?.value)||5;
+  const l = parseInt(document.getElementById('pomo-custom-long')?.value)||15;
+  POMO_MODES = { focus:f*60, short:s*60, long:l*60 };
+  const fl=document.getElementById('pomo-lbl-focus'); if(fl) fl.textContent=f+' min';
+  const sl=document.getElementById('pomo-lbl-short'); if(sl) sl.textContent=s+' min';
+  const ll=document.getElementById('pomo-lbl-long');  if(ll) ll.textContent=l+' min';
+  if(!_pomoRunning){ _pomoTotal=POMO_MODES[_pomoMode]; _pomoLeft=_pomoTotal; updatePomoDisplay(); }
+}
+
+function togglePomo(){
+  if(_pomoRunning){ pausePomo(); } else { startPomo(); }
+}
+
+function startPomo(){
+  _pomoRunning = true;
+  const playBtn = document.getElementById('pomo-play-btn');
+  if(playBtn) playBtn.innerHTML = '⏸';
+  const lbl = document.getElementById('pomo-label');
+  if(lbl) lbl.textContent = _pomoMode==='focus' ? 'Locked in 🔒' : 'Break time!';
+  if(_pomoMode==='focus') startPomoSound();
+  _pomoInterval = setInterval(()=>{
+    _pomoLeft = Math.max(0, _pomoLeft-1);
+    updatePomoDisplay();
+    if(_pomoLeft===0){ clearInterval(_pomoInterval); onPomoEnd(); }
+  }, 1000);
+}
+
+function pausePomo(){
+  _pomoRunning = false;
+  clearInterval(_pomoInterval);
+  stopPomoSound();
+  const playBtn = document.getElementById('pomo-play-btn');
+  if(playBtn) playBtn.innerHTML = '▶';
+  const lbl = document.getElementById('pomo-label');
+  if(lbl) lbl.textContent = 'Paused';
+}
+
+function resetPomo(){
+  _pomoRunning = false;
+  clearInterval(_pomoInterval);
+  stopPomoSound();
+  _pomoLeft = _pomoTotal;
+  const playBtn = document.getElementById('pomo-play-btn');
+  if(playBtn) playBtn.innerHTML = '▶';
+  const lbl = document.getElementById('pomo-label');
+  if(lbl) lbl.textContent = _pomoMode==='focus' ? 'Ready — tap to start' : 'Enjoy your break!';
+  updatePomoDisplay();
+}
+
+function skipPomo(){
+  _pomoRunning = false;
+  clearInterval(_pomoInterval);
+  stopPomoSound();
+  _pomoLeft = 0;
+  onPomoEnd();
+}
+
+function onPomoEnd(){
+  _pomoRunning = false;
+  stopPomoSound();
+  const playBtn = document.getElementById('pomo-play-btn');
+  if(playBtn) playBtn.innerHTML = '▶';
+  try{ navigator.vibrate&&navigator.vibrate([200,100,200]); }catch(e){}
+  if(_pomoMode==='focus'){
+    const subject = document.getElementById('pomo-subject-input')?.value.trim() || 'General study';
+    const focusMins = Math.round(_pomoTotal/60);
+    _pomoTodayMins += focusMins;
+    _pomoTodaySessions++;
+    _pomoSessions = (_pomoSessions+1) % 4;
+    _pomoSessionLog.unshift({ subject, mins:focusMins, time:new Date().toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'}) });
+    if(_pomoSessionLog.length>10) _pomoSessionLog.pop();
+    updatePomoStats();
+    renderPomoLog();
+    if(_pomoSessions===0){
+      toast('🎉 4 sessions done! Well earned long break.');
+      setPomoMode('long', true);
+      startPomo();
+    } else {
+      toast('🍅 Session '+_pomoTodaySessions+' done! Take a breather.');
+      setPomoMode('short', true);
+    }
+  } else {
+    toast('✓ Break over — back to it!');
+    setPomoMode('focus', true);
+  }
+  updatePomoDots();
+}
+
+function updatePomoDisplay(){
+  const m = Math.floor(_pomoLeft/60), s = _pomoLeft%60;
+  const timeEl = document.getElementById('pomo-time');
+  if(timeEl) timeEl.textContent = String(m).padStart(2,'0')+':'+String(s).padStart(2,'0');
+  const ring = document.getElementById('pomo-ring');
+  if(ring){
+    ring.style.strokeDashoffset = _pomoTotal>0 ? POMO_RING_C*(_pomoLeft/_pomoTotal) : 0;
+    ring.style.stroke = POMO_COLORS[_pomoMode]||'var(--green)';
+  }
+  updatePomoDots();
+}
+
+function updatePomoDots(){
+  for(let i=0;i<4;i++){
+    const dot=document.getElementById('pd'+i); if(!dot) continue;
+    if(i<_pomoSessions) dot.className='pomo-dot done';
+    else if(i===_pomoSessions&&_pomoMode==='focus'&&_pomoRunning) dot.className='pomo-dot active';
+    else dot.className='pomo-dot';
+  }
+  const sn=document.getElementById('pomo-session-n'); if(sn) sn.textContent=_pomoSessions+1;
+}
+
+function updatePomoStats(){
+  const s=document.getElementById('pomo-stat-sessions'); if(s) s.textContent=_pomoTodaySessions;
+  const m=document.getElementById('pomo-stat-mins');     if(m) m.textContent=_pomoTodayMins;
+}
+
+function renderPomoLog(){
+  const el=document.getElementById('pomo-session-log'); if(!el) return;
+  if(!_pomoSessionLog.length){ el.innerHTML='<span style="font-style:italic;color:var(--muted);">No sessions yet — start one above!</span>'; return; }
+  el.innerHTML=_pomoSessionLog.map(s=>
+    `<div style="display:flex;align-items:center;justify-content:space-between;padding:.4rem 0;border-bottom:1px solid var(--line);">
+      <div style="display:flex;align-items:center;gap:.45rem;">
+        <span>🍅</span>
+        <div><div style="font-size:.78rem;font-weight:600;color:var(--ink);">${s.subject}</div>
+        <div style="font-size:.62rem;color:var(--muted);">${s.time}</div></div>
+      </div>
+      <div style="font-size:.75rem;font-weight:700;color:var(--green);">${s.mins} min</div>
+    </div>`
+  ).join('');
+}
+
+function populatePomoSubjects(){
+  const sel=document.getElementById('pomo-subject-select'); if(!sel) return;
+  const subjects=[...new Set([...notes.map(n=>n.subject||'General'),...studyCards.map(c=>c.subject||'General')])].filter(Boolean).sort();
+  sel.innerHTML='<option value="">My subjects</option>'+subjects.map(s=>`<option value="${s}">${s}</option>`).join('');
+}
+
+
 function renderNextAction(){
   const el=document.getElementById('home-next-action');
   if(!el)return;
@@ -5633,6 +6477,43 @@ function renderNextAction(){
     '</div>';
   const card=document.getElementById('na-card');
   if(card) card.onclick=new Function(action.onclick);
+
+  // ── Streak + due cards row ──
+  const studyRow = document.getElementById('home-study-row');
+  if(studyRow){
+    const dueCount = getDueCards().length;
+    let studyLog={};
+    try{ studyLog=JSON.parse(localStorage.getItem('fn_study_log')||'{}'); }catch(e){}
+    const todayReviewed = studyLog[todayStr()]?.reviewed || 0;
+    const hasStreak = streakDays > 0;
+    const hasDue = dueCount > 0;
+    if(hasStreak || hasDue){
+      studyRow.innerHTML = `<div style="display:grid;grid-template-columns:${hasStreak&&hasDue?'1fr 1fr':'1fr'};gap:.55rem;margin-bottom:.1rem;">
+        ${hasStreak ? `<div style="background:var(--paper);border:1px solid var(--line);border-radius:12px;padding:.75rem .9rem;display:flex;align-items:center;gap:.6rem;cursor:pointer;" onclick="navTo('gaps',document.getElementById('nav-gaps'))">
+          <span style="font-size:1.4rem;line-height:1;">🔥</span>
+          <div>
+            <div style="font-size:1.1rem;font-weight:800;color:var(--green);line-height:1;">${streakDays}</div>
+            <div style="font-size:.6rem;color:var(--muted);margin-top:.1rem;">day streak</div>
+          </div>
+        </div>` : ''}
+        ${hasDue ? `<div style="background:var(--green-light);border:1.5px solid var(--green);border-radius:12px;padding:.75rem .9rem;display:flex;align-items:center;gap:.6rem;cursor:pointer;" onclick="navTo('cards',document.getElementById('nav-cards'));setTimeout(startStudySession,150);">
+          <span style="font-size:1.4rem;line-height:1;">🃏</span>
+          <div>
+            <div style="font-size:1.1rem;font-weight:800;color:var(--green);line-height:1;">${dueCount}</div>
+            <div style="font-size:.6rem;color:var(--green);margin-top:.1rem;">card${dueCount>1?'s':''} due</div>
+          </div>
+        </div>` : todayReviewed>0 ? `<div style="background:var(--paper);border:1px solid var(--line);border-radius:12px;padding:.75rem .9rem;display:flex;align-items:center;gap:.6rem;">
+          <span style="font-size:1.4rem;line-height:1;">✅</span>
+          <div>
+            <div style="font-size:1.1rem;font-weight:800;color:var(--green);line-height:1;">${todayReviewed}</div>
+            <div style="font-size:.6rem;color:var(--muted);margin-top:.1rem;">reviewed today</div>
+          </div>
+        </div>` : ''}
+      </div>`;
+    } else {
+      studyRow.innerHTML = '';
+    }
+  }
 }
 
 // ══════════════════════════════════════════════════════
@@ -6047,18 +6928,245 @@ function updateNotifStatus(){
 
 document.addEventListener('DOMContentLoaded', function(){
   registerSW().then(function(){
-    // Once SW is ready, sync the schedule and start keepalive ping
     setTimeout(function(){
       syncScheduleToSW();
       startSWPing();
-    }, 1000); // small delay to let SW activate
+    }, 1000);
   });
   scheduleAllReminders();
   startNotifPoller();
   if(typeof updateNotifBtn==='function') updateNotifBtn();
+
+  // Escape key closes note editor
+  document.addEventListener('keydown', function(e){
+    if(e.key==='Escape'){
+      const overlay=document.getElementById('note-editor-overlay');
+      if(overlay&&overlay.style.display!=='none') closeNoteEditor();
+    }
+  });
+
+  // Android back button / browser back closes note editor if open
+  window.addEventListener('popstate', function(){
+    const overlay=document.getElementById('note-editor-overlay');
+    if(overlay&&overlay.style.display!=='none'){
+      closeNoteEditor();
+      history.pushState(null,'',location.href); // stay on page
+    }
+  });
 });
 
 (function(){var ha=document.getElementById('home-avi');if(!ha)return;var img=localStorage.getItem('fn_avatar_img');var em=localStorage.getItem('fn_avatar')||'🙂';if(img)ha.innerHTML='<img src="'+img+'" style="width:100%;height:100%;object-fit:cover;border-radius:50%" alt=""/>';else ha.textContent=em;})();
 </script>
 </body>
 </html>
+<script>
+// ══════════════════════════════════════
+// COUNTDOWN
+// ══════════════════════════════════════
+function getCountdowns(){try{return JSON.parse(localStorage.getItem('fn_countdowns')||'[]');}catch(e){return[];}}
+function saveCountdowns(a){localStorage.setItem('fn_countdowns',JSON.stringify(a));}
+function daysUntilDate(s){var t=new Date();t.setHours(0,0,0,0);return Math.ceil((new Date(s+'T00:00:00')-t)/86400000);}
+function escH(s){var d=document.createElement('div');d.textContent=s;return d.innerHTML;}
+function closeFWModal(){var m=document.getElementById('fw-modal-bg');if(m)m.remove();}
+
+function renderCountdownWidget(){
+  var chip=document.getElementById('home-countdown-chip');if(!chip)return;
+  var items=getCountdowns().filter(function(c){return daysUntilDate(c.date)>=0;});
+  items.sort(function(a,b){return daysUntilDate(a.date)-daysUntilDate(b.date);});
+  var daysEl=document.getElementById('cd-days');
+  var titleEl=document.getElementById('cd-title');
+  var barEl=document.getElementById('cd-bar');
+  if(!items.length){
+    if(daysEl)daysEl.textContent='+';
+    if(titleEl)titleEl.textContent='Add an event';
+    if(barEl)barEl.style.width='0%';
+    chip.style.borderLeftColor='var(--green)';
+    if(daysEl)daysEl.style.color='var(--green)';
+    return;
+  }
+  var c=items[0];var days=daysUntilDate(c.date);
+  var color=days<=3?'#ef4444':days<=10?'#f59e0b':'var(--green)';
+  chip.style.borderLeftColor=color;
+  if(daysEl){daysEl.textContent=days===0?'🎉':days;daysEl.style.color=color;}
+  if(titleEl)titleEl.textContent=(c.emoji||'📅')+' '+c.title;
+  var pct=c.totalDays?Math.max(0,Math.min(100,((c.totalDays-days)/c.totalDays)*100)):0;
+  if(barEl){barEl.style.width=pct+'%';barEl.style.background=color;}
+}
+
+function buildCDList(){
+  var items=getCountdowns();
+  if(!items.length)return'<p style="font-size:.78rem;color:var(--muted);margin:.3rem 0 .8rem;">No countdowns yet.</p>';
+  return items.map(function(c,i){
+    var d=daysUntilDate(c.date);var lbl=d<0?'passed':d===0?'Today!':d+'d left';
+    return'<div style="display:flex;align-items:center;gap:.6rem;padding:.6rem .7rem;background:var(--paper2);border-radius:10px;margin-bottom:.4rem;">'+
+      '<div style="font-size:1.1rem;min-width:28px;text-align:center;">'+(c.emoji||'📅')+'</div>'+
+      '<div style="flex:1;min-width:0;"><div style="font-size:.82rem;font-weight:600;color:var(--ink);">'+escH(c.title)+'</div>'+
+      '<div style="font-size:.66rem;color:var(--muted);margin-top:.1rem;">'+new Date(c.date+'T00:00:00').toLocaleDateString(undefined,{weekday:'short',month:'short',day:'numeric',year:'numeric'})+' · '+lbl+'</div></div>'+
+      '<button onclick="deleteCountdown('+i+')" style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:.9rem;padding:.2rem .35rem;">✕</button>'+
+    '</div>';
+  }).join('');
+}
+
+function openCountdownManager(){
+  closeFWModal();
+  var today=new Date().toISOString().slice(0,10);
+  document.body.insertAdjacentHTML('beforeend',
+    '<div class="fw-modal-bg" id="fw-modal-bg" onclick="if(event.target===this)closeFWModal()">'+
+    '<div class="fw-modal">'+
+      '<div class="fw-modal-title">⏳ Countdowns</div>'+
+      '<div id="cd-list">'+buildCDList()+'</div>'+
+      '<div style="border-top:1px solid var(--line);padding-top:.9rem;margin-top:.4rem;">'+
+        '<p style="font-size:.68rem;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);margin-bottom:.5rem;">ADD NEW</p>'+
+        '<input class="fw-inp" id="cd-new-title" placeholder="e.g. Biology Exam, Job Interview…" maxlength="60"/>'+
+        '<div style="display:grid;grid-template-columns:1fr 1fr;gap:.5rem;">'+
+          '<input class="fw-inp" id="cd-new-emoji" placeholder="Emoji (optional)" maxlength="4" style="margin-bottom:0"/>'+
+          '<input class="fw-inp" type="date" id="cd-new-date" min="'+today+'" style="margin-bottom:0"/>'+
+        '</div>'+
+      '</div>'+
+      '<div class="fw-btn-row" style="margin-top:.75rem;">'+
+        '<button class="fw-btn fw-btn-ghost" onclick="closeFWModal()">Close</button>'+
+        '<button class="fw-btn fw-btn-primary" onclick="addCountdown()">Add</button>'+
+      '</div>'+
+    '</div></div>');
+}
+
+function addCountdown(){
+  var title=(document.getElementById('cd-new-title').value||'').trim();
+  var dateVal=document.getElementById('cd-new-date').value;
+  var emoji=(document.getElementById('cd-new-emoji').value||'').trim()||'📅';
+  if(!title){toast('Give it a name!');return;}
+  if(!dateVal){toast('Pick a date!');return;}
+  var items=getCountdowns();
+  var days=daysUntilDate(dateVal);
+  items.push({id:Date.now(),title:title,date:dateVal,emoji:emoji,totalDays:Math.max(days,1)});
+  saveCountdowns(items);closeFWModal();renderCountdownWidget();
+  toast('Countdown added ✓');
+}
+function deleteCountdown(i){
+  var items=getCountdowns();items.splice(i,1);saveCountdowns(items);
+  var l=document.getElementById('cd-list');if(l)l.innerHTML=buildCDList();
+  renderCountdownWidget();
+}
+
+// ══════════════════════════════════════
+// WEEKLY STUDY GOAL
+// Tracks cards reviewed this week (Mon–Sun)
+// ══════════════════════════════════════
+function getWeekStart(){
+  var d=new Date();d.setHours(0,0,0,0);
+  var day=d.getDay();var diff=day===0?-6:1-day; // Mon=start
+  d.setDate(d.getDate()+diff);
+  return d.toISOString().slice(0,10);
+}
+function getGoalSettings(){try{return JSON.parse(localStorage.getItem('fn_goal')||'{}');}catch(e){return{};}}
+function saveGoalSettings(o){localStorage.setItem('fn_goal',JSON.stringify(o));}
+function getGoalWeek(){
+  try{
+    var d=JSON.parse(localStorage.getItem('fn_goal_week')||'{}');
+    var ws=getWeekStart();
+    if(d.week!==ws)return{week:ws,done:0};
+    return d;
+  }catch(e){return{week:getWeekStart(),done:0};}
+}
+function saveGoalWeek(o){localStorage.setItem('fn_goal_week',JSON.stringify(o));}
+
+function renderGoalWidget(){
+  var chip=document.getElementById('home-goal-chip');if(!chip)return;
+  var gs=getGoalSettings();
+  var gw=getGoalWeek();
+  var done=gw.done||0;
+  var target=gs.target||0;
+  var ring=document.getElementById('goal-ring-fg');
+  var circumference=113.1; // 2π×18
+  var doneEl=document.getElementById('goal-done-n');
+  var totEl=document.getElementById('goal-total-n');
+  var subEl=document.getElementById('goal-sub');
+  if(!target){
+    if(ring)ring.style.strokeDashoffset=circumference;
+    if(doneEl)doneEl.textContent='0';
+    if(totEl)totEl.textContent='/—';
+    if(subEl)subEl.textContent='Tap to set a weekly target';
+    var sr=document.getElementById('goal-streak-row');if(sr)sr.style.display='none';
+    return;
+  }
+  var pct=Math.min(1,done/target);
+  if(ring)ring.style.strokeDashoffset=circumference*(1-pct);
+  if(doneEl)doneEl.textContent=done;
+  if(totEl)totEl.textContent='/'+target;
+  if(subEl){
+    if(done>=target)subEl.textContent='Week complete! 🎉';
+    else if(done===0)subEl.textContent='cards this week';
+    else subEl.textContent=(target-done)+' cards left this week';
+  }
+  // Streak
+  var sr=document.getElementById('goal-streak-row');
+  var st=document.getElementById('goal-streak-txt');
+  if(gs.weekStreak>1&&sr&&st){sr.style.display='flex';st.textContent=gs.weekStreak+' week streak';}
+  else if(sr)sr.style.display='none';
+}
+
+function recordCardReview(){
+  var gs=getGoalSettings();if(!gs.target)return;
+  var gw=getGoalWeek();gw.done=(gw.done||0)+1;saveGoalWeek(gw);
+  if(gw.done===gs.target){
+    var ws=getWeekStart();
+    var lastWs=gs.lastGoalWeek||'';
+    // Check if last week was the previous week
+    var lastWeekDate=new Date(ws+'T00:00:00');lastWeekDate.setDate(lastWeekDate.getDate()-7);
+    var lastWeekStr=lastWeekDate.toISOString().slice(0,10);
+    if(lastWs===lastWeekStr){gs.weekStreak=(gs.weekStreak||0)+1;}
+    else if(lastWs!==ws){gs.weekStreak=1;}
+    gs.lastGoalWeek=ws;saveGoalSettings(gs);
+    setTimeout(function(){toast('🎉 Weekly goal hit! '+(gs.weekStreak>1?gs.weekStreak+' week streak!':'Amazing work!'));},400);
+  }
+  renderGoalWidget();
+}
+
+function openGoalSettings(){
+  closeFWModal();
+  var gs=getGoalSettings();var hasGoal=!!gs.target;
+  document.body.insertAdjacentHTML('beforeend',
+    '<div class="fw-modal-bg" id="fw-modal-bg" onclick="if(event.target===this)closeFWModal()">'+
+    '<div class="fw-modal">'+
+      '<div class="fw-modal-title">🎯 Weekly Study Goal</div>'+
+      '<p style="font-size:.78rem;color:var(--muted);line-height:1.5;margin-bottom:1rem;">How many flashcards do you want to review this week? The ring fills as you go. Resets every Monday.</p>'+
+      '<label style="font-size:.72rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.07em;display:block;margin-bottom:.35rem;">Cards per week</label>'+
+      '<input class="fw-inp" type="number" id="goal-target-inp" min="1" max="2000" value="'+(gs.target||100)+'" placeholder="100"/>'+
+      '<div class="fw-btn-row">'+
+        '<button class="fw-btn fw-btn-ghost" onclick="'+(hasGoal?'removeGoal()':'closeFWModal()')+'">'+( hasGoal?'Remove goal':'Cancel')+'</button>'+
+        '<button class="fw-btn fw-btn-primary" onclick="saveGoal()">Save goal</button>'+
+      '</div>'+
+    '</div></div>');
+  setTimeout(function(){var el=document.getElementById('goal-target-inp');if(el)el.select();},100);
+}
+function saveGoal(){
+  var val=parseInt(document.getElementById('goal-target-inp').value||'100');
+  if(!val||val<1){toast('Enter a number greater than 0');return;}
+  var gs=getGoalSettings();gs.target=val;saveGoalSettings(gs);
+  closeFWModal();renderGoalWidget();toast('Weekly goal set: '+val+' cards ✓');
+}
+function removeGoal(){
+  if(!confirm('Remove your weekly goal?'))return;
+  localStorage.removeItem('fn_goal');localStorage.removeItem('fn_goal_week');
+  closeFWModal();renderGoalWidget();toast('Goal removed');
+}
+
+// Modal CSS
+(function(){
+  var s=document.createElement('style');
+  s.textContent='.fw-modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:600;display:flex;align-items:flex-end;justify-content:center;}.fw-modal{background:var(--paper);border-radius:20px 20px 0 0;width:100%;max-width:480px;padding:1.4rem 1.3rem 2.4rem;max-height:85dvh;overflow-y:auto;}.fw-modal-title{font-size:1.05rem;font-weight:700;color:var(--ink);margin-bottom:1rem;}.fw-inp{width:100%;background:var(--paper2);border:1.5px solid var(--line);border-radius:10px;padding:.65rem .85rem;font-family:inherit;font-size:.9rem;color:var(--ink);box-sizing:border-box;margin-bottom:.6rem;}.fw-inp:focus{outline:none;border-color:var(--green);}.fw-btn-row{display:flex;gap:.5rem;margin-top:.5rem;}.fw-btn{flex:1;border:none;border-radius:10px;padding:.65rem;font-family:inherit;font-size:.85rem;font-weight:700;cursor:pointer;}.fw-btn-primary{background:var(--green);color:#fff;}.fw-btn-ghost{background:var(--paper2);color:var(--ink);}';
+  document.head.appendChild(s);
+})();
+
+// Hook card grading
+(function(){
+  function tryHook(){
+    if(typeof gradeCard==='function'&&!gradeCard._hooked){
+      var _o=gradeCard;gradeCard=function(c,g){_o(c,g);recordCardReview();};gradeCard._hooked=true;return true;
+    }
+    return false;
+  }
+  if(!tryHook())document.addEventListener('DOMContentLoaded',tryHook);
+  document.addEventListener('DOMContentLoaded',function(){renderCountdownWidget();renderGoalWidget();});
+})();
+</script>
