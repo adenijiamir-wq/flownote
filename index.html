@@ -1912,15 +1912,14 @@ html, body, #app {
 
             <div class="prof-section-label">Accent colour</div>
             <div class="accent-grid" id="accent-grid">
-              <button class="accent-swatch" data-accent="emerald" onclick="applyAccent('emerald')" title="Green"  style="--sw:#059669;"></button>
-              <button class="accent-swatch" data-accent="blue"    onclick="applyAccent('blue')"    title="Blue"   style="--sw:#2563eb;"></button>
-              <button class="accent-swatch" data-accent="violet"  onclick="applyAccent('violet')"  title="Purple" style="--sw:#7c3aed;"></button>
-              <button class="accent-swatch" data-accent="red"     onclick="applyAccent('red')"     title="Red"    style="--sw:#dc2626;"></button>
-              <button class="accent-swatch" data-accent="orange"  onclick="applyAccent('orange')"  title="Orange" style="--sw:#ea580c;"></button>
-              <button class="accent-swatch" data-accent="pink"    onclick="applyAccent('pink')"    title="Pink"   style="--sw:#db2777;"></button>
-              <button class="accent-swatch" data-accent="amber"   onclick="applyAccent('amber')"   title="Amber"  style="--sw:#d97706;"></button>
-              <button class="accent-swatch" data-accent="slate"   onclick="applyAccent('slate')"   title="Slate"  style="--sw:#475569;"></button>
-              <button class="accent-swatch" data-accent="teal"    onclick="applyAccent('teal')"    title="Teal"   style="--sw:#0d9488;"></button>
+              <button class="accent-swatch" data-accent="forest"   onclick="applyAccent('forest')"   title="Forest"  style="--sw:#1a6b3c;"></button>
+              <button class="accent-swatch" data-accent="ocean"    onclick="applyAccent('ocean')"    title="Ocean"   style="--sw:#0369a1;"></button>
+              <button class="accent-swatch" data-accent="violet"   onclick="applyAccent('violet')"   title="Violet"  style="--sw:#6d28d9;"></button>
+              <button class="accent-swatch" data-accent="sunset"   onclick="applyAccent('sunset')"   title="Sunset"  style="--sw:#c2410c;"></button>
+              <button class="accent-swatch" data-accent="rose"     onclick="applyAccent('rose')"     title="Rose"    style="--sw:#9d174d;"></button>
+              <button class="accent-swatch" data-accent="gold"     onclick="applyAccent('gold')"     title="Gold"    style="--sw:#92400e;"></button>
+              <button class="accent-swatch" data-accent="slate"    onclick="applyAccent('slate')"    title="Slate"   style="--sw:#334155;"></button>
+              <button class="accent-swatch" data-accent="sky"      onclick="applyAccent('sky')"      title="Sky"     style="--sw:#0e7490;"></button>
             </div>
 
             <div class="prof-section-label" style="margin-top:1.1rem;">Theme</div>
@@ -5705,18 +5704,17 @@ function setMicState(target,on){
 // PERSONALISATION — accent, theme, avatar
 // ══════════════════════════════════════════════════════
 const ACCENTS={
-  emerald: {light:'#059669', lightBg:'#ecfdf5', dark:'#34d399', darkBg:'#022c22'},
-  blue:    {light:'#2563eb', lightBg:'#eff6ff', dark:'#60a5fa', darkBg:'#1e3a5f'},
-  violet:  {light:'#7c3aed', lightBg:'#f5f3ff', dark:'#a78bfa', darkBg:'#2e1065'},
-  red:     {light:'#dc2626', lightBg:'#fef2f2', dark:'#f87171', darkBg:'#450a0a'},
-  orange:  {light:'#ea580c', lightBg:'#fff7ed', dark:'#fb923c', darkBg:'#431407'},
-  pink:    {light:'#db2777', lightBg:'#fdf2f8', dark:'#f472b6', darkBg:'#500724'},
-  amber:   {light:'#d97706', lightBg:'#fffbeb', dark:'#fbbf24', darkBg:'#2d1a00'},
-  slate:   {light:'#475569', lightBg:'#f8fafc', dark:'#94a3b8', darkBg:'#1e293b'},
-  teal:    {light:'#0d9488', lightBg:'#f0fdfa', dark:'#2dd4bf', darkBg:'#042f2e'},
+  forest: {light:'#1a6b3c', lightBg:'#e8f4ed', dark:'#52d98a', darkBg:'#0e2a1a'},
+  ocean:  {light:'#0369a1', lightBg:'#e0f2fe', dark:'#38bdf8', darkBg:'#082f49'},
+  violet: {light:'#6d28d9', lightBg:'#ede9fe', dark:'#a78bfa', darkBg:'#2e1065'},
+  sunset: {light:'#c2410c', lightBg:'#fff7ed', dark:'#fb923c', darkBg:'#431407'},
+  rose:   {light:'#9d174d', lightBg:'#fdf2f8', dark:'#f472b6', darkBg:'#500724'},
+  gold:   {light:'#92400e', lightBg:'#fef3c7', dark:'#fbbf24', darkBg:'#2d1a00'},
+  slate:  {light:'#334155', lightBg:'#f1f5f9', dark:'#94a3b8', darkBg:'#1e293b'},
+  sky:    {light:'#0e7490', lightBg:'#ecfeff', dark:'#22d3ee', darkBg:'#083344'},
 };
 
-let currentAccent=localStorage.getItem('fn_accent')||'emerald';
+let currentAccent=localStorage.getItem('fn_accent')||'forest';
 let currentThemePref=localStorage.getItem('fn_theme_pref')||'system';
 let currentAvatar=localStorage.getItem('fn_avatar')||'🙂';
 
@@ -6138,11 +6136,13 @@ async function callAI(sys, msg, maxT = 500) {
       })
     });
     if (!response.ok) {
-      const err = await response.json();
-      throw new Error(err.error?.message || `HTTP ${response.status}`);
+      let _em = `AI error (${response.status})`;
+      try { const _ej = await response.json(); _em = _ej.error?.message || _em; } catch(_) {}
+      throw new Error(_em);
     }
-    const data = await response.json();
-    return data.content[0].text.trim();
+    let _data;
+    try { _data = await response.json(); } catch(_) { throw new Error('Server returned non-JSON — check /api/ai route.'); }
+    return _data.content[0].text.trim();
   } catch (err) {
     console.error("AI call failed:", err);
     throw err;
@@ -7085,11 +7085,16 @@ function buildCDList(){
   if(!items.length)return'<p style="font-size:.78rem;color:var(--muted);margin:.3rem 0 .8rem;">No countdowns yet.</p>';
   return items.map(function(c,i){
     var d=daysUntilDate(c.date),lbl=d<0?'passed':d===0?'Today!':d+'d left';
-    return'<div style="display:flex;align-items:center;gap:.6rem;padding:.6rem .7rem;background:var(--paper2);border-radius:10px;margin-bottom:.4rem;">'+
+    var _bdr=d>=0&&d<=3?'border-left:3px solid #ef4444;':d>=0&&d<=10?'border-left:3px solid #f59e0b;':'';
+    return'<div style="display:flex;align-items:center;gap:.6rem;padding:.6rem .7rem;background:var(--paper2);border-radius:10px;margin-bottom:.4rem;'+_bdr+'">'+
       '<div style="font-size:1.1rem;min-width:28px;text-align:center;">'+(c.emoji||'📅')+'</div>'+
       '<div style="flex:1;min-width:0;"><div style="font-size:.82rem;font-weight:600;color:var(--ink);">'+_escH(c.title)+'</div>'+
       '<div style="font-size:.66rem;color:var(--muted);margin-top:.1rem;">'+new Date(c.date+'T00:00:00').toLocaleDateString(undefined,{weekday:'short',month:'short',day:'numeric',year:'numeric'})+' · '+lbl+'</div></div>'+
-      '<button onclick="deleteCountdown('+i+')" style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:.9rem;padding:.2rem .4rem;">✕</button>'+
+      '<div style="display:flex;gap:.15rem;flex-shrink:0;">'+
+      '<button onclick="editCountdown('+i+')" title="Edit" style="background:none;border:none;color:var(--muted);cursor:pointer;padding:.3rem;border-radius:6px;display:flex;align-items:center;">'+
+      '<svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>'+
+      '<button onclick="deleteCountdown('+i+')" title="Delete" style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:.85rem;padding:.3rem;border-radius:6px;">✕</button>'+
+      '</div>'+
     '</div>';
   }).join('');
 }
@@ -7111,6 +7116,46 @@ function openCountdownManager(){
       '<button class="fw-btn fw-btn-ghost" onclick="closeFWModal()">Close</button>'+
       '<button class="fw-btn fw-btn-primary" onclick="addCountdown()">Add</button>'+
     '</div></div></div>');
+}
+
+function editCountdown(i){
+  var items=getCountdowns(), ct=items[i]; if(!ct) return;
+  var old=document.getElementById('fw-modal-bg'); if(old) old.remove();
+  var today=new Date().toISOString().slice(0,10);
+  var wrap=document.createElement('div');
+  wrap.id='fw-modal-bg'; wrap.className='fw-modal-bg';
+  wrap.innerHTML=
+    '<div class="fw-modal">'+
+    '<div class="fw-modal-title">Edit countdown</div>'+
+    '<div style="display:flex;gap:.5rem;margin-bottom:.6rem;">'+
+      '<input class="fw-inp" id="cd-ei-em" maxlength="4" placeholder="📅" style="width:4.5rem;margin:0;flex-shrink:0;"/>'+
+      '<input class="fw-inp" id="cd-ei-ti" maxlength="60" placeholder="Event name" style="flex:1;margin:0;"/>'+
+    '</div>'+
+    '<input class="fw-inp" type="date" id="cd-ei-dt" style="margin-bottom:.8rem;"/>'+
+    '<div class="fw-btn-row">'+
+      '<button class="fw-btn fw-btn-ghost" id="cd-ei-cancel">Cancel</button>'+
+      '<button class="fw-btn fw-btn-primary" id="cd-ei-save">Save</button>'+
+    '</div></div>';
+  document.body.appendChild(wrap);
+  document.getElementById('cd-ei-em').value = ct.emoji||'📅';
+  document.getElementById('cd-ei-ti').value = ct.title||'';
+  document.getElementById('cd-ei-dt').value = ct.date||today;
+  wrap.addEventListener('click', function(e){ if(e.target===wrap) wrap.remove(); });
+  document.getElementById('cd-ei-cancel').onclick = function(){ wrap.remove(); };
+  document.getElementById('cd-ei-save').onclick = function(){ saveEditCountdown(i); };
+}
+function saveEditCountdown(i){
+  var title=(document.getElementById('cd-ei-ti').value||'').trim();
+  var date=document.getElementById('cd-ei-dt').value;
+  var emoji=(document.getElementById('cd-ei-em').value||'').trim()||'📅';
+  if(!title){ toast('Give it a name!'); return; }
+  if(!date){ toast('Pick a date!'); return; }
+  var items=getCountdowns();
+  items[i]=Object.assign({},items[i],{title:title,date:date,emoji:emoji});
+  saveCountdowns(items);
+  document.getElementById('fw-modal-bg').remove();
+  renderCountdownWidget();
+  toast('Countdown updated ✓');
 }
 function addCountdown(){
   var title=(document.getElementById('cd-new-title').value||'').trim();
