@@ -1465,10 +1465,10 @@ html, body, #app {
         <div class="sb-section">Main</div>
         <button class="nav-btn active" id="nav-home" onclick="navTo('home',this)"><span class="nav-icon"><svg viewBox="0 0 24 24"><path d="M3 9.5L12 3l9 6.5V20a1 1 0 01-1 1H5a1 1 0 01-1-1V9.5z"/><path d="M9 21V12h6v9"/></svg></span>Home</button>
         <button class="nav-btn" id="nav-notes" onclick="navTo('notes',this)"><span class="nav-icon"><svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><line x1="10" y1="9" x2="8" y2="9"/></svg></span>Notes</button>
-        <button class="nav-btn" id="nav-cards" onclick="navTo('cards',this)"><span class="nav-icon"><svg viewBox="0 0 24 24"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg></span>Study Cards</button>
+        <button class="nav-btn" id="nav-cards" onclick="navTo('cards',this)"><span class="nav-icon"><svg viewBox="0 0 24 24"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg></span>Study Cards<span class="nav-badge" id="review-badge" style="display:none">0</span></button>
         <button class="nav-btn" id="nav-gaps" onclick="navTo('gaps',this)"><span class="nav-icon"><svg viewBox="0 0 24 24"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg></span>Progress</button>
         <button class="nav-btn" id="nav-timer" onclick="navTo('timer',this)"><span class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><polyline points="12 7 12 12 15 15"/></svg></span>Timer</button>
-        <button class="nav-btn" id="nav-chat" onclick="navTo('chat',this)"><span class="nav-icon"><svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/><circle cx="9" cy="10" r="1" fill="currentColor"/><circle cx="12" cy="10" r="1" fill="currentColor"/><circle cx="15" cy="10" r="1" fill="currentColor"/></svg></span><span id="chat-nav-lbl">Coach</span><span class="nav-badge" id="review-badge" style="display:none">0</span></button>
+        <button class="nav-btn" id="nav-chat" onclick="navTo('chat',this)"><span class="nav-icon"><svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/><circle cx="9" cy="10" r="1" fill="currentColor"/><circle cx="12" cy="10" r="1" fill="currentColor"/><circle cx="15" cy="10" r="1" fill="currentColor"/></svg></span><span id="chat-nav-lbl">Coach</span></button>
         <div class="sb-section" style="margin-top:.5rem;">Subjects</div>
         <div id="sb-subjects"></div>
         <div style="flex:1;"></div>
@@ -1663,6 +1663,10 @@ html, body, #app {
             <button class="gen-card-btn" style="width:auto;padding:.42rem .85rem;font-size:.75rem;margin-bottom:0;" onclick="openManualCardModal()">+ Add card</button>
           </div>
         </div>
+          <div id="review-banner" class="review-banner" style="display:none;margin-bottom:.75rem;">
+            <span id="review-banner-text">⏰ You have cards due for review</span>
+            <button onclick="startReviewSession()">Review now</button>
+          </div>
         <div class="study-filters" id="cards-filter-chips">
           <div class="filter-chip active" data-subj="all" onclick="setCardFilter('all',this)">All</div>
           <div class="filter-chip" data-subj="due" onclick="setCardFilter('due',this)">📅 Due today</div>
@@ -1845,10 +1849,7 @@ html, body, #app {
           </div>
           <div class="char-switcher" id="char-sw" style="display:none"></div>
         </div>
-        <div id="review-banner" class="review-banner" style="display:none;">
-          <span id="review-banner-text">⏰ You have cards due for review</span>
-          <button onclick="startReviewSession()">Review now</button>
-        </div>
+
         <div class="chat-msgs" id="chat-msgs"></div>
         <div class="typing" id="typing">
           <img id="t-avi" src="" class="msg-avi" alt=""/>
@@ -2051,7 +2052,7 @@ html, body, #app {
     <div class="bn-inner">
       <button class="bn-btn active" id="bn-home" onclick="navTo('home',document.getElementById('nav-home'));setBN('home')"><span class="bn-icon"><svg viewBox="0 0 24 24"><path d="M3 9.5L12 3l9 6.5V20a1 1 0 01-1 1H5a1 1 0 01-1-1V9.5z"/><path d="M9 21V12h6v9"/></svg></span>Home</button>
       <button class="bn-btn" id="bn-notes" onclick="navTo('notes',document.getElementById('nav-notes'));setBN('notes')"><span class="bn-icon"><svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><line x1="10" y1="9" x2="8" y2="9"/></svg></span>Notes</button>
-      <button class="bn-btn" id="bn-cards" onclick="navTo('cards',document.getElementById('nav-cards'));setBN('cards')"><span class="bn-icon"><svg viewBox="0 0 24 24"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg></span>Cards</button>
+      <button class="bn-btn" id="bn-cards" style="position:relative;" onclick="navTo('cards',document.getElementById('nav-cards'));setBN('cards')"><span class="bn-icon"><svg viewBox="0 0 24 24"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg></span>Cards<span id="bn-cards-badge" style="position:absolute;top:4px;right:8px;background:#ef4444;color:#fff;font-size:.5rem;font-weight:800;border-radius:99px;min-width:14px;height:14px;display:none;align-items:center;justify-content:center;padding:0 3px;line-height:1;">0</span></button>
       <button class="bn-btn" id="bn-timer" onclick="navTo('timer',document.getElementById('nav-timer'));setBN('timer')"><span class="bn-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><polyline points="12 7 12 12 15 15"/></svg></span>Timer</button>
       <button class="bn-btn" id="bn-chat" onclick="navTo('chat',document.getElementById('nav-chat'));setBN('chat')"><span class="bn-icon"><svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/><circle cx="9" cy="10" r="1" fill="currentColor"/><circle cx="12" cy="10" r="1" fill="currentColor"/><circle cx="15" cy="10" r="1" fill="currentColor"/></svg></span>Coach</button>
     </div>
@@ -4135,13 +4136,16 @@ function closeReviewModal(){
 function checkReviewBadge(){
   const due=getDueCards().length;
   const badge=document.getElementById('review-badge');
+  const bnBadge=document.getElementById('bn-cards-badge');
   const banner=document.getElementById('review-banner');
   const bannerText=document.getElementById('review-banner-text');
   if(due>0){
     if(badge){badge.style.display='';badge.textContent=due;}
-    if(banner){banner.style.display='flex';bannerText.textContent=`⏰ ${due} card${due>1?'s':''} due for review`;}
+    if(bnBadge){bnBadge.style.display='flex';bnBadge.textContent=due;}
+    if(banner){banner.style.display='flex';if(bannerText)bannerText.textContent=`⏰ ${due} card${due>1?'s':''} due for review`;}
   } else {
     if(badge)badge.style.display='none';
+    if(bnBadge)bnBadge.style.display='none';
     if(banner)banner.style.display='none';
   }
 }
@@ -6865,6 +6869,7 @@ document.addEventListener('DOMContentLoaded', function(){
 </body>
 </html>
 <script>
+// ── COUNTDOWN ──
 function getCountdowns(){try{return JSON.parse(localStorage.getItem('fn_countdowns')||'[]');}catch(e){return[];}}
 function saveCountdowns(a){localStorage.setItem('fn_countdowns',JSON.stringify(a));}
 function daysUntilDate(s){var t=new Date();t.setHours(0,0,0,0);return Math.ceil((new Date(s+'T00:00:00')-t)/86400000);}
@@ -6941,6 +6946,7 @@ function deleteCountdown(i){
   renderCountdownWidget();
 }
 
+// ── WEEKLY GOAL ──
 function getWeekStart(){var d=new Date();d.setHours(0,0,0,0);var day=d.getDay();d.setDate(d.getDate()+(day===0?-6:1-day));return d.toISOString().slice(0,10);}
 function getGoalSettings(){try{return JSON.parse(localStorage.getItem('fn_goal')||'{}');}catch(e){return{};}}
 function saveGoalSettings(o){localStorage.setItem('fn_goal',JSON.stringify(o));}
@@ -6988,7 +6994,7 @@ function openGoalSettings(){
     '<div class="fw-modal-bg" id="fw-modal-bg" onclick="if(event.target===this)closeFWModal()">'+
     '<div class="fw-modal">'+
       '<div class="fw-modal-title">🎯 Weekly Study Goal</div>'+
-      '<p style="font-size:.78rem;color:var(--muted);line-height:1.5;margin-bottom:1rem;">How many flashcards do you want to review this week? The ring fills as you go — resets every Monday.</p>'+
+      '<p style="font-size:.78rem;color:var(--muted);line-height:1.5;margin-bottom:1rem;">How many flashcards to review this week? Ring fills as you go — resets every Monday.</p>'+
       '<label style="font-size:.72rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.07em;display:block;margin-bottom:.35rem;">Cards per week</label>'+
       '<input class="fw-inp" type="number" id="goal-target-inp" min="1" max="2000" value="'+(gs.target||100)+'" placeholder="e.g. 50, 100, 200"/>'+
       '<div class="fw-btn-row">'+
@@ -7010,14 +7016,27 @@ function removeGoal(){
   closeFWModal();renderGoalWidget();toast('Goal removed');
 }
 
+// ── Modal CSS ──
 (function(){
   var s=document.createElement('style');
   s.textContent='.fw-modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:600;display:flex;align-items:flex-end;justify-content:center;}.fw-modal{background:var(--paper);border-radius:20px 20px 0 0;width:100%;max-width:480px;padding:1.4rem 1.3rem 2.4rem;max-height:85dvh;overflow-y:auto;}.fw-modal-title{font-size:1.05rem;font-weight:700;color:var(--ink);margin-bottom:1rem;}.fw-inp{width:100%;background:var(--paper2);border:1.5px solid var(--line);border-radius:10px;padding:.65rem .85rem;font-family:inherit;font-size:.9rem;color:var(--ink);box-sizing:border-box;margin-bottom:.6rem;}.fw-inp:focus{outline:none;border-color:var(--green);}.fw-btn-row{display:flex;gap:.5rem;margin-top:.5rem;}.fw-btn{flex:1;border:none;border-radius:10px;padding:.65rem;font-family:inherit;font-size:.85rem;font-weight:700;cursor:pointer;}.fw-btn-primary{background:var(--green);color:#fff;}.fw-btn-ghost{background:var(--paper2);color:var(--ink);}';
   document.head.appendChild(s);
 })();
+
+// ── Hook gradeCard for weekly goal tracking ──
 (function(){
-  function hook(){if(typeof gradeCard==='function'&&!gradeCard._hw){var o=gradeCard;gradeCard=function(c,g){o(c,g);recordCardReview();};gradeCard._hw=true;return true;}return false;}
+  function hook(){
+    if(typeof gradeCard==='function'&&!gradeCard._hw){
+      var o=gradeCard;
+      gradeCard=function(c,g){o(c,g);recordCardReview();};
+      gradeCard._hw=true;return true;
+    }return false;
+  }
   if(!hook())document.addEventListener('DOMContentLoaded',hook);
-  document.addEventListener('DOMContentLoaded',function(){renderCountdownWidget();renderGoalWidget();});
+  document.addEventListener('DOMContentLoaded',function(){
+    renderCountdownWidget();
+    renderGoalWidget();
+    checkReviewBadge(); // ensure badge updates on load
+  });
 })();
 </script>
