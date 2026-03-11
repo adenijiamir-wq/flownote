@@ -1344,6 +1344,16 @@ html, body, #app {
 #float-timer .ft-mode{opacity:.82;font-size:.65rem;text-transform:uppercase;letter-spacing:.06em;}
 #float-timer .ft-pause{background:rgba(255,255,255,.2);border:none;color:#fff;border-radius:50%;width:22px;height:22px;font-size:.75rem;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
 
+
+#note-body:empty:before{
+  content: attr(data-placeholder);
+  color: var(--muted);
+  pointer-events: none;
+  white-space: pre-wrap;
+  font-size:.95rem;
+  line-height:1.75;
+}
+
 </style>
 </head>
 <body>
@@ -2220,9 +2230,9 @@ html, body, #app {
   <!-- Writing area — full height, scrollable -->
   <div style="flex:1;overflow-y:auto;padding:1.25rem 1.1rem 2rem;display:flex;flex-direction:column;">
     <input class="note-title-input" id="note-title" placeholder="Title…" style="font-size:1.5rem;margin-bottom:.75rem;"/>
-    <textarea class="note-body-input" id="note-body"
-      placeholder="Write your notes here…&#10;&#10;Your AI coach will automatically generate study cards from what you write."
-      style="flex:1;min-height:60vh;font-size:.95rem;line-height:1.75;resize:none;font-family:'DM Sans',sans-serif;"></textarea>
+    <div class="note-body-input" id="note-body" contenteditable="true"
+      data-placeholder="Write your notes here…&#10;&#10;Your AI coach will automatically generate study cards from what you write."
+      style="flex:1;min-height:60vh;font-size:.95rem;line-height:1.75;font-family:'DM Sans',sans-serif;outline:none;overflow-y:auto;white-space:pre-wrap;word-break:break-word;"></div>
   </div>
   <!-- Word count bar -->
   <div style="padding:.4rem 1.1rem;border-top:1px solid var(--line);background:var(--paper2);display:flex;align-items:center;justify-content:space-between;flex-shrink:0;">
@@ -2482,17 +2492,10 @@ html, body, #app {
   <div class="modal" style="max-width:430px;">
     <h3>🤖 AI Features</h3>
     <p style="font-size:.82rem;color:var(--muted);line-height:1.6;margin:.3rem 0 1rem;">Paste your Anthropic API key to enable AI features. Your key is saved only on this device.</p>
-    <div id="ai-status-banner" style="border-radius:10px;padding:.75rem 1rem;font-size:.8rem;font-weight:600;display:flex;align-items:center;gap:.5rem;margin-bottom:.85rem;background:var(--paper2);color:var(--muted);border:1.5px solid var(--line);">
-      <span id="ai-status-icon">⚠️</span> <span id="ai-status-text">No API key — AI features disabled</span>
+    <div style="border-radius:10px;padding:.75rem 1rem;font-size:.8rem;font-weight:600;display:flex;align-items:center;gap:.5rem;margin-bottom:.85rem;background:var(--green-light);color:var(--green);border:1.5px solid var(--green);">
+      <span>✓</span> <span>AI features enabled — no setup needed</span>
     </div>
-    <label style="font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);display:block;margin-bottom:.35rem;">Anthropic API Key</label>
-    <div style="display:flex;gap:.4rem;margin-bottom:.5rem;">
-      <input id="api-key-input" type="password" placeholder="sk-ant-…" autocomplete="off" style="flex:1;background:var(--paper2);border:1.5px solid var(--line);border-radius:10px;padding:.6rem .85rem;font-family:monospace;font-size:.82rem;color:var(--ink);outline:none;" oninput="this.style.borderColor='var(--line)'" />
-      <button onclick="saveApiKey()" style="background:var(--green);color:#fff;border:none;border-radius:10px;padding:.6rem 1rem;font-size:.82rem;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap;">Save</button>
-    </div>
-    <p style="font-size:.72rem;color:var(--muted);margin:0 0 1rem;line-height:1.5;">Get your key at <strong>console.anthropic.com</strong> → API Keys.</p>
     <div class="m-btns">
-      <button class="btn-c" onclick="clearApiKey()" style="font-size:.8rem;">Remove key</button>
       <button class="btn-ok" onclick="closeSettings()">Done</button>
     </div>
   </div>
@@ -3077,31 +3080,10 @@ window.addEventListener('DOMContentLoaded',()=>{
 });
 
 function updateBadge(){
-  const key=localStorage.getItem('fn_anthropic_key')||'';
   const b=document.getElementById('api-badge');
-  if(key&&key.startsWith('sk-ant')){
-    if(b){b.textContent='✓ AI on';b.className='api-badge ok';b.title='AI on';}
-  } else {
-    if(b){b.textContent='AI off';b.className='api-badge bad';b.title='Add API key in Settings';}
-  }
-  _refreshAIStatusBanner();
+  if(b){b.textContent='✓ AI on';b.className='api-badge ok';b.title='AI ready';}
 }
-function _refreshAIStatusBanner(){
-  const key=localStorage.getItem('fn_anthropic_key')||'';
-  const banner=document.getElementById('ai-status-banner');
-  const icon=document.getElementById('ai-status-icon');
-  const text=document.getElementById('ai-status-text');
-  if(!banner)return;
-  if(key&&key.startsWith('sk-ant')){
-    banner.style.cssText='border-radius:10px;padding:.75rem 1rem;font-size:.8rem;font-weight:600;display:flex;align-items:center;gap:.5rem;margin-bottom:.85rem;background:var(--green-light);color:var(--green);border:1.5px solid var(--green);';
-    if(icon)icon.textContent='✓';
-    if(text)text.textContent='AI connected — all features enabled';
-  } else {
-    banner.style.cssText='border-radius:10px;padding:.75rem 1rem;font-size:.8rem;font-weight:600;display:flex;align-items:center;gap:.5rem;margin-bottom:.85rem;background:var(--paper2);color:var(--muted);border:1.5px solid var(--line);';
-    if(icon)icon.textContent='⚠️';
-    if(text)text.textContent='No API key — AI features disabled';
-  }
-}
+function _refreshAIStatusBanner(){ /* AI always on via proxy */ }
 function saveApiKey(){
   const inp=document.getElementById('api-key-input');
   if(!inp)return;
@@ -3521,13 +3503,13 @@ function openNoteEditor(noteId){
     const n=notes.find(x=>x.id===noteId);
     if(n){
       document.getElementById('note-title').value=n.title||'';
-      document.getElementById('note-body').value=n.body||'';
+      { const _nb=document.getElementById('note-body'); const _bv=n.body||''; if(_bv.includes('<img')){ _nb.innerHTML=_bv; } else { _nb.innerText=_bv; } }
       const sel=document.getElementById('note-subj-sel');
       if(sel) sel.value=n.subject||'General';
     }
   } else {
     document.getElementById('note-title').value='';
-    document.getElementById('note-body').value='';
+    document.getElementById('note-body').innerHTML='';
     const sel=document.getElementById('note-subj-sel');
     if(sel && currentNoteFilter && currentNoteFilter!=='all') sel.value=currentNoteFilter;
   }
@@ -3536,7 +3518,7 @@ function openNoteEditor(noteId){
   const body=document.getElementById('note-body');
   const wc=document.getElementById('note-word-count');
   const updateWC=()=>{
-    const words=(body.value.trim().match(/\S+/g)||[]).length;
+    const words=((body.value!==undefined?body.value:body.innerText||'').trim().match(/\S+/g)||[]).length;
     if(wc) wc.textContent=words+' word'+(words===1?'':'s');
   };
   updateWC();
@@ -3660,7 +3642,7 @@ function closeNoteEditor(){
 }
 async function saveNote(){
   const title=document.getElementById('note-title').value.trim()||'Untitled Note';
-  const body=document.getElementById('note-body').value.trim();
+  const _nbEl=document.getElementById('note-body'); const body=(_nbEl.innerHTML||'').includes('<img')?_nbEl.innerHTML.trim():(_nbEl.innerText||'').trim();
   const subject=document.getElementById('note-subj-sel').value||'General';
   if(!body&&!title){toast('Write something first!');return;}
   const isNewNote=!editingNoteId;
@@ -3825,7 +3807,7 @@ function renderNotes(){
         (n.subject||'General')+
       '</div>'+
       '<div class="note-card-title">'+(n.title||'Untitled')+'</div>'+
-      '<div class="note-card-preview note-md">'+renderMarkdown((n.body||'(empty)').substring(0,300))+'</div>'+
+      '<div class="note-card-preview note-md">'+(n.body&&n.body.includes('<img')?'📷 Image note':renderMarkdown((n.body||'(empty)').substring(0,300)))+'</div>'+
       '<div class="note-card-foot">'+
         '<span class="note-card-time">'+relTime(n.created)+'</span>'+
         (function(){
@@ -6700,15 +6682,11 @@ function resetDatePicker(prefix){
 // ══════════════════════════════════════════════════════
 // AI — direct Anthropic API using stored key
 // ══════════════════════════════════════════════════════
-function getAIKey(){
-  const k=localStorage.getItem('fn_anthropic_key')||'';
-  if(!k)throw new Error('no_key');
-  return k;
-}
+function getAIKey(){ return ''; } // key handled server-side
 function getAIHeaders(){
-  return{'Content-Type':'application/json','x-api-key':getAIKey(),'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'};
+  return{'Content-Type':'application/json'};
 }
-function getAIUrl(){ return 'https://api.anthropic.com/v1/messages'; }
+function getAIUrl(){ return '/api/ai'; }
 
 async function callAI(sys, msg, maxT = 500) {
   try {
@@ -7879,6 +7857,214 @@ function launchConfetti(){
   }
   requestAnimationFrame(draw);
 }
+</script>
+
+
+<!-- EMAIL NOTIFICATION SYSTEM - Menmory -->
+<script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+<script>
+(function(){
+
+var EJSVC = "service_iq92tte";
+var EJSTPL = "template_86xck16";
+var EJSPK = "hGW7vjG5bJZbW2Vls";
+
+function getEmailAddr(){
+  try{ return JSON.parse(localStorage.getItem("mn_email_cfg")||"{}" ).toEmail || ""; }
+  catch(e){ return ""; }
+}
+function saveEmailAddr(email){
+  localStorage.setItem("mn_email_cfg", JSON.stringify({toEmail: email}));
+}
+function getEmailPrefs(){
+  try{ return JSON.parse(localStorage.getItem("mn_email_prefs") || "{}"); }
+  catch(e){ return {}; }
+}
+function saveEmailPrefs(o){
+  localStorage.setItem("mn_email_prefs", JSON.stringify(o));
+}
+function prefVal(key, def){
+  var p = getEmailPrefs();
+  return (p[key] !== undefined) ? p[key] : def;
+}
+
+async function sendMenmoryEmail(subject, bodyHtml){
+  var toEmail = getEmailAddr();
+  if(!toEmail) return false;
+  try{
+    var r = await fetch("https://api.emailjs.com/api/v1.0/email/send", {
+      method: "POST",
+      headers: {"Content-Type": "application/json"},
+      body: JSON.stringify({
+        service_id: EJSVC,
+        template_id: EJSTPL,
+        user_id: EJSPK,
+        template_params: {
+          to_email: toEmail,
+          subject: subject,
+          message_html: bodyHtml,
+          app_name: "Menmory"
+        }
+      })
+    });
+    return r.ok;
+  } catch(e){
+    console.warn("EmailJS error:", e);
+    return false;
+  }
+}
+
+function emailWrap(title, emoji, bodyContent){
+  return "<div style='font-family:system-ui,sans-serif;max-width:520px;margin:0 auto;background:#faf9f6;border-radius:16px;overflow:hidden;border:1px solid #e2dfd8'>"
+  + "<div style='background:#1a6b3c;padding:24px 28px;text-align:center'>"
+  + "<span style='font-size:2rem'>" + emoji + "</span>"
+  + "<h1 style='color:#fff;margin:8px 0 0;font-size:1.2rem;font-weight:700'>" + title + "</h1>"
+  + "</div>"
+  + "<div style='padding:24px 28px;color:#0f0f0f;line-height:1.6'>"+bodyContent+"</div>"
+  + "<div style='padding:14px 28px;background:#f2f0eb;text-align:center;font-size:.75rem;color:#9e9b93'>Menmory - Your personal study OS</div>"
+  + "</div>";
+}
+
+window.notifStudyReminder = async function(cardsDue){
+  if(!prefVal("studyReminder", true)) return;
+  var body = "<p>Hey there!</p>"
+    + "<p>You have <strong>" + cardsDue + " flashcard" + (cardsDue !== 1 ? "s" : "") + " due</strong> for review today in Menmory.</p>"
+    + "<p>Keeping up with reviews is the key to long-term retention. Your brain is ready - go crush it!</p>";
+  var ok = await sendMenmoryEmail("Menmory: " + cardsDue + " cards due today", emailWrap("Time to review!", "📚", body));
+  if(ok && typeof toast === "function") toast("📧 Study reminder sent!");
+};
+
+window.notifCountdownAlert = async function(title, daysLeft){
+  if(!prefVal("countdowns", true)) return;
+  var urgency = daysLeft === 0 ? "TODAY" : daysLeft === 1 ? "Tomorrow" : "in " + daysLeft + " days";
+  var body = "<p>Heads up! Your countdown is almost here:</p>"
+    + "<div style='background:#e8f4ed;border-radius:12px;padding:16px 20px;margin:16px 0;border-left:4px solid #1a6b3c'>"
+    + "<strong>" + title + "</strong><br>"
+    + "<span style='color:#1a6b3c;font-weight:700'>" + urgency + "</span>"
+    + "</div>"
+    + "<p>Make sure you are prepared and ready to go!</p>";
+  await sendMenmoryEmail("Menmory: " + title + " is " + urgency, emailWrap("Countdown Alert", "⏳", body));
+};
+
+window.notifStreakWarning = async function(streakDays){
+  if(!prefVal("streakWarning", true)) return;
+  var body = "<p>Do not break your streak!</p>"
+    + "<p>You are on a <strong>" + streakDays + "-day study streak</strong> and you have not reviewed any cards today yet.</p>"
+    + "<p>Even 5 minutes of review will keep your streak alive and your memory sharp.</p>";
+  await sendMenmoryEmail("Menmory: Streak at risk - " + streakDays + " days", emailWrap("Streak Warning", "🔥", body));
+};
+
+window.notifWeeklyDigest = async function(){
+  if(!prefVal("digest", false)) return;
+  var gw = typeof getGoalWeek === "function" ? getGoalWeek() : {done: 0};
+  var gs = typeof getGoalSettings === "function" ? getGoalSettings() : {};
+  var done = gw.done || 0;
+  var target = gs.target || 0;
+  var body = "<p>Here is your Menmory week in review:</p>"
+    + "<div style='display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:16px 0'>"
+    + "<div style='background:#e8f4ed;border-radius:10px;padding:14px;text-align:center'><div style='font-size:1.6rem;font-weight:800;color:#1a6b3c'>" + done + "</div><div style='font-size:.75rem;color:#666'>Cards reviewed</div></div>"
+    + "<div style='background:#fef3c7;border-radius:10px;padding:14px;text-align:center'><div style='font-size:1.6rem;font-weight:800;color:#b45309'>" + (target || "--") + "</div><div style='font-size:.75rem;color:#666'>Weekly goal</div></div>"
+    + "</div>"
+    + (done >= (gs.target || Infinity) ? "<p>Goal complete! Amazing work this week.</p>" : "<p>Keep going - every card counts!</p>");
+  await sendMenmoryEmail("Menmory: Your weekly digest", emailWrap("Weekly Recap", "📊", body));
+};
+
+function checkCountdownAlerts(){
+  if(!prefVal("countdowns", true)) return;
+  if(!getEmailAddr()) return;
+  var items = [];
+  try{ items = JSON.parse(localStorage.getItem("fn_countdowns") || "[]"); } catch(e){}
+  var today = new Date(); today.setHours(0,0,0,0);
+  var todayStr = today.toISOString().slice(0,10);
+  var lastCheck = localStorage.getItem("mn_cd_check_date");
+  if(lastCheck === todayStr) return;
+  localStorage.setItem("mn_cd_check_date", todayStr);
+  items.forEach(function(cd){
+    if(!cd.date) return;
+    var diff = Math.round((new Date(cd.date) - today) / (1000*60*60*24));
+    if(diff === 0 || diff === 1 || diff === 3 || diff === 7){
+      window.notifCountdownAlert(cd.title, diff);
+    }
+  });
+}
+
+function buildNotifToggle(id, label, checked){
+  var chk = checked ? " checked" : "";
+  return "<label style='display:flex;align-items:center;gap:.75rem;padding:.5rem 0;cursor:pointer;border-bottom:1px solid var(--line)'>"
+    + "<input type='checkbox' id='" + id + "'"+chk+" style='width:1.1rem;height:1.1rem;accent-color:var(--green)'>"
+    + "<span style='font-size:.88rem;color:var(--ink)'>"+label+"</span>"
+    + "</label>";
+}
+
+window.openEmailNotifSettings = function(){
+  if(typeof closeFWModal === "function") closeFWModal();
+  var email = getEmailAddr();
+  var html = "<div class='fw-modal-bg' id='fw-modal-bg' onclick='if(event.target===this)closeFWModal()'>";
+  html += "<div class='fw-modal' style='max-height:90dvh'>";
+  html += "<div class='fw-modal-title'>📧 Email Notifications</div>";
+  html += email
+    ? "<div style='background:#e8f4ed;border:1.5px solid #1a6b3c;border-radius:10px;padding:10px 14px;font-size:.8rem;color:#1a6b3c;font-weight:600;margin-bottom:1rem'>Active - sending to " + email + "</div>"
+    : "<div style='background:#e8f4ed;border:1.5px solid #1a6b3c;border-radius:10px;padding:10px 14px;font-size:.8rem;color:#1a6b3c;font-weight:600;margin-bottom:1rem'>Powered by Menmory - just enter your email!</div>";
+  html += "<label style='font-size:.72rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.07em;display:block;margin-bottom:.3rem'>Your Email Address</label>";
+  html += "<input class='fw-inp' type='email' id='en-email' placeholder='you@gmail.com' value='" + email + "' />";
+  html += "<p style='font-size:.75rem;color:var(--muted);margin:.3rem 0 1rem'>Notifications will be sent here. That is all you need!</p>";
+  html += "<div style='margin:1rem 0 .5rem;font-size:.72rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.07em'>Notify me about</div>";
+  html += buildNotifToggle("en-t-study", "📚 Cards due for review", prefVal("studyReminder", true));
+  html += buildNotifToggle("en-t-cd", "⏳ Upcoming countdowns", prefVal("countdowns", true));
+  html += buildNotifToggle("en-t-streak", "🔥 Streak at risk", prefVal("streakWarning", true));
+  html += buildNotifToggle("en-t-digest", "📊 Weekly digest (Sundays)", prefVal("digest", false));
+  html += "<div class='fw-btn-row' style='margin-top:1.2rem'>";
+  html += "<button class='fw-btn fw-btn-ghost' onclick='closeFWModal()'>Cancel</button>";
+  html += "<button class='fw-btn fw-btn-ghost' onclick='testNotifEmail()' style='flex:.7'>Test 📤</button>";
+  html += "<button class='fw-btn fw-btn-primary' onclick='saveEmailNotifSettings()'>Save</button>";
+  html += "</div></div></div>";
+  document.body.insertAdjacentHTML("beforeend", html);
+  setTimeout(function(){ var el = document.getElementById("en-email"); if(el) el.focus(); }, 80);
+};
+
+window.saveEmailNotifSettings = function(){
+  var email = (document.getElementById("en-email").value || "").trim();
+  if(!email){ if(typeof toast === "function") toast("Enter your email address"); return; }
+  saveEmailAddr(email);
+  saveEmailPrefs({
+    studyReminder: document.getElementById("en-t-study").checked,
+    countdowns: document.getElementById("en-t-cd").checked,
+    streakWarning: document.getElementById("en-t-streak").checked,
+    digest: document.getElementById("en-t-digest").checked
+  });
+  if(typeof closeFWModal === "function") closeFWModal();
+  if(typeof toast === "function") toast("📧 Email notifications saved!");
+};
+
+window.testNotifEmail = async function(){
+  var email = (document.getElementById("en-email").value || "").trim();
+  if(!email){ if(typeof toast === "function") toast("Enter your email first"); return; }
+  saveEmailAddr(email);
+  if(typeof toast === "function") toast("Sending test email...");
+  var body = "<p>Your Menmory email notifications are working!</p>"
+    + "<p>You will now receive study reminders, countdown alerts, and streak warnings right in your inbox.</p>"
+    + "<p style='background:#e8f4ed;border-radius:10px;padding:12px 16px;border-left:4px solid #1a6b3c'><strong>Keep studying consistently</strong> - spaced repetition only works when you show up!</p>";
+  var ok = await sendMenmoryEmail("Menmory notifications connected!", emailWrap("Test Successful!", "✅", body));
+  if(ok){ if(typeof toast === "function") toast("✅ Test email sent! Check your inbox."); }
+  else { if(typeof toast === "function") toast("❌ Failed - please check your Gmail service connection"); }
+};
+
+document.addEventListener("DOMContentLoaded", function(){
+  var panels = document.querySelectorAll("[id*=setting],[data-section=settings],.settings-section");
+  var btn = "<button onclick='openEmailNotifSettings()' style='display:flex;align-items:center;gap:.75rem;width:100%;background:var(--paper2);border:1.5px solid var(--line);border-radius:12px;padding:.8rem 1rem;font-family:inherit;font-size:.88rem;font-weight:600;color:var(--ink);cursor:pointer;text-align:left;margin-top:.5rem'>";
+  btn += "<span style='font-size:1.2rem'>📧</span><span>Email Notifications</span>";
+  btn += "<span style='margin-left:auto;font-size:.75rem;color:var(--muted)'>&#9658;</span>";
+  btn += "</button>";
+  panels.forEach(function(p){ p.insertAdjacentHTML("beforeend", btn); });
+  setTimeout(checkCountdownAlerts, 2500);
+  if(!panels.length){
+    var fab = document.createElement("div");
+    fab.innerHTML = "<button onclick='openEmailNotifSettings()' title='Email Notifications' style='position:fixed;bottom:88px;right:16px;z-index:500;background:#1a6b3c;color:#fff;border:none;border-radius:50%;width:46px;height:46px;font-size:1.3rem;cursor:pointer;box-shadow:0 4px 16px rgba(0,0,0,.3)'>📧</button>";
+    document.body.appendChild(fab);
+  }
+});
+
+})();
 </script>
 </body>
 </html>
