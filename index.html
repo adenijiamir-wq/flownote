@@ -3169,7 +3169,10 @@ let feedbackHistory=JSON.parse(localStorage.getItem('fn_feedback')||'[]');
 function save(){
   localStorage.setItem('mb7_data',JSON.stringify({
     userName,userStruggles,userSubjects,currentChar,
-    reminders,notes,studyCards,streakDays,onboarded:true
+    reminders,notes,studyCards,streakDays,onboarded:true,
+    accent:(typeof currentAccent!=='undefined'?currentAccent:'emerald'),
+    themePref:(typeof currentThemePref!=='undefined'?currentThemePref:'system'),
+    avatarEmoji:(typeof currentAvatar!=='undefined'?currentAvatar:'🙂')
   }));
   localStorage.setItem('fn_trash_notes',JSON.stringify(trashedNotes||[]));
   localStorage.setItem('fn_trash_cards',JSON.stringify(trashedCards||[]));
@@ -3222,6 +3225,36 @@ function load(){
     try{deletedReminders=JSON.parse(localStorage.getItem('fn_trash')||'[]');}catch{deletedReminders=[];}
     try{trashedNotes=JSON.parse(localStorage.getItem('fn_trash_notes')||'[]');}catch{trashedNotes=[];}
     try{trashedCards=JSON.parse(localStorage.getItem('fn_trash_cards')||'[]');}catch{trashedCards=[];}
+    // Restore per-user appearance settings
+    if(d.accent){
+      currentAccent=d.accent;
+      localStorage.setItem('fn_accent',d.accent);
+    }
+    if(d.themePref){
+      currentThemePref=d.themePref;
+      localStorage.setItem('fn_theme_pref',d.themePref);
+    }
+    if(d.avatarEmoji && d.avatarEmoji!=='__img__'){
+      currentAvatar=d.avatarEmoji;
+      localStorage.setItem('fn_avatar',d.avatarEmoji);
+      localStorage.removeItem('fn_avatar_img'); // clear any stale photo from another account
+    } else if(d.avatarEmoji==='__img__'){
+      // Photo avatars are NEVER stored in Firestore — only in localStorage.
+      // Only keep '__img__' state if the actual base64 image is still present.
+      const _existingPhoto=localStorage.getItem('fn_avatar_img');
+      if(_existingPhoto){
+        currentAvatar='__img__';
+        localStorage.setItem('fn_avatar','__img__');
+      } else {
+        // Photo is gone (signed out / cleared / different device) → safe default
+        currentAvatar='🙂';
+        localStorage.setItem('fn_avatar','🙂');
+      }
+    } else {
+      currentAvatar='🙂';
+      localStorage.setItem('fn_avatar','🙂');
+      localStorage.removeItem('fn_avatar_img');
+    }
     return d.onboarded||false;
   }catch{return false;}
 }
@@ -3367,6 +3400,11 @@ function _clearAllUserData(){
   if(typeof currentAvatar !== 'undefined')   currentAvatar   = '🙂';
   if(typeof currentAccent !== 'undefined')   currentAccent   = 'emerald';
   if(typeof currentThemePref !== 'undefined') currentThemePref = 'system';
+
+  // Also reset the DOM immediately — variables alone don't update the CSS / UI
+  if(typeof applyAccent === 'function')        applyAccent('emerald');
+  if(typeof applyTheme === 'function')         applyTheme('system');
+  if(typeof _updateAvatarDisplay === 'function') _updateAvatarDisplay('🙂', null);
 }
 function signOut(){
   showConfirm('Sign out?','You can log back in anytime.',async function(){
@@ -3657,21 +3695,19 @@ function doGuest(){
 
 function afterAuth(isReturning){
   updateBadge();
-  if(isReturning && load()){
-    document.getElementById('ob').style.display='none';
-    (document.getElementById('app')||document.createElement('div')).classList.add('on');
-    startApp();
-  } else if(!isReturning){
-    // Brand new user — always show onboarding, never skip
+  if(!isReturning){
+    // Brand new account — always show onboarding
     buildOBComps();
-  } else if(load()){
-    // Returning but no Firestore data — use local data
-    document.getElementById('ob').style.display='none';
-    (document.getElementById('app')||document.createElement('div')).classList.add('on');
-    startApp();
-  } else {
-    buildOBComps();
+    return;
   }
+  // Returning user: load local/Firestore data.
+  // If load() finds data with onboarded:true → go straight to app.
+  // If data is missing or onboarded flag absent → still go to app (not onboarding).
+  // Only brand-new accounts (isReturning=false) should ever see onboarding.
+  load(); // populate runtime vars even if it returns false
+  document.getElementById('ob').style.display='none';
+  (document.getElementById('app')||document.createElement('div')).classList.add('on');
+  startApp();
 }
 
 // ══════════════════════════════════════════════════════
@@ -3682,28 +3718,24 @@ window.addEventListener('DOMContentLoaded',()=>{
   document.getElementById('topbar-date').textContent=
     new Date().toLocaleDateString('en-GB',{weekday:'long',day:'numeric',month:'long'});
 
-  // Wait for Firebase auth to initialise
-  // Show a subtle "connecting…" state so buttons feel disabled before Firebase loads
+  // Disable auth buttons until Firebase is confirmed ready, then re-enable
   (function(){
-    var _authBtns = ['signup-btn','login-btn'];
-    var _gBtns = document.querySelectorAll('.auth-google-btn');
-    _authBtns.forEach(function(id){var b=document.getElementById(id);if(b){b.disabled=true;b.style.opacity='.55';}});
-    _gBtns.forEach(function(b){b.disabled=true;b.style.opacity='.55';});
-    function _enableAuthBtns(){
-      _authBtns.forEach(function(id){var b=document.getElementById(id);if(b){b.disabled=false;b.style.opacity='';}});
-      _gBtns.forEach(function(b){b.disabled=false;b.style.opacity='';});
+    var _authBtnIds = ['signup-btn','login-btn'];
+    var _gBtns = Array.from(document.querySelectorAll('.auth-google-btn'));
+    function _setEnabled(on){
+      _authBtnIds.forEach(function(id){var b=document.getElementById(id);if(b){b.disabled=!on;b.style.opacity=on?'':'0.5';}});
+      _gBtns.forEach(function(b){b.disabled=!on;b.style.opacity=on?'':'0.5';});
     }
-    // Re-enable once Firebase signals it's ready (or after fallback timeout)
-    var _origReady = null;
-    Object.defineProperty(window,'_fbFns',{
-      configurable:true,
-      set:function(v){
-        Object.defineProperty(window,'_fbFns',{configurable:true,writable:true,value:v});
-        if(v) _enableAuthBtns();
+    _setEnabled(false);
+    // Poll every 100ms — works whether _fbFns is set before or after DOMContentLoaded
+    var _poll = setInterval(function(){
+      if(window._fbFns && window._fbAuth){
+        clearInterval(_poll);
+        _setEnabled(true);
       }
-    });
-    // Fallback: always enable after 4s regardless
-    setTimeout(_enableAuthBtns, 4000);
+    }, 100);
+    // Hard fallback: always re-enable after 5s so users are never stuck
+    setTimeout(function(){ clearInterval(_poll); _setEnabled(true); }, 5000);
   })();
 
   window._fbUserReady = async (user) => {
@@ -3849,7 +3881,12 @@ function finishOB(){
   if(!userSubjects.length) userSubjects=['General'];
   document.getElementById('ob').style.display='none';
   (document.getElementById('app')||document.createElement('div')).classList.add('on');
-  save(); startApp();
+  save();
+  // Sync to Firestore immediately (don't rely on the 2s debounce alone —
+  // if the app closes before that fires, onboarded:true never reaches the cloud
+  // and the user gets onboarding again on their next login from another device)
+  if(typeof fbSyncData === 'function') fbSyncData();
+  startApp();
 }
 
 // ══════════════════════════════════════════════════════
@@ -3866,6 +3903,8 @@ function startApp(){
     else if(r.date==='nextweek') r.date=_nwStr;
   });
   save();
+  // Re-apply appearance in case load() just restored accent/avatar from this user's Firestore data
+  if(typeof applyTheme==='function') applyTheme(currentThemePref||'system');
   const c=CHARS[currentChar];
   document.getElementById('sb-avi').src=c.img;
   document.getElementById('sb-cname').textContent=c.name;
@@ -7057,6 +7096,7 @@ function applyAccent(name){
   document.documentElement.style.setProperty('--green', isDark?a.dark:a.light);
   document.documentElement.style.setProperty('--green-light', isDark?a.darkBg:a.lightBg);
   updateAccentUI();
+  if(typeof save==='function' && typeof userName!=='undefined') save();
 }
 
 function applyTheme(pref){
@@ -7070,6 +7110,7 @@ function applyTheme(pref){
   // Re-apply accent for the new mode
   applyAccent(currentAccent);
   updateThemeUI();
+  if(typeof save==='function' && typeof userName!=='undefined') save();
 }
 
 function pickAvatar(av){
@@ -7078,6 +7119,7 @@ function pickAvatar(av){
   localStorage.removeItem('fn_avatar_img'); // clear any uploaded image
   _updateAvatarDisplay(av, null);
   updateAvatarUI();
+  if(typeof save==='function' && typeof userName!=='undefined') save();
 }
 
 function handleAvatarUpload(input){
@@ -7099,12 +7141,13 @@ function handleAvatarUpload(input){
 }
 
 function _updateAvatarDisplay(emoji,imgUrl){
+  const _safeEmoji = (!emoji || emoji==='__img__') ? '🙂' : emoji;
   const prof=document.getElementById('prof-avatar');
-  if(prof){if(imgUrl)prof.innerHTML='<img src="'+imgUrl+'" alt="avatar"/>';else{prof.innerHTML='';prof.textContent=emoji||'🙂';}}
+  if(prof){if(imgUrl)prof.innerHTML='<img src="'+imgUrl+'" alt="avatar"/>';else{prof.innerHTML='';prof.textContent=_safeEmoji;}}
   const prev=document.getElementById('avatar-preview-large');
-  if(prev){if(imgUrl)prev.innerHTML='<img src="'+imgUrl+'" alt="avatar"/>';else{prev.innerHTML='';prev.textContent=emoji||'🙂';}}
+  if(prev){if(imgUrl)prev.innerHTML='<img src="'+imgUrl+'" alt="avatar"/>';else{prev.innerHTML='';prev.textContent=_safeEmoji;}}
   const ha=document.getElementById('home-avi');
-  if(ha){if(imgUrl)ha.innerHTML='<img src="'+imgUrl+'" style="width:100%;height:100%;object-fit:cover;border-radius:50%" alt=""/>';else ha.textContent=emoji||'🙂';}
+  if(ha){if(imgUrl)ha.innerHTML='<img src="'+imgUrl+'" style="width:100%;height:100%;object-fit:cover;border-radius:50%" alt=""/>';else ha.textContent=_safeEmoji;}
 }
 
 function updateAccentUI(){
@@ -8756,7 +8799,7 @@ document.addEventListener('DOMContentLoaded', function(){
   });
 });
 
-(function(){var ha=document.getElementById('home-avi');if(!ha)return;var img=localStorage.getItem('fn_avatar_img');var em=localStorage.getItem('fn_avatar')||'🙂';if(img)ha.innerHTML='<img src="'+img+'" style="width:100%;height:100%;object-fit:cover;border-radius:50%" alt=""/>';else ha.textContent=em;})();
+(function(){var ha=document.getElementById('home-avi');if(!ha)return;var img=localStorage.getItem('fn_avatar_img');var em=localStorage.getItem('fn_avatar')||'🙂';if(em==='__img__'&&!img)em='🙂';if(img&&em==='__img__')ha.innerHTML='<img src="'+img+'" style="width:100%;height:100%;object-fit:cover;border-radius:50%" alt=""/>';else ha.textContent=em;})();
 </script>
 
 <canvas id="confetti-canvas" style="display:none;position:fixed;inset:0;z-index:99999;pointer-events:none;"></canvas>
@@ -9154,15 +9197,13 @@ function launchConfetti(){
 </script>
 
 
-<!-- EMAIL NOTIFICATION SYSTEM - Menmory -->
-<script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+<!-- EMAIL NOTIFICATION SYSTEM - Menmory (via Netlify Function + Resend) -->
 <script>
 (function(){
 
 var APP_URL = "https://menmory.netlify.app";
-var EJSVC = "service_iq92tte";
-var EJSTPL = "template_86xck16";
-var EJSPK = "hGW7vjG5bJZbW2Vls";
+// Emails are sent via /.netlify/functions/send-email — API key lives server-side only
+var EMAIL_FN_URL = "/.netlify/functions/send-email";
 
 function getEmailAddr(){
   try{ return JSON.parse(localStorage.getItem("mn_email_cfg")||"{}" ).toEmail || ""; }
@@ -9184,57 +9225,26 @@ function prefVal(key, def){
   return (p[key] !== undefined) ? p[key] : def;
 }
 
-// Init EmailJS once at load — not inside send()
-(function _ejsInit(){
-  function tryInit(){
-    if(typeof emailjs !== "undefined"){
-      // v4 requires an options object, not a bare string
-      emailjs.init({ publicKey: EJSPK });
-      console.log("Menmory: EmailJS initialised");
-    } else {
-      setTimeout(tryInit, 300);
-    }
-  }
-  tryInit();
-})();
-
 async function sendMenmoryEmail(subject, bodyHtml){
-  if(isMinor()) return false; // COPPA: no email collection for under-14
+  if(isMinor()) return false;
   var toEmail = getEmailAddr();
   if(!toEmail){ console.warn("Menmory email: no address saved"); return false; }
   console.log("Menmory: sending email to", toEmail, "| subject:", subject);
-  // Template params — field names must match your EmailJS template variables exactly
-  var templateParams = {
-    to_email: toEmail,
-    subject: subject,
-    message: bodyHtml,        // EmailJS default template uses {{message}}
-    message_html: bodyHtml,   // kept as fallback in case template uses {{message_html}}
-    app_name: "Menmory"
-  };
   try{
-    if(typeof emailjs !== "undefined"){
-      var resp = await emailjs.send(EJSVC, EJSTPL, templateParams);
-      console.log("Menmory: EmailJS response", resp);
-      return true;
-    }
-    // Fallback: REST API
-    var r = await fetch("https://api.emailjs.com/api/v1.0/email/send", {
+    var r = await fetch(EMAIL_FN_URL, {
       method: "POST",
-      headers: {"Content-Type": "application/json"},
-      body: JSON.stringify({
-        service_id: EJSVC,
-        template_id: EJSTPL,
-        user_id: EJSPK,
-        template_params: templateParams
-      })
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ to_email: toEmail, subject: subject, message_html: bodyHtml })
     });
+    var data = await r.json();
     if(!r.ok){
-      var errText = await r.text();
-      console.warn("EmailJS REST error:", r.status, errText);
+      console.warn("Menmory email error:", data);
+      return false;
     }
-    return r.ok;
+    console.log("Menmory email sent:", data.id);
+    return true;
   } catch(e){
-    console.warn("EmailJS send error:", e);
+    console.warn("Menmory email send error:", e);
     return false;
   }
 }
@@ -9372,30 +9382,14 @@ window.testNotifEmail = async function(){
   if(!email){ if(typeof toast === "function") toast("Enter your email first"); return; }
   saveEmailAddr(email);
   if(typeof toast === "function") toast("Sending test email...");
-  // Check EmailJS is loaded
-  if(typeof emailjs === "undefined"){
-    if(typeof toast === "function") toast("❌ EmailJS library not loaded — check your internet connection");
-    return;
-  }
   var body = "<p>Your Menmory email notifications are working!</p>"
     + "<p>You will now receive study reminders, countdown alerts, and streak warnings right in your inbox.</p>"
-    + "<p style='background:#e8f4ed;border-radius:10px;padding:12px 16px;border-left:4px solid #1a6b3c'><strong>Keep studying consistently</strong> - spaced repetition only works when you show up!</p>";
-  try{
-    var templateParams = {
-      to_email: email,
-      subject: "Menmory notifications connected!",
-      message: emailWrap("Test Successful!", "✅", body),
-      message_html: emailWrap("Test Successful!", "✅", body),
-      app_name: "Menmory"
-    };
-    var resp = await emailjs.send("service_iq92tte", "template_86xck16", templateParams);
-    console.log("EmailJS test resp:", resp);
+    + "<p style='background:#e8f4ed;border-radius:10px;padding:12px 16px;border-left:4px solid #1a6b3c'><strong>Keep studying consistently</strong> — spaced repetition only works when you show up!</p>";
+  var ok = await sendMenmoryEmail("Menmory notifications connected! ✅", emailWrap("Test Successful!", "✅", body));
+  if(ok){
     if(typeof toast === "function") toast("✅ Test email sent! Check your inbox.");
-  } catch(e){
-    console.error("EmailJS test error:", e);
-    var msg = e && e.text ? e.text : (e && e.message ? e.message : JSON.stringify(e));
-    if(typeof toast === "function") toast("❌ EmailJS error: " + msg);
-
+  } else {
+    if(typeof toast === "function") toast("❌ Email failed — check Netlify function logs.");
   }
 };
 
