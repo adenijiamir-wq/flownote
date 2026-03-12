@@ -8564,11 +8564,50 @@ function checkAndFireReminders(){
       nlog('FIRE: '+r.text.slice(0,20));
       firedToday[key]=true; changed=true;
       fireNotif((r.emoji||'🔔')+' '+r.text, r.date==='everyday'?'Daily reminder':'Tap to view task', key);
+      // Send email for this reminder if user has email set up
+      if(typeof sendMenmoryEmail==='function' && typeof getEmailAddr==='function' && getEmailAddr()){
+        var emailKey='email_r'+r.id;
+        if(!firedToday[emailKey]){
+          firedToday[emailKey]=true;
+          var reminderBody = "<p>Hey <strong>"+(data.userName||'there')+"</strong>!</p>"
+            + "<p>Your reminder just went off:</p>"
+            + "<div style='background:#e8f4ed;border-radius:12px;padding:16px 20px;margin:16px 0;border-left:4px solid #1a6b3c'>"
+            + "<div style='font-size:1.3rem;margin-bottom:6px'>"+(r.emoji||'🔔')+"</div>"
+            + "<strong style='font-size:1rem'>"+r.text+"</strong><br>"
+            + "<span style='color:#1a6b3c;font-weight:600;font-size:.85rem'>"+raw+"</span>"
+            + "</div>"
+            + "<p style='margin-top:20px'><a href='"+APP_URL+"' style='background:#1a6b3c;color:#fff;padding:12px 24px;border-radius:10px;text-decoration:none;font-weight:700;display:inline-block'>Open Menmory</a></p>";
+          sendMenmoryEmail((r.emoji||'🔔')+' Reminder: '+r.text, emailWrap('Reminder', r.emoji||'🔔', reminderBody));
+        }
+      }
     }
   });
   if(changed){ fired[today]=firedToday; localStorage.setItem('fn_fired',JSON.stringify(fired)); }
   // Keep SW schedule in sync with latest fired state
   syncScheduleToSW();
+  // Send morning digest once per day at 8am
+  _maybeSendMorningDigest(data, today, nowMin);
+}
+
+function _maybeSendMorningDigest(data, today, nowMin){
+  if(typeof sendMenmoryEmail!=='function' || typeof getEmailAddr!=='function' || !getEmailAddr()) return;
+  var digestKey='mn_digest_'+today;
+  if(localStorage.getItem(digestKey)) return;
+  // Send between 8:00am and 8:10am
+  if(nowMin < 480 || nowMin > 490) return;
+  localStorage.setItem(digestKey,'1');
+  var todayTasks=(data.reminders||[]).filter(function(r){ return !r.done&&(r.date===today||r.date==='everyday'||r.date==='everyweek'); });
+  if(!todayTasks.length) return;
+  var rows=todayTasks.map(function(r){
+    return "<tr><td style='padding:8px 12px;font-size:.9rem'>"+(r.emoji||'🔔')+" "+r.text+"</td>"
+      +"<td style='padding:8px 12px;font-size:.85rem;color:#1a6b3c;font-weight:600;white-space:nowrap'>"+(r.time||r.startTime||'')+"</td></tr>";
+  }).join('');
+  var digestBody = "<p>Hey <strong>"+(data.userName||'there')+"</strong>! Here's what's on your plate today:</p>"
+    +"<table style='width:100%;border-collapse:collapse;margin:12px 0;background:#f9f9f9;border-radius:10px;overflow:hidden'>"
+    +"<tr style='background:#1a6b3c;color:#fff'><th style='padding:8px 12px;text-align:left;font-size:.8rem'>TASK</th><th style='padding:8px 12px;text-align:left;font-size:.8rem'>TIME</th></tr>"
+    +rows+"</table>"
+    +"<p style='margin-top:20px'><a href='"+APP_URL+"' style='background:#1a6b3c;color:#fff;padding:12px 24px;border-radius:10px;text-decoration:none;font-weight:700;display:inline-block'>Open Menmory</a></p>";
+  sendMenmoryEmail("Menmory: Your tasks for today ☀️", emailWrap("Today's Tasks", "☀️", digestBody));
 }
 
 function debugFireAll(){
@@ -9212,6 +9251,7 @@ function getEmailAddr(){
 window.getEmailAddr = getEmailAddr;
 function saveEmailAddr(email){
   localStorage.setItem("mn_email_cfg", JSON.stringify({toEmail: email}));
+  _syncEmailCfgToFirestore(email, getEmailPrefs());
 }
 function getEmailPrefs(){
   try{ return JSON.parse(localStorage.getItem("mn_email_prefs") || "{}"); }
@@ -9219,6 +9259,19 @@ function getEmailPrefs(){
 }
 function saveEmailPrefs(o){
   localStorage.setItem("mn_email_prefs", JSON.stringify(o));
+  _syncEmailCfgToFirestore(getEmailAddr(), o);
+}
+function _syncEmailCfgToFirestore(email, prefs){
+  var uid = localStorage.getItem('fn_current_user');
+  if(!uid || uid==='guest' || !window._fbDb || !window._fbFns) return;
+  if(typeof isMinor === 'function' && isMinor()) return;
+  try{
+    window._fbFns.setDoc(
+      window._fbFns.doc(window._fbDb, 'users', uid),
+      { notifEmail: email||'', notifPrefs: prefs||{} },
+      { merge: true }
+    );
+  }catch(e){ console.warn('Email cfg sync failed', e); }
 }
 function prefVal(key, def){
   var p = getEmailPrefs();
