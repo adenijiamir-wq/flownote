@@ -58,7 +58,26 @@ onAuthStateChanged(auth, (user) => {
 
 
 <style>
-/* ── In-app notification banner — TOP of screen, always visible ── */
+/* ── Energy Check-in Modal ── */
+#energy-checkin-bg{position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:9998;display:flex;align-items:flex-end;justify-content:center;animation:fadeIn .2s ease;}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+#energy-checkin{background:var(--paper);border-radius:22px 22px 0 0;padding:1.6rem 1.4rem 2.2rem;width:100%;max-width:480px;animation:slideUp .3s cubic-bezier(.34,1.2,.64,1);}
+@keyframes slideUp{from{transform:translateY(60px);opacity:0}to{transform:none;opacity:1}}
+.ec-title{font-family:'DM Serif Display',Georgia,serif;font-size:1.3rem;line-height:1.2;margin-bottom:.25rem;}
+.ec-sub{font-size:.82rem;color:var(--muted);margin-bottom:1.5rem;}
+.ec-btns{display:grid;grid-template-columns:1fr 1fr 1fr;gap:.7rem;}
+.ec-btn{background:var(--paper2);border:1.5px solid var(--line);border-radius:14px;padding:1rem .5rem .8rem;cursor:pointer;font-family:inherit;transition:all .15s;display:flex;flex-direction:column;align-items:center;gap:.4rem;}
+.ec-btn:active{transform:scale(.96);}
+.ec-btn.low:hover,.ec-btn.low.picked{background:var(--blue-light);border-color:var(--blue);}
+.ec-btn.mid:hover,.ec-btn.mid.picked{background:var(--amber-light);border-color:var(--amber);}
+.ec-btn.high:hover,.ec-btn.high.picked{background:var(--green-light);border-color:var(--green);}
+.ec-emoji{font-size:1.8rem;line-height:1;}
+.ec-lbl{font-size:.78rem;font-weight:600;color:var(--ink);}
+.ec-skip{background:none;border:none;color:var(--muted);font-size:.76rem;font-family:inherit;cursor:pointer;margin-top:1.1rem;width:100%;text-align:center;padding:.3rem;}
+[data-theme="dark"] #energy-checkin{background:#1e1e1e;}
+[data-theme="dark"] .ec-btn{background:#2a2a2a;border-color:var(--line);}
+
+
 #inapp-notif-stack{position:fixed;top:calc(16px + env(safe-area-inset-top,0px));left:12px;right:12px;z-index:99999;display:flex;flex-direction:column;gap:.5rem;pointer-events:none;}
 .ian{background:#1a6b3c;color:#fff;border-radius:14px;padding:.9rem 1rem;display:flex;align-items:center;gap:.75rem;box-shadow:0 8px 32px rgba(0,0,0,.45);pointer-events:all;cursor:pointer;width:100%;position:relative;overflow:hidden;animation:ianIn .35s cubic-bezier(.34,1.3,.64,1);}
 @keyframes ianIn{from{opacity:0;transform:translateY(-20px) scale(.95);}to{opacity:1;transform:none;}}
@@ -256,7 +275,8 @@ onAuthStateChanged(auth, (user) => {
 .auth-divider::before,.auth-divider::after{content:'';flex:1;height:1px;background:var(--line);}
 .auth-google-btn{width:100%;display:flex;align-items:center;justify-content:center;gap:.6rem;background:#fff;color:#333;border:1.5px solid #dadce0;border-radius:10px;padding:.72rem 1rem;font-family:'DM Sans',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:.88rem;font-weight:600;cursor:pointer;margin-bottom:.6rem;transition:box-shadow .15s;}
 .auth-google-btn:hover{box-shadow:0 2px 8px rgba(0,0,0,.12);}
-[data-theme="dark"] .auth-google-btn{background:#2a2a2a;color:#f0ede8;border-color:#444;}width:100%;background:none;color:var(--ink);border:1.5px solid var(--line);border-radius:10px;padding:.78rem;font-family:'DM Sans',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:.88rem;font-weight:500;cursor:pointer;transition:all .15s;}
+[data-theme="dark"] .auth-google-btn{background:#2a2a2a;color:#f0ede8;border-color:#444;}
+.auth-ghost{width:100%;background:none;color:var(--ink);border:1.5px solid var(--line);border-radius:10px;padding:.78rem;font-family:'DM Sans',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:.88rem;font-weight:500;cursor:pointer;transition:all .15s;}
 .auth-ghost:hover{border-color:var(--ink);}
 .auth-switch{text-align:center;margin-top:1.2rem;font-size:.82rem;color:var(--muted);}
 .auth-switch button{background:none;border:none;color:var(--ink);font-weight:600;cursor:pointer;font-family:inherit;font-size:.82rem;text-decoration:underline;padding:0;}
@@ -717,6 +737,9 @@ html,body{height:100%;overflow:hidden;font-family:'DM Sans',-apple-system,BlinkM
 .deck-progress{font-size:.6rem;font-weight:700;color:var(--muted);}
 .deck-study-btn{background:var(--blue);color:#fff;border:none;border-radius:8px;padding:.3rem .65rem;font-size:.7rem;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap;}
 .deck-study-btn:active{opacity:.85;}
+.deck-quiz-btn{background:var(--green-light);color:var(--green);border:1.5px solid var(--green);border-radius:8px;padding:.3rem .65rem;font-size:.7rem;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap;transition:all .15s;}
+.deck-quiz-btn:hover{background:var(--green);color:#fff;}
+.deck-quiz-btn:active{opacity:.85;}
 .card-item{background:var(--paper);border:none;border-bottom:1px solid var(--line);border-radius:0;padding:.7rem 1rem;margin-bottom:0;display:flex;align-items:flex-start;gap:.65rem;}
 .card-item:last-child{border-bottom:none;}
 .card-item:active{background:var(--paper2);}
@@ -1354,6 +1377,426 @@ html, body, #app {
   line-height:1.75;
 }
 
+/* ═══════════════════════════════════════
+   PREMIUM VISUAL LAYER
+═══════════════════════════════════════ */
+
+/* Subtle grain on the background */
+body::after{
+  content:'';position:fixed;inset:0;pointer-events:none;z-index:9999;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='200' height='200' filter='url(%23n)' opacity='1'/%3E%3C/svg%3E");
+  opacity:.028;mix-blend-mode:multiply;
+}
+[data-theme="dark"] body::after{mix-blend-mode:screen;opacity:.04;}
+
+/* ── Floating bottom nav pill ── */
+#bottom-nav{
+  background:transparent!important;
+  border-top:none!important;
+  padding:8px 14px calc(10px + env(safe-area-inset-bottom,0px))!important;
+  position:sticky;bottom:0;
+}
+.bn-inner{
+  background:rgba(250,249,246,.92);
+  backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);
+  border-radius:22px;
+  border:1px solid rgba(226,223,216,.7);
+  box-shadow:0 4px 24px rgba(0,0,0,.1),0 1px 4px rgba(0,0,0,.06),inset 0 1px 0 rgba(255,255,255,.8);
+  padding:3px 4px;
+  display:flex;
+}
+[data-theme="dark"] .bn-inner{
+  background:rgba(24,24,24,.92);
+  border-color:rgba(255,255,255,.07);
+  box-shadow:0 4px 24px rgba(0,0,0,.45),0 1px 4px rgba(0,0,0,.3),inset 0 1px 0 rgba(255,255,255,.04);
+}
+.bn-btn{
+  border-radius:18px!important;
+  padding:.5rem .1rem!important;
+  transition:all .2s cubic-bezier(.34,1.2,.64,1)!important;
+  flex:1;
+}
+.bn-btn.active{
+  background:var(--green-light)!important;
+  color:var(--green)!important;
+}
+[data-theme="dark"] .bn-btn.active{
+  background:rgba(82,217,138,.13)!important;
+  color:var(--green)!important;
+}
+.bn-icon svg{stroke-width:1.6;}
+.bn-btn.active .bn-icon svg{stroke-width:2.2;}
+
+/* ── Toast rises above floating nav */
+.toast{bottom:calc(80px + env(safe-area-inset-bottom,0px))!important;
+  border-radius:14px!important;
+  box-shadow:0 8px 24px rgba(0,0,0,.18),0 2px 6px rgba(0,0,0,.1)!important;
+  font-weight:600!important;
+  backdrop-filter:blur(8px)!important;
+  letter-spacing:.01em!important;
+}
+
+/* ── Section titles ── */
+.section-title{
+  font-size:.95rem!important;
+  font-weight:700!important;
+  letter-spacing:-.01em!important;
+}
+.section-action{
+  font-size:.72rem!important;
+  font-weight:600!important;
+  background:var(--green-light)!important;
+  color:var(--green)!important;
+  border:1.5px solid var(--green)!important;
+  border-radius:8px!important;
+  padding:.28rem .7rem!important;
+  cursor:pointer!important;
+  font-family:inherit!important;
+  transition:all .15s!important;
+}
+.section-action:hover{background:var(--green)!important;color:#fff!important;}
+
+/* ── Filter chips — pill style ── */
+.filter-chip{
+  border-radius:10px!important;
+  font-weight:600!important;
+  font-size:.72rem!important;
+  padding:.3rem .75rem!important;
+  transition:all .18s!important;
+  box-shadow:0 1px 2px rgba(0,0,0,.04)!important;
+}
+.filter-chip.active{
+  background:var(--ink)!important;
+  color:var(--paper)!important;
+  box-shadow:0 2px 6px rgba(0,0,0,.12)!important;
+}
+
+/* ── Auth screen ── */
+.auth-card{animation:fadeUp .4s cubic-bezier(.34,1.2,.64,1)!important;}
+.auth-h{letter-spacing:-.02em!important;}
+.auth-input{
+  border-radius:12px!important;
+  padding:.85rem 1.1rem!important;
+  box-shadow:0 1px 3px rgba(0,0,0,.04)!important;
+  transition:border-color .15s,box-shadow .15s!important;
+}
+.auth-input:focus{
+  border-color:var(--green)!important;
+  box-shadow:0 0 0 3px rgba(26,107,60,.1)!important;
+}
+.auth-btn{border-radius:12px!important;}
+.auth-google-btn{border-radius:12px!important;}
+
+/* ── Dark toggle ── */
+.dark-toggle{
+  border-radius:10px!important;
+  padding:.3rem .55rem!important;
+  width:32px;height:32px;
+  display:flex!important;align-items:center!important;justify-content:center!important;
+}
+
+/* ── Pages need bottom breathing room for floating nav */
+.page{padding-bottom:1.6rem!important;}
+
+/* ── Streak pill ── */
+.streak-pill{
+  border-radius:10px!important;
+  padding:.28rem .65rem!important;
+  font-size:.72rem!important;
+  font-weight:600!important;
+  box-shadow:0 1px 3px rgba(0,0,0,.05)!important;
+}
+
+/* ── Note editor ── */
+.note-title-input{
+  font-size:1.3rem!important;
+  letter-spacing:-.02em!important;
+}
+
+/* ── Reminders ── */
+.rem-input,.rem-sel{
+  border-radius:12px!important;
+  padding:.75rem .95rem!important;
+  box-shadow:0 1px 3px rgba(0,0,0,.04)!important;
+  transition:border-color .15s,box-shadow .15s!important;
+}
+.rem-input:focus,.rem-sel:focus{
+  border-color:var(--green)!important;
+  box-shadow:0 0 0 3px rgba(26,107,60,.08)!important;
+}
+.rem-add-btn{border-radius:12px!important;}
+
+/* ── Reminder items big ── */
+.rb{
+  border-radius:14px!important;
+  padding:.9rem 1rem!important;
+  border:1px solid rgba(226,223,216,.6)!important;
+}
+[data-theme="dark"] .rb{border-color:rgba(255,255,255,.05)!important;}
+
+/* ── Chat ── */
+.chat-header{
+  backdrop-filter:blur(18px)!important;
+  -webkit-backdrop-filter:blur(18px)!important;
+  background:rgba(250,249,246,.88)!important;
+  position:sticky!important;top:0!important;z-index:10!important;
+}
+[data-theme="dark"] .chat-header{background:rgba(24,24,24,.88)!important;}
+.msg .bubble{
+  border-radius:18px!important;
+  box-shadow:0 1px 4px rgba(0,0,0,.06)!important;
+}
+.msg.me .bubble{border-radius:18px 18px 4px 18px!important;}
+.msg:not(.me) .bubble{border-radius:4px 18px 18px 18px!important;}
+.chat-input{
+  border-radius:14px!important;
+  padding:.75rem 1rem!important;
+  box-shadow:0 1px 4px rgba(0,0,0,.06)!important;
+  transition:border-color .15s,box-shadow .15s!important;
+}
+.chat-input:focus{
+  border-color:var(--green)!important;
+  box-shadow:0 0 0 3px rgba(26,107,60,.08)!important;
+}
+
+/* ── Flashcard grade buttons ── */
+.fc-btn{
+  border-radius:16px!important;
+  font-size:.85rem!important;
+  box-shadow:0 2px 8px rgba(0,0,0,.08)!important;
+  transition:all .18s cubic-bezier(.34,1.2,.64,1)!important;
+}
+.fc-btn:active{transform:scale(.96)!important;}
+.fc-btn.again:hover{box-shadow:0 4px 16px rgba(192,57,43,.25)!important;}
+.fc-btn.good:hover{box-shadow:0 4px 16px rgba(26,107,60,.25)!important;}
+
+/* ── Pomo timer ring ── */
+#pomo-ring-fg{filter:drop-shadow(0 0 6px rgba(26,107,60,.4));}
+[data-theme="dark"] #pomo-ring-fg{filter:drop-shadow(0 0 8px rgba(82,217,138,.35));}
+
+/* ── Deck study/quiz buttons ── */
+.deck-study-btn{
+  border-radius:8px!important;
+  box-shadow:0 1px 4px rgba(29,78,216,.25)!important;
+  transition:all .15s!important;
+}
+.deck-study-btn:hover{box-shadow:0 3px 10px rgba(29,78,216,.35)!important;transform:translateY(-1px)!important;}
+.deck-quiz-btn{
+  box-shadow:0 1px 4px rgba(26,107,60,.2)!important;
+}
+.deck-quiz-btn:hover{box-shadow:0 3px 10px rgba(26,107,60,.3)!important;transform:translateY(-1px)!important;}
+
+/* ── Modal inputs ── */
+.modal input,.modal select,.modal textarea{
+  border-radius:12px!important;
+  transition:border-color .15s,box-shadow .15s!important;
+}
+.modal input:focus,.modal textarea:focus{
+  border-color:var(--green)!important;
+  box-shadow:0 0 0 3px rgba(26,107,60,.08)!important;
+}
+
+/* ── Onboarding cards ── */
+.comp-card,.sg-card{
+  border-radius:14px!important;
+  transition:all .18s cubic-bezier(.34,1.2,.64,1)!important;
+  box-shadow:0 1px 4px rgba(0,0,0,.05)!important;
+}
+.comp-card:hover,.sg-card:hover{transform:translateY(-2px)!important;box-shadow:0 4px 14px rgba(0,0,0,.08)!important;}
+.comp-card.sel,.sg-card.sel{box-shadow:0 4px 14px rgba(26,107,60,.2)!important;}
+
+/* ── Profile tabs ── */
+.prof-tab{border-radius:9px!important;transition:all .18s!important;}
+.prof-tab.active{box-shadow:0 2px 8px rgba(0,0,0,.1)!important;}
+
+/* ── Subject chips ── */
+.sub-chip{border-radius:10px!important;transition:all .18s!important;}
+.sub-chip.sel{box-shadow:0 2px 8px rgba(26,107,60,.2)!important;}
+
+/* ── Empty states ── */
+.empty-state{
+  padding:2.5rem 1rem!important;
+  text-align:center!important;
+}
+.es-icon{font-size:2.5rem!important;margin-bottom:.75rem!important;opacity:.5!important;}
+
+/* ── Date preset buttons ── */
+.date-preset-btn{
+  border-radius:10px!important;
+  transition:all .15s!important;
+}
+.date-preset-btn.active{
+  background:var(--ink)!important;color:var(--paper)!important;border-color:var(--ink)!important;
+  box-shadow:0 2px 6px rgba(0,0,0,.12)!important;
+}
+
+/* ── Gaps page ── */
+.gap-subject-card{
+  border-radius:16px!important;
+  box-shadow:0 1px 4px rgba(0,0,0,.05),0 2px 10px rgba(0,0,0,.06)!important;
+  border:1px solid rgba(226,223,216,.6)!important;
+}
+[data-theme="dark"] .gap-subject-card{border-color:rgba(255,255,255,.05)!important;}
+
+/* ── Sound mode buttons ── */
+.smode-btn{background:var(--paper2);border:1.5px solid var(--line);border-radius:8px;padding:.28rem .55rem;font-size:.65rem;font-weight:700;cursor:pointer;font-family:inherit;color:var(--muted);transition:all .15s;white-space:nowrap;}
+.smode-btn:hover{border-color:var(--ink);color:var(--ink);}
+.smode-btn.active{background:var(--green);border-color:var(--green);color:#fff;box-shadow:0 2px 8px rgba(26,107,60,.25);}
+
+/* ── Bottom nav pill (override for gap between items) */
+#bottom-nav{padding:8px 14px calc(12px + env(safe-area-inset-bottom,0px))!important;}
+
+
+/* ── Topbar — glass blur ── */
+.topbar{
+  backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);
+  background:rgba(250,249,246,.88)!important;
+  border-bottom:1px solid rgba(226,223,216,.55)!important;
+  position:sticky;top:0;z-index:40;
+}
+[data-theme="dark"] .topbar{
+  background:rgba(24,24,24,.88)!important;
+  border-bottom-color:rgba(255,255,255,.06)!important;
+}
+
+/* ── Greet card — rich gradient ── */
+.greet-card{
+  background:linear-gradient(135deg,#1a6b3c 0%,#145530 55%,#1d7844 100%)!important;
+  box-shadow:0 8px 28px rgba(26,107,60,.28),0 2px 6px rgba(26,107,60,.15)!important;
+  border-radius:16px!important;
+}
+.greet-card::before{
+  width:200px!important;height:200px!important;
+  right:-50px!important;top:-70px!important;
+  background:rgba(255,255,255,.07)!important;
+}
+.greet-card::after{
+  width:160px!important;height:160px!important;
+  right:30px!important;bottom:-50px!important;
+  background:rgba(255,255,255,.04)!important;
+}
+
+/* ── Cards — drop shadow depth ── */
+.card{
+  border:1px solid rgba(226,223,216,.6)!important;
+  box-shadow:0 1px 2px rgba(0,0,0,.03),0 3px 10px rgba(0,0,0,.05)!important;
+  border-radius:16px!important;
+}
+[data-theme="dark"] .card{
+  background:#1e1e1e!important;
+  border:1px solid rgba(255,255,255,.05)!important;
+  box-shadow:0 2px 8px rgba(0,0,0,.25),0 1px 3px rgba(0,0,0,.15)!important;
+}
+
+/* ── Note cards ── */
+.note-card{
+  border-radius:14px!important;
+  box-shadow:0 1px 2px rgba(0,0,0,.03),0 2px 8px rgba(0,0,0,.04)!important;
+  transition:all .22s cubic-bezier(.34,1.2,.64,1)!important;
+}
+.note-card:hover{
+  transform:translateY(-2px)!important;
+  box-shadow:0 6px 20px rgba(0,0,0,.09)!important;
+  border-color:var(--green)!important;
+}
+[data-theme="dark"] .note-card{
+  border-color:rgba(255,255,255,.05)!important;
+  box-shadow:0 2px 8px rgba(0,0,0,.2)!important;
+}
+
+/* ── Deck folders ── */
+.deck-folder{
+  border-radius:16px!important;
+  border-color:rgba(226,223,216,.7)!important;
+  box-shadow:0 1px 2px rgba(0,0,0,.03),0 2px 8px rgba(0,0,0,.05)!important;
+  transition:box-shadow .2s ease,transform .2s ease!important;
+}
+.deck-folder:hover{box-shadow:0 4px 16px rgba(0,0,0,.08)!important;}
+[data-theme="dark"] .deck-folder{
+  border-color:rgba(255,255,255,.05)!important;
+  box-shadow:0 2px 8px rgba(0,0,0,.25)!important;
+}
+
+/* ── Stat boxes — more presence ── */
+.stat-box{
+  border-radius:12px!important;
+  border:none!important;
+  box-shadow:0 1px 2px rgba(0,0,0,.03),0 2px 8px rgba(0,0,0,.05)!important;
+}
+[data-theme="dark"] .stat-box{
+  box-shadow:0 2px 8px rgba(0,0,0,.2)!important;
+}
+.stat-n{font-size:1.7rem!important;letter-spacing:-.02em;}
+
+/* ── Flashcard ── */
+.fc-face{
+  border-radius:20px!important;
+  box-shadow:0 4px 24px rgba(0,0,0,.08),0 1px 4px rgba(0,0,0,.04)!important;
+}
+[data-theme="dark"] .fc-face{
+  box-shadow:0 4px 24px rgba(0,0,0,.35)!important;
+}
+
+/* ── Buttons ── */
+.auth-btn,.rem-add-btn,.qc-save,.note-save-btn{
+  box-shadow:0 2px 8px rgba(0,0,0,.12)!important;
+  transition:all .18s cubic-bezier(.34,1.2,.64,1)!important;
+}
+.auth-btn:hover,.rem-add-btn:hover,.qc-save:hover{
+  transform:translateY(-1px)!important;
+  box-shadow:0 4px 16px rgba(0,0,0,.18)!important;
+}
+.auth-btn:active,.rem-add-btn:active{
+  transform:scale(.98)!important;
+}
+
+/* ── Search box ── */
+.search-box{
+  border-radius:12px!important;
+  box-shadow:0 1px 4px rgba(0,0,0,.05)!important;
+}
+
+/* ── Countdown & Goal chips ── */
+#home-countdown-chip,#home-goal-chip{
+  border-radius:16px!important;
+  box-shadow:0 1px 3px rgba(0,0,0,.04),0 2px 10px rgba(0,0,0,.05)!important;
+  border-color:rgba(226,223,216,.6)!important;
+  transition:all .18s ease!important;
+}
+#home-countdown-chip:hover,#home-goal-chip:hover{
+  box-shadow:0 4px 14px rgba(0,0,0,.09)!important;
+  transform:translateY(-1px)!important;
+}
+
+/* ── Modals ── */
+.modal{
+  border-radius:22px!important;
+  box-shadow:0 24px 64px rgba(0,0,0,.2),0 4px 16px rgba(0,0,0,.1)!important;
+}
+[data-theme="dark"] .modal{
+  box-shadow:0 24px 64px rgba(0,0,0,.6),0 4px 16px rgba(0,0,0,.4)!important;
+}
+
+/* ── Reminder items ── */
+.rb{
+  border-radius:14px!important;
+  box-shadow:0 1px 3px rgba(0,0,0,.03),0 2px 6px rgba(0,0,0,.04)!important;
+  transition:box-shadow .18s ease!important;
+}
+.rb:hover{box-shadow:0 3px 12px rgba(0,0,0,.07)!important;}
+[data-theme="dark"] .rb{
+  box-shadow:0 2px 6px rgba(0,0,0,.18)!important;
+}
+
+/* ── FAB ── */
+#mobile-qc-fab{
+  box-shadow:0 4px 20px rgba(26,107,60,.35),0 2px 6px rgba(26,107,60,.2)!important;
+}
+#mobile-qc-fab:active{
+  transform:scale(.94)!important;
+  box-shadow:0 2px 10px rgba(26,107,60,.25)!important;
+}
+
 </style>
 </head>
 <body>
@@ -1516,7 +1959,7 @@ html, body, #app {
     <aside class="sidebar" id="sidebar">
       <div class="sb-logo">
         <span class="sb-logo-text" id="sb-logo-tap" onclick="secretTap()">Men<span>mory</span></span>
-        <button class="sb-close" onclick="closeSidebar()">✕</button>
+        <button class="sb-close" onclick="closeSidebar()"><svg viewBox="0 0 24 24" style="width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:2.5;stroke-linecap:round;"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
       </div>
       <div class="sb-nav">
         <div class="sb-section">Main</div>
@@ -1555,9 +1998,9 @@ html, body, #app {
           </div>
         </div>
         <div class="tb-right">
-          <button class="dark-toggle" id="dark-toggle" onclick="toggleDark()" title="Toggle dark mode">🌙</button>
+          <button class="dark-toggle" id="dark-toggle" onclick="toggleDark()" title="Toggle dark mode"><svg id="dark-toggle-icon" viewBox="0 0 24 24" style="width:14px;height:14px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;"><path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/></svg></button>
           <span id="api-badge" class="api-badge bad">AI off</span>
-          <div class="streak-pill">🔥 <span id="streak-n">0</span> day streak</div>
+          <div class="streak-pill"><svg viewBox="0 0 24 24" style="width:13px;height:13px;fill:var(--amber);stroke:none;display:inline-block;vertical-align:middle;margin-right:2px;"><path d="M12 2c0 0-5 5.5-5 10a5 5 0 0010 0c0-4.5-5-10-5-10zm0 13a2 2 0 01-2-2c0-2 2-4.5 2-4.5s2 2.5 2 4.5a2 2 0 01-2 2z"/></svg><span id="streak-n">0</span> day streak</div>
         </div>
       </div>
 
@@ -1619,9 +2062,10 @@ html, body, #app {
 
               <!-- Mini stats row -->
               <div class="stats-row" style="margin-bottom:1rem;">
-                <div class="stat-box"><div class="stat-n" style="color:var(--green)" id="s-done">0</div><div class="stat-l">Done</div></div>
+                <div class="stat-box"><div class="stat-n" style="color:var(--blue)" id="s-tasks-due">0</div><div class="stat-l">Tasks due</div></div>
+                <div class="stat-box"><div class="stat-n" style="color:var(--amber)" id="s-due">0</div><div class="stat-l">Cards due</div></div>
                 <div class="stat-box"><div class="stat-n" id="s-notes">0</div><div class="stat-l">Notes</div></div>
-                <div class="stat-box"><div class="stat-n" style="color:var(--purple)" id="s-cards">0</div><div class="stat-l">Cards</div></div>
+                <div class="stat-box"><div class="stat-n" style="color:var(--green)" id="s-done">0</div><div class="stat-l">Tasks done</div></div>
               </div>
 
               <!-- Collapsible add form -->
@@ -1662,7 +2106,7 @@ html, body, #app {
               <!-- Count + show/hide done toggle -->
               <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:.6rem;" id="rem-toolbar">
                 <span style="font-size:.72rem;font-weight:600;color:var(--muted);" id="rem-count-label"></span>
-                <button id="show-done-btn" onclick="toggleShowDone()" style="display:none;background:none;border:none;color:var(--muted);font-size:.72rem;font-weight:600;cursor:pointer;font-family:inherit;padding:.2rem .4rem;border-radius:5px;text-decoration:underline;">Show completed</button>
+                <button id="show-done-btn" onclick="toggleShowDone()" style="display:none;background:var(--paper2);border:1px solid var(--line);color:var(--muted);font-size:.68rem;font-weight:600;cursor:pointer;font-family:inherit;padding:.22rem .6rem;border-radius:8px;display:none;align-items:center;gap:.3rem;transition:all .15s;"><svg id="show-done-chevron" viewBox="0 0 24 24" style="width:11px;height:11px;fill:none;stroke:currentColor;stroke-width:2.5;stroke-linecap:round;stroke-linejoin:round;transition:transform .2s;"><polyline points="6 9 12 15 18 9"/></svg><span id="show-done-label">Show completed</span></button>
               </div>
 
               <!-- hidden anchor for home-r-list (used by JS) -->
@@ -1684,7 +2128,7 @@ html, body, #app {
       <!-- ── NOTES ── -->
       <div class="page" id="page-notes">
         <div class="notes-toolbar">
-          <div class="search-box"><span>🔍</span><input id="notes-search" placeholder="Search notes…" oninput="renderNotes()"/></div>
+          <div class="search-box"><span style="display:flex;align-items:center;flex-shrink:0;color:var(--muted);"><svg viewBox="0 0 24 24" style="width:15px;height:15px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></span><input id="notes-search" placeholder="Search notes…" oninput="renderNotes()"/></div>
           <div class="filter-chips" id="notes-filter-chips">
             <div class="filter-chip active" data-subj="all" onclick="setNoteFilter('all',this)">All</div>
           </div>
@@ -1719,18 +2163,18 @@ html, body, #app {
         <div class="study-header">
           <div style="font-family:'DM Serif Display',Georgia,'Times New Roman',serif;font-size:1.1rem;">Study Cards</div>
           <div style="display:flex;gap:.5rem;">
-            <button class="gen-card-btn" style="width:auto;padding:.42rem .85rem;font-size:.75rem;margin-bottom:0;background:var(--green-light);color:var(--green);border:1.5px solid var(--green);" onclick="openGenModal('quiz-cards')">🧠 Quiz me</button>
+            <button class="gen-card-btn" style="width:auto;padding:.42rem .85rem;font-size:.75rem;margin-bottom:0;background:var(--green-light);color:var(--green);border:1.5px solid var(--green);" onclick="openGenModal('quiz-cards')"><svg viewBox="0 0 24 24" style="width:13px;height:13px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;display:inline-block;vertical-align:middle;margin-right:4px;"><path d="M12 5a7 7 0 00-7 7h1a1 1 0 001 1h1a1 1 0 001-1V9a1 1 0 011-1h2a1 1 0 011 1v3a1 1 0 001 1h1a1 1 0 001-1h1a7 7 0 00-7-7z"/><path d="M9 17v1a3 3 0 006 0v-1"/></svg>Quiz me</button>
             <button class="gen-card-btn" style="width:auto;padding:.42rem .85rem;font-size:.75rem;margin-bottom:0;" onclick="openManualCardModal()">+ Add card</button>
           </div>
         </div>
-          <div id="review-banner" class="review-banner" style="display:none;margin-bottom:.75rem;"><span id="review-banner-text">⏰ You have cards due for review</span><button onclick="startReviewSession()">Review now</button></div>
+          <div id="review-banner" class="review-banner" style="display:none;margin-bottom:.75rem;"><span id="review-banner-text"><svg viewBox="0 0 24 24" style="width:13px;height:13px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;display:inline-block;vertical-align:middle;margin-right:4px;"><circle cx="12" cy="12" r="9"/><polyline points="12 7 12 12 15 15"/></svg>You have cards due for review</span><button onclick="startReviewSession()">Review now</button></div>
         <div class="study-filters" id="cards-filter-chips">
           <div class="filter-chip active" data-subj="all" onclick="setCardFilter('all',this)">All</div>
           <div class="filter-chip" data-subj="due" onclick="setCardFilter('due',this)">📅 Due today</div>
         </div>
         <!-- Topic filter row — shown when a subject is active -->
         <div class="study-filters" id="cards-topic-chips" style="display:none;padding-top:0;margin-top:-.3rem;"></div>
-        <div class="search-box" style="margin-bottom:.6rem;"><span>🔍</span><input id="cards-search" placeholder="Search cards…" oninput="renderCards()"/></div>
+        <div class="search-box" style="margin-bottom:.6rem;"><span style="display:flex;align-items:center;flex-shrink:0;color:var(--muted);"><svg viewBox="0 0 24 24" style="width:15px;height:15px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></span><input id="cards-search" placeholder="Search cards…" oninput="renderCards()"/></div>
 
         <!-- Active flashcard -->
         <div id="fc-session" style="display:none;">
@@ -1819,10 +2263,24 @@ html, body, #app {
             <div style="font-family:'DM Serif Display',Georgia,'Times New Roman',serif;font-size:1.35rem;margin-bottom:.15rem;">Study Timer</div>
             <div style="font-size:.73rem;color:var(--muted);">Deep work in focused sessions</div>
           </div>
-          <!-- Sound toggle -->
-          <button id="pomo-sound-btn" onclick="togglePomoSound()" style="background:var(--paper2);border:1.5px solid var(--line);border-radius:10px;padding:.4rem .7rem;font-size:.72rem;font-weight:600;cursor:pointer;color:var(--muted);font-family:inherit;display:flex;align-items:center;gap:.3rem;">
-            🔇 Sound
-          </button>
+          <!-- Sound panel -->
+          <div style="display:flex;flex-direction:column;align-items:flex-end;gap:.4rem;">
+            <button id="pomo-sound-btn" onclick="togglePomoSound()" style="background:var(--paper2);border:1.5px solid var(--line);border-radius:10px;padding:.38rem .75rem;font-size:.72rem;font-weight:600;cursor:pointer;color:var(--muted);font-family:inherit;display:flex;align-items:center;gap:.35rem;transition:all .15s;">
+              <svg id="sound-icon" viewBox="0 0 24 24" style="width:13px;height:13px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><line x1="23" y1="9" x2="17" y2="15"/><line x1="17" y1="9" x2="23" y2="15"/></svg>
+              <span id="sound-btn-label">Sound off</span>
+            </button>
+            <div id="sound-mode-row" style="display:none;flex-direction:column;align-items:flex-end;gap:.3rem;">
+              <div style="display:flex;gap:.3rem;">
+                <button class="smode-btn active" data-mode="cafe" onclick="setSoundMode('cafe',this)" title="Lo-fi jazz: creative tasks &amp; default study vibe">☕ Café</button>
+                <button class="smode-btn" data-mode="flow" onclick="setSoundMode('deep',this)" title="Binaural beats + ambient pads: deep focus">🎵 Deep Work</button>
+                <button class="smode-btn" data-mode="focus" onclick="setSoundMode('ocean',this)" title="Pink + white noise blend: clean full-spectrum masking">❄️ Clarity</button>
+              </div>
+              <div style="display:flex;align-items:center;gap:.4rem;margin-top:.1rem;">
+                <svg viewBox="0 0 24 24" style="width:10px;height:10px;fill:none;stroke:var(--muted);stroke-width:2;stroke-linecap:round;flex-shrink:0;"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M15.54 8.46a5 5 0 010 7.07"/></svg>
+                <input type="range" id="sound-vol" min="0" max="100" value="60" oninput="setSoundVol(this.value)" style="width:72px;height:3px;accent-color:var(--green);cursor:pointer;">
+              </div>
+            </div>
+          </div>
         </div>
 
         <!-- What are you studying? -->
@@ -2264,7 +2722,7 @@ html, body, #app {
 
 <!-- Quick Capture -->
 <div id="qc-sidebar">
-  <div class="qc-head"><div class="qc-title">💭 Quick Capture</div><button class="qc-x" onclick="closeQC()">✕</button></div>
+  <div class="qc-head"><div class="qc-title" style="display:flex;align-items:center;gap:.4rem;"><svg viewBox="0 0 24 24" style="width:15px;height:15px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>Quick Capture</div><button class="qc-x" onclick="closeQC()"><svg viewBox="0 0 24 24" style="width:14px;height:14px;fill:none;stroke:currentColor;stroke-width:2.5;stroke-linecap:round;"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button></div>
   <textarea id="qc-textarea" placeholder="Write a thought, concept, or note before it disappears…"></textarea>
   <div class="qc-foot" style="display:flex;gap:.5rem;align-items:center;">
     <button class="mic-btn" id="qc-mic-btn" onclick="toggleVoice('qc')" title="Speak your capture">
@@ -2568,7 +3026,9 @@ function setDark(isDark) {
     document.documentElement.setAttribute('data-theme', isDark ? 'dark' : 'light');
     localStorage.setItem('mb7_theme', isDark ? 'dark' : 'light');
     const btn = document.getElementById('dark-toggle');
-    if (btn) btn.textContent = isDark ? '☀️' : '🌙';
+    const sunSVG = '<svg viewBox="0 0 24 24" style="width:14px;height:14px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>';
+    const moonSVG = '<svg viewBox="0 0 24 24" style="width:14px;height:14px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;"><path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/></svg>';
+    if (btn) btn.innerHTML = isDark ? sunSVG : moonSVG;
 }
 
 function toggleDark() {
@@ -3207,6 +3667,7 @@ function startApp(){
   initFAB();
   scheduleAllReminders();
   startNotifPoller();
+  maybeShowCheckin(1500);
   // Show permission prompts if not yet asked
   setTimeout(showStartupPermissions, 1500);
   // Subscribe to push if already permitted
@@ -3768,7 +4229,7 @@ function renderQCNotes(){
   const captures=notes.filter(n=>n.quickCapture);
   section.style.display=captures.length?'block':'none';
   const _qcb=document.getElementById('qc-count-badge');if(_qcb)_qcb.textContent=captures.length?'('+captures.length+')':'';
-  const _qcl=document.getElementById('qc-notes-list');if(_qcl&&_qcl.getAttribute('data-collapsed')!=='1')_qcl.style.maxHeight='none';
+  const _qcl=document.getElementById('qc-notes-list');if(_qcl&&_qcl.getAttribute('data-collapsed')==='0'){_qcl.style.maxHeight='none';}else if(_qcl&&!_qcl.getAttribute('data-collapsed')){_qcl.setAttribute('data-collapsed','1');_qcl.style.maxHeight='0px';const _chev=document.getElementById('qc-chevron');if(_chev)_chev.style.transform='rotate(-90deg)';}
   list.innerHTML=captures.map(n=>
     '<div class="qc-note-card" onclick="openNoteEditor('+n.id+')">'+
     '<span style="font-size:1rem;flex-shrink:0;">⚡</span>'+
@@ -4276,7 +4737,7 @@ function renderCards(){
   );
 
   // Update stat counter
-  document.getElementById('s-cards').textContent = studyCards.length;
+  const _sc=document.getElementById('s-cards'); if(_sc) _sc.textContent = studyCards.length;
   // Keep hidden study-btn label in sync for any legacy callers
   const lbl = document.getElementById('study-btn-label');
   if(lbl){ const d=getDueCards().length; lbl.textContent=d>0?`Start Review (${d} due)`:'Study All Cards'; }
@@ -4310,7 +4771,7 @@ function renderCards(){
   list.innerHTML = Object.entries(groups).map(([key, grp])=>{
     const {subj, topic, cards} = grp;
     const col       = SUBJECT_COLORS[subj]||'#6b7280';
-    const isOpen    = !_deckCollapsed[key];
+    const isOpen    = !!_deckCollapsed[key];
     const safeKey   = key.replace(/\\/g,'\\\\').replace(/'/g,"\\'");
 
     // Progress: how many cards in this deck have been reviewed today
@@ -4334,6 +4795,8 @@ function renderCards(){
       ? ''
       : '<button class="deck-study-btn" onclick="event.stopPropagation();startDeckSession(\''+safeKey+'\')" style="background:var(--blue);">&#x25B6; Study</button>';
 
+    const quizBtn = '<button class="deck-quiz-btn" onclick="event.stopPropagation();openDeckQuiz(\''+safeKey+'\')" title="Quiz me on this deck"><svg viewBox="0 0 24 24" style="width:11px;height:11px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;display:inline-block;vertical-align:middle;margin-right:3px;"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 015.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>Quiz</button>';
+
     const cardRows = cards.map((c,i)=>{
       const isDue = !c.nextReview||c.nextReview<=today;
       const doneToday = c.reviewedDate===today;
@@ -4344,7 +4807,9 @@ function renderCards(){
           : '<span class="pill pill-green" style="font-size:.58rem;padding:.05rem .35rem;">&#x2713; '+daysUntil(c.nextReview)+'</span>';
       const safeQ = (c.question||'').replace(/</g,'&lt;');
       const safeA = (c.answer||'').replace(/</g,'&lt;');
-      return `<div class="card-item" onclick="startDeckSession('${safeKey}',${c.id})" style="cursor:pointer;${doneToday?'opacity:.55;':''}">
+      return `<div class="card-item"
+        onclick="startDeckSession('${safeKey}',${c.id})"
+        style="cursor:pointer;${doneToday?'opacity:.55;':''}">
         <div class="ci-num">${i+1}</div>
         <div class="ci-body">
           <div class="ci-q">${safeQ}</div>
@@ -4378,12 +4843,52 @@ function renderCards(){
         <div class="deck-right">
           ${badge}
           ${studyBtn}
+          ${quizBtn}
+          <button onclick="event.stopPropagation();deleteDeck('${safeKey}')" title="Delete deck" style="background:none;border:none;cursor:pointer;padding:.3rem .4rem;border-radius:8px;color:var(--muted);line-height:1;transition:color .15s,background .15s;margin-right:.3rem;display:flex;align-items:center;justify-content:center;" onmouseover="this.style.color='var(--red)';this.style.background='var(--red-light)'" onmouseout="this.style.color='var(--muted)';this.style.background='none'"><svg viewBox="0 0 24 24" style="width:15px;height:15px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4h6v2"/></svg></button>
+          <div style="width:1px;height:16px;background:var(--line);flex-shrink:0;margin-right:.3rem;"></div>
           <div class="deck-chevron ${isOpen?'open':''}">${chevron}</div>
         </div>
       </div>
       ${isOpen?`<div class="deck-body">${cardRows}</div>`:''}
     </div>`;
   }).join('');
+}
+
+// Quiz me on a specific deck
+function openDeckQuiz(key){
+  const parts = key.split('|');
+  const subj  = parts[0];
+  const topic = parts.slice(1).join('|');
+  // Temporarily set filters to this deck
+  const prevFilter = currentCardFilter;
+  const prevTopic  = currentCardTopicFilter;
+  currentCardFilter      = subj;
+  currentCardTopicFilter = topic || 'all';
+  openGenModal('quiz-cards');
+  // Restore filters after modal opens
+  currentCardFilter      = prevFilter;
+  currentCardTopicFilter = prevTopic;
+}
+
+// Delete an entire deck (all cards with matching subject|topic key)
+function deleteDeck(key){
+  const parts = key.split('|');
+  const subj  = parts[0];
+  const topic = parts.slice(1).join('|');
+  const name  = topic || subj;
+  const count = studyCards.filter(c => (c.subject||'General') === subj && (c.topic||'').trim() === topic).length;
+  showConfirm(
+    'Delete "' + name + '"?',
+    'This will permanently delete all ' + count + ' card' + (count !== 1 ? 's' : '') + ' in this deck. This cannot be undone.',
+    function(){
+      studyCards = studyCards.filter(c => !((c.subject||'General') === subj && (c.topic||'').trim() === topic));
+      save();
+      renderCards();
+      checkReviewBadge();
+      toast('🗑 "' + name + '" deleted');
+    },
+    'Delete deck'
+  );
 }
 
 // Start studying a deck. If startId given, begin from that card.
@@ -4847,6 +5352,15 @@ function checkReviewBadge(){
     if(badge){badge.style.display='';badge.textContent=due;}
     if(bnBadge){bnBadge.style.display='flex';bnBadge.textContent=due;}
     if(banner){banner.style.display='flex';if(bannerText)bannerText.textContent=`⏰ ${due} card${due>1?'s':''} due for review`;}
+    // Send email reminder once per day if user has email set up
+    if(typeof window.notifStudyReminder === 'function' && typeof getEmailAddr === 'function' && getEmailAddr()){
+      var todayStr = new Date().toISOString().slice(0,10);
+      var lastSent = localStorage.getItem('mn_study_email_sent');
+      if(lastSent !== todayStr){
+        localStorage.setItem('mn_study_email_sent', todayStr);
+        setTimeout(function(){ window.notifStudyReminder(due); }, 3000);
+      }
+    }
   } else {
     if(badge)badge.style.display='none';
     if(bnBadge)bnBadge.style.display='none';
@@ -5239,7 +5753,7 @@ function checkReminderOverlap(newR){
   return null;
 }
 let pendingReminder=null;
-let showDoneReminders=true;
+let showDoneReminders=false;
 let deletedReminders=[];
 
 function toggleRemForm(forceOpen){
@@ -5253,8 +5767,10 @@ function toggleRemForm(forceOpen){
 
 function toggleShowDone(){
   showDoneReminders=!showDoneReminders;
-  const btn=document.getElementById('show-done-btn');
-  if(btn) btn.textContent=showDoneReminders?'Hide completed':'Show completed';
+  const lbl=document.getElementById('show-done-label');
+  const chev=document.getElementById('show-done-chevron');
+  if(lbl) lbl.textContent=showDoneReminders?'Hide completed':'Show completed';
+  if(chev) chev.style.transform=showDoneReminders?'rotate(180deg)':'';
   renderAll();
 }
 function showOverlapSuggestion(newR,overlap){
@@ -5540,8 +6056,12 @@ function renderAll(){
   if(countLabel) countLabel.textContent=pendingCount>0?`${pendingCount} pending`:'';
   const doneBtnEl=document.getElementById('show-done-btn');
   if(doneBtnEl){
-    doneBtnEl.style.display=doneCount>0?'':'none';
-    doneBtnEl.textContent=showDoneReminders?`Hide completed (${doneCount})`:`Show completed (${doneCount})`;
+    const hasDone = doneCount > 0;
+    doneBtnEl.style.display = hasDone ? 'flex' : 'none';
+    const lbl = document.getElementById('show-done-label');
+    const chev = document.getElementById('show-done-chevron');
+    if(lbl) lbl.textContent = showDoneReminders ? `Hide completed (${doneCount})` : `Show completed (${doneCount})`;
+    if(chev) chev.style.transform = showDoneReminders ? 'rotate(180deg)' : '';
   }
   if(!reminders.length){bl.innerHTML='<div style="text-align:center;padding:.9rem .5rem;color:var(--muted);font-size:.75rem;">No tasks yet — tap <strong>+ Add task</strong> above to get started.</div>';return;}
 
@@ -5554,7 +6074,8 @@ function renderAll(){
       return dateCmp!==0?dateCmp:sortMin(a)-sortMin(b);
     });
     html+=`<div class="r-group-missing">⚠️ Missing Work (${overdSorted.length})</div>`;
-    html+=overdSorted.map(r=>`<div class="rb overdue" onclick="toggleR(${r.id})">
+    html+=overdSorted.map(r=>`<div class="rb overdue"
+      onclick="toggleR(${r.id})">
       <div class="rb-icon">${r.emoji}</div>
       <div style="flex:1;min-width:0;">
         <div class="rb-title" style="display:flex;align-items:center;gap:.3rem;flex-wrap:wrap;">${r.text}<span class="overdue-badge">MISSING</span></div>
@@ -5588,7 +6109,8 @@ function renderAll(){
         ? 'width:22px;height:22px;border-radius:50%;border:2px solid rgba(239,68,68,.6);display:flex;align-items:center;justify-content:center;font-size:.6rem;flex-shrink:0;'
         : '';
 
-      return `<div class="rb ${r.done?'done':''} ${missed&&!r.done?'missed-time':''}" onclick="toggleR(${r.id})">
+      return `<div class="rb ${r.done?'done':''} ${missed&&!r.done?'missed-time':''}"
+        onclick="toggleR(${r.id})">
         <div class="rb-icon">${r.emoji}</div>
         <div style="flex:1;min-width:0;">
           <div class="rb-title" style="display:flex;align-items:center;gap:.3rem;flex-wrap:wrap;">${r.text}${missed&&!r.done?'<span class="overdue-badge">MISSED</span>':''}</div>
@@ -5619,6 +6141,8 @@ function renderAll(){
   const sDone=document.getElementById('s-done'); if(sDone) sDone.textContent=reminders.filter(r=>r.done).length;
   const sNotes=document.getElementById('s-notes'); if(sNotes) sNotes.textContent=notes.length;
   const sCards=document.getElementById('s-cards'); if(sCards) sCards.textContent=studyCards.length;
+  const sDue=document.getElementById('s-due'); if(sDue) sDue.textContent=getDueCards().length;
+  const sTasksDue=document.getElementById('s-tasks-due'); if(sTasksDue) sTasksDue.textContent=reminders.filter(r=>!r.done).length;
   const streakEl=document.getElementById('streak-n'); if(streakEl) streakEl.textContent=streakDays;
   try{renderNextAction();}catch(e){console.warn('renderNextAction failed:',e);}
 }
@@ -6967,38 +7491,428 @@ function savePomoStats(){
 let _pomoSoundOn = false;
 let _pomoAudioCtx = null;
 let _pomoSoundNode = null;
+let _soundMode = 'cafe'; // 'ocean' | 'deep' | 'cafe'
+let _soundVol = 0.60;
+
+/* ─────────────────────────────────────────────────────────────────
+   RESEARCH-BACKED STUDY SOUND ENGINE
+   ─────────────────────────────────────────────────────────────────
+   MODE: FOCUS
+     40 Hz gamma isochronic tones (amplitude-modulated carrier).
+     Studies from MIT, NeuroReport (2019), and Frontiers in Human
+     Neuroscience show 40 Hz entrainment boosts working memory,
+     sustained attention, and episodic memory consolidation.
+     Layered under brown noise (warmer than white, less fatiguing —
+     proven to mask distracting sounds without cognitive overload).
+
+   MODE: FLOW
+     Slow ambient pads at 60 BPM — matches resting heart rate,
+     induces alpha-wave state (8–14 Hz: relaxed alertness, ideal
+     for reading and comprehension). No lyrics, no drums, no
+     surprises. Research (Rauscher et al.; Thompson et al. 2001)
+     shows predictable, slow instrumental music reduces anxiety
+     and improves spatial-temporal reasoning.
+     Layered with gentle rain: nature sounds lower cortisol and
+     improve cognitive performance (Jahncke et al., 2011, JAIS).
+
+   MODE: CAFÉ
+     Lo-fi at 70–75 BPM with mild ambient noise (~65 dB level).
+     The "coffee shop effect" study (Mehta et al., 2012, Journal
+     of Consumer Research) found moderate ambient noise (~65 dB)
+     boosts creative cognition vs. silence or loud environments.
+     Familiar, repetitive chord patterns reduce anxiety while
+     providing just enough stimulation to prevent boredom (Yerkes-
+     Dodson arousal curve optimal zone).
+   ──────────────────────────────────────────────────────────────── */
+
+function setSoundMode(mode, btn){
+  _soundMode = mode;
+  document.querySelectorAll('.smode-btn').forEach(b=>b.classList.remove('active'));
+  if(btn) btn.classList.add('active');
+  if(_pomoSoundOn){ stopPomoSound(); startPomoSound(); }
+}
+
+function setSoundVol(v){
+  _soundVol = v / 100;
+  if(_pomoSoundNode && _pomoSoundNode.masterGain){
+    try{
+      const g = _pomoSoundNode.masterGain;
+      g.gain.setTargetAtTime(_soundVol * 0.78, _pomoAudioCtx.currentTime, 0.1);
+    }catch(_){}
+  }
+}
 
 function togglePomoSound(){
   _pomoSoundOn = !_pomoSoundOn;
-  const btn = document.getElementById('pomo-sound-btn');
+  const btn    = document.getElementById('pomo-sound-btn');
+  const label  = document.getElementById('sound-btn-label');
+  const icon   = document.getElementById('sound-icon');
+  const row    = document.getElementById('sound-mode-row');
+  const onSVG  = '<polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M15.54 8.46a5 5 0 010 7.07"/><path d="M19.07 4.93a10 10 0 010 14.14"/>';
+  const offSVG = '<polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><line x1="23" y1="9" x2="17" y2="15"/><line x1="17" y1="9" x2="23" y2="15"/>';
   if(_pomoSoundOn){
-    if(btn) btn.innerHTML = '🔊 Sound';
+    if(label) label.textContent = 'Sound on';
+    if(icon)  icon.innerHTML = onSVG;
+    if(btn)   { btn.style.color='var(--green)'; btn.style.borderColor='var(--green)'; }
+    if(row)   row.style.display = 'flex';
     if(_pomoRunning && _pomoMode==='focus') startPomoSound();
   } else {
-    if(btn) btn.innerHTML = '🔇 Sound';
+    if(label) label.textContent = 'Sound off';
+    if(icon)  icon.innerHTML = offSVG;
+    if(btn)   { btn.style.color=''; btn.style.borderColor=''; }
+    if(row)   row.style.display = 'none';
     stopPomoSound();
   }
+}
+
+// ── Brown noise buffer (warm, fatigue-free masking) ──
+function makeBrownNoise(ctx, durationSec){
+  const buf = ctx.createBuffer(2, ctx.sampleRate * durationSec, ctx.sampleRate);
+  for(let ch=0;ch<2;ch++){
+    const d = buf.getChannelData(ch);
+    let last = 0;
+    for(let i=0;i<d.length;i++){
+      const w = Math.random()*2-1;
+      last = (last + 0.02*w) / 1.02;
+      d[i] = last * 14; // normalize
+    }
+  }
+  return buf;
+}
+
+// ── Pink noise buffer (rain-like) ──
+function makePinkNoise(ctx, durationSec){
+  const buf = ctx.createBuffer(2, ctx.sampleRate * durationSec, ctx.sampleRate);
+  for(let ch=0;ch<2;ch++){
+    const d = buf.getChannelData(ch);
+    let b0=0,b1=0,b2=0,b3=0,b4=0,b5=0;
+    for(let i=0;i<d.length;i++){
+      const w=Math.random()*2-1;
+      b0=0.99886*b0+w*0.0555179; b1=0.99332*b1+w*0.0750759;
+      b2=0.96900*b2+w*0.1538520; b3=0.86650*b3+w*0.3104856;
+      b4=0.55000*b4+w*0.5329522; b5=-0.7616*b5-w*0.0168980;
+      d[i]=(b0+b1+b2+b3+b4+b5+w*0.5362)*0.11;
+    }
+  }
+  return buf;
+}
+
+// ── Sparse vinyl crackle ──
+function makeVinyl(ctx){
+  const buf = ctx.createBuffer(1, ctx.sampleRate * 4, ctx.sampleRate);
+  const d = buf.getChannelData(0);
+  for(let i=0;i<d.length;i++)
+    d[i] = Math.random() < 0.0004 ? (Math.random()-0.5)*0.4 : 0;
+  return buf;
+}
+
+// ─────────────────────────────────────────
+// MODE: OCEAN — Ocean waves + 40 Hz Gamma
+// Research: 40Hz isochronic entrainment
+// (Martorell et al. 2019 MIT; Frontiers 2021)
+// boosts working memory and recall.
+// Real ocean sound: layered noise bands
+// shaped to mimic wave surge & recession.
+// ─────────────────────────────────────────
+// ─────────────────────────────────────────
+// MODE: RAIN — Rain + Thunder + Brown noise
+// Research: Jahncke et al. (2011) JAIS —
+// nature sounds (esp. rain) significantly
+// lower cortisol, improve cognitive perf.
+// Rensselaer Poly (2015): employees more
+// focused & satisfied with nature sounds.
+// Brown noise base masks speech & traffic —
+// warmer, less fatiguing than white noise.
+// ─────────────────────────────────────────
+// MODE: RAIN — Rain + Thunder + Brown noise base
+// MODE: CLARITY — Pink + White noise blend
+// Pink noise (1/f spectrum) is the most natural-sounding
+// masking noise — matches patterns in nature and music.
+// Blended with white noise for sharper high-freq masking.
+// Together they cover the full audible spectrum evenly
+// without the bass-heaviness of brown or the harshness
+// of pure white. (Messineo et al. 2004; Fan et al. 2012)
+// MODE: CLARITY — Pure pink noise
+// Pink noise (1/f spectrum) decreases 3dB per octave, matching
+// human auditory sensitivity. Most comfortable for long sessions.
+// PMC study (2021): red & pink noise scored highest on BOTH
+// comfort AND cognitive performance vs white or silence.
+// No white noise — white is harsh. No brown — too bass-heavy.
+// Pure pink is the research-backed sweet spot.
+function buildOceanMode(ctx, master){
+  const nodes = [];
+  const dur = 10;
+
+  // ── Pink noise — Voss-McCartney algorithm, accurate 1/f spectrum ──
+  const pinkBuf = ctx.createBuffer(2, ctx.sampleRate * dur, ctx.sampleRate);
+  for(let ch = 0; ch < 2; ch++){
+    const d = pinkBuf.getChannelData(ch);
+    let b0=0,b1=0,b2=0,b3=0,b4=0,b5=0,b6=0;
+    for(let i = 0; i < d.length; i++){
+      const w = Math.random() * 2 - 1;
+      b0 = 0.99886*b0 + w*0.0555179;
+      b1 = 0.99332*b1 + w*0.0750759;
+      b2 = 0.96900*b2 + w*0.1538520;
+      b3 = 0.86650*b3 + w*0.3104856;
+      b4 = 0.55000*b4 + w*0.5329522;
+      b5 = -0.7616*b5 - w*0.0168980;
+      b6 = 0.115926*b6 + w*0.5362;
+      d[i] = (b0+b1+b2+b3+b4+b5+b6) * 0.11;
+    }
+  }
+  const pinkSrc = ctx.createBufferSource();
+  pinkSrc.buffer = pinkBuf; pinkSrc.loop = true;
+
+  // Soft ceiling — remove ultra-highs above 8kHz that cause ear fatigue
+  const ceilLP = ctx.createBiquadFilter();
+  ceilLP.type = 'lowpass'; ceilLP.frequency.value = 8000; ceilLP.Q.value = 0.5;
+
+  // Gentle presence dip around 3-5kHz — this is where ears are most
+  // sensitive; a slight cut makes long-session listening less tiring
+  const presenceDip = ctx.createBiquadFilter();
+  presenceDip.type = 'peaking'; presenceDip.frequency.value = 3500;
+  presenceDip.gain.value = -3; presenceDip.Q.value = 1.0;
+
+  const pinkG = ctx.createGain(); pinkG.gain.value = 0.52;
+  pinkSrc.connect(ceilLP); ceilLP.connect(presenceDip);
+  presenceDip.connect(pinkG); pinkG.connect(master);
+  pinkSrc.start(); nodes.push(pinkSrc);
+
+  // Very subtle slow LFO — prevents dead static feel (one swell per 30s)
+  const lfo = ctx.createOscillator();
+  lfo.type = 'sine'; lfo.frequency.value = 0.033;
+  const lfoG = ctx.createGain(); lfoG.gain.value = 0.035;
+  lfo.connect(lfoG); lfoG.connect(pinkG.gain);
+  lfo.start(); nodes.push(lfo);
+
+  nodes._loopOn = function(){};
+  return nodes;
+}
+// MODE: DEEP WORK — Pure filtered brown noise + 40Hz gamma
+// Brown noise filtered hard below 300Hz = deep warm rumble only.
+// Above 300Hz it bleeds into mid-range and sounds harsh —
+// the exact problem we're fixing. At correct cutoff it feels
+// like a distant waterfall or thunder heard through a wall.
+// 40Hz gamma isochronic (MIT 2019) fades in gently for focus.
+function buildDeepMode(ctx, master){
+  const nodes = [];
+  const t0 = ctx.currentTime + 0.3;
+
+  // ── Brown noise — heavily low-passed for warmth, not harshness ──
+  const brownBuf = ctx.createBuffer(2, ctx.sampleRate * 10, ctx.sampleRate);
+  for(let ch = 0; ch < 2; ch++){
+    const d = brownBuf.getChannelData(ch); let last = 0;
+    for(let i = 0; i < d.length; i++){
+      const w = Math.random() * 2 - 1;
+      last = (last + 0.02 * w) / 1.02;
+      d[i] = last * 14;
+    }
+  }
+  const brownSrc = ctx.createBufferSource();
+  brownSrc.buffer = brownBuf; brownSrc.loop = true;
+
+  // Two-stage lowpass — aggressive rolloff above 300Hz
+  // This is the key fix: below 300Hz = warm rumble, above = static
+  const lp1 = ctx.createBiquadFilter();
+  lp1.type = 'lowpass'; lp1.frequency.value = 300; lp1.Q.value = 0.6;
+  const lp2 = ctx.createBiquadFilter();
+  lp2.type = 'lowpass'; lp2.frequency.value = 300; lp2.Q.value = 0.6;
+
+  // Gentle sub-bass boost — enhances the "felt" warmth
+  const bassBoost = ctx.createBiquadFilter();
+  bassBoost.type = 'peaking'; bassBoost.frequency.value = 80;
+  bassBoost.gain.value = 4; bassBoost.Q.value = 1.0;
+
+  // Conservative gain — brown noise at high gain is tiring
+  const brownG = ctx.createGain(); brownG.gain.value = 0.38;
+  brownSrc.connect(lp1); lp1.connect(lp2); lp2.connect(bassBoost);
+  bassBoost.connect(brownG); brownG.connect(master);
+  brownSrc.start(); nodes.push(brownSrc);
+
+  // ── 40Hz gamma isochronic — amplitude modulated, fades in over 10s ──
+  // Carrier at 140Hz (low and inoffensive, blends into brown noise bed)
+  const carrier = ctx.createOscillator();
+  carrier.type = 'sine'; carrier.frequency.value = 140;
+  const modOsc = ctx.createOscillator();
+  modOsc.type = 'sine'; modOsc.frequency.value = 40;
+  const modScale = ctx.createGain(); modScale.gain.value = 0.5;
+  const modOff = ctx.createConstantSource(); modOff.offset.value = 0.5;
+  const amGain = ctx.createGain(); amGain.gain.value = 0;
+  modOsc.connect(modScale); modOff.connect(modScale); modScale.connect(amGain.gain);
+  // Keep gamma tone below brown noise — supporting role only
+  const gammaLP = ctx.createBiquadFilter();
+  gammaLP.type = 'lowpass'; gammaLP.frequency.value = 400;
+  const gammaEnv = ctx.createGain();
+  gammaEnv.gain.setValueAtTime(0, t0);
+  gammaEnv.gain.linearRampToValueAtTime(0.06, t0 + 10);
+  carrier.connect(amGain); amGain.connect(gammaLP);
+  gammaLP.connect(gammaEnv); gammaEnv.connect(master);
+  carrier.start(t0); modOsc.start(t0); modOff.start(t0);
+  nodes.push(carrier, modOsc, modOff);
+
+  nodes._loopOn = function(){};
+  return nodes;
+}
+function buildCafeMode(ctx, master){
+  const nodes=[];
+  const t0=ctx.currentTime+0.3;
+
+  // Café ambient noise — shaped brown noise
+  const ambBuf=(function(){
+    const b=ctx.createBuffer(2,ctx.sampleRate*6,ctx.sampleRate);
+    for(let ch=0;ch<2;ch++){const d=b.getChannelData(ch);let l=0;for(let i=0;i<d.length;i++){const w=Math.random()*2-1;l=(l+0.02*w)/1.02;d[i]=l*14;}}
+    return b;
+  })();
+  const ambSrc=ctx.createBufferSource(); ambSrc.buffer=ambBuf; ambSrc.loop=true;
+  const ambBP=ctx.createBiquadFilter(); ambBP.type='bandpass'; ambBP.frequency.value=600; ambBP.Q.value=0.4;
+  const ambHP=ctx.createBiquadFilter(); ambHP.type='highpass'; ambHP.frequency.value=120;
+  const ambG=ctx.createGain(); ambG.gain.value=0.055;
+  ambSrc.connect(ambBP); ambBP.connect(ambHP); ambHP.connect(ambG); ambG.connect(master);
+  ambSrc.start(); nodes.push(ambSrc);
+
+  // Vinyl crackle
+  const vinylBuf=(function(){
+    const b=ctx.createBuffer(1,ctx.sampleRate*4,ctx.sampleRate);
+    const d=b.getChannelData(0);
+    for(let i=0;i<d.length;i++) d[i]=Math.random()<0.0004?(Math.random()-0.5)*0.4:0;
+    return b;
+  })();
+  const vinylSrc=ctx.createBufferSource(); vinylSrc.buffer=vinylBuf; vinylSrc.loop=true;
+  const vinylG=ctx.createGain(); vinylG.gain.value=0.5;
+  vinylSrc.connect(vinylG); vinylG.connect(master); vinylSrc.start(); nodes.push(vinylSrc);
+
+  // Lo-fi chain
+  const loLP=ctx.createBiquadFilter(); loLP.type='lowpass'; loLP.frequency.value=4200;
+  const loPeak=ctx.createBiquadFilter(); loPeak.type='peaking'; loPeak.frequency.value=1800; loPeak.gain.value=-4; loPeak.Q.value=1;
+  const loComp=ctx.createDynamicsCompressor();
+  loComp.threshold.value=-20; loComp.knee.value=10; loComp.ratio.value=3; loComp.attack.value=0.04; loComp.release.value=0.4;
+  loLP.connect(loPeak); loPeak.connect(loComp); loComp.connect(master);
+
+  // Jazz chord engine — Eb major, lush 9th chords, 72 BPM
+  const BPM=72,beat=60/BPM,bar=beat*4,swing=beat*0.06;
+  const CHORDS=[
+    [155.56,195.99,246.94,311.13,369.99],
+    [130.81,155.56,195.99,246.94,311.13],
+    [103.83,130.81,155.56,207.65,246.94],
+    [116.54,146.83,174.61,220.00,261.63],
+  ];
+  const BASS=[77.78,65.41,51.91,58.27];
+  const MEL=[
+    [0,622.25,0.45],[0.5,587.33,0.3],[1,659.26,0.65],
+    [2,523.25,0.4],[2.5,554.37,0.3],[3,493.88,0.85],
+    [4,466.16,0.5],[4.75,493.88,0.3],[5,440.00,0.75],
+    [6,415.30,0.4],[6.5,440.00,0.3],[7,466.16,1.0],
+    [8,493.88,0.4],[8.5,523.25,0.3],[9,554.37,0.85],
+    [10,523.25,0.45],[11,493.88,0.3],[11.5,440.00,0.95],
+    [12,415.30,0.5],[13,392.00,0.4],[13.5,415.30,0.35],[14,440.00,0.5],[15,466.16,1.3],
+  ];
+
+  function pluck(t,freq,vol,dur){
+    const o1=ctx.createOscillator(),o2=ctx.createOscillator(),env=ctx.createGain();
+    o1.type='triangle'; o1.frequency.value=freq*(1+(Math.random()-0.5)*0.003);
+    o2.type='sine'; o2.frequency.value=freq*1.002;
+    const o2g=ctx.createGain(); o2g.gain.value=0.35;
+    env.gain.setValueAtTime(0,t); env.gain.linearRampToValueAtTime(vol,t+0.022);
+    env.gain.exponentialRampToValueAtTime(vol*0.5,t+0.15);
+    env.gain.setValueAtTime(vol*0.38,t+dur-0.3); env.gain.linearRampToValueAtTime(0.0001,t+dur);
+    o2.connect(o2g); o2g.connect(env); o1.connect(env); env.connect(loLP);
+    o1.start(t); o1.stop(t+dur+0.1); o2.start(t); o2.stop(t+dur+0.1); nodes.push(o1,o2);
+  }
+  function bass(t,freq,dur){
+    const o=ctx.createOscillator(),sub=ctx.createOscillator(),env=ctx.createGain();
+    const bf=ctx.createBiquadFilter(); bf.type='lowpass'; bf.frequency.value=300; bf.Q.value=1.4;
+    o.type='sine'; o.frequency.value=freq; sub.type='sine'; sub.frequency.value=freq*0.5;
+    const subG=ctx.createGain(); subG.gain.value=0.4;
+    env.gain.setValueAtTime(0,t); env.gain.linearRampToValueAtTime(0.25,t+0.07);
+    env.gain.exponentialRampToValueAtTime(0.12,t+0.55); env.gain.linearRampToValueAtTime(0.0001,t+dur);
+    sub.connect(subG); subG.connect(env); o.connect(env); env.connect(bf); bf.connect(loLP);
+    o.start(t); o.stop(t+dur+0.1); sub.start(t); sub.stop(t+dur+0.1); nodes.push(o,sub);
+  }
+  function kick(t){
+    const o=ctx.createOscillator(),env=ctx.createGain();
+    o.type='sine'; o.frequency.setValueAtTime(150,t); o.frequency.exponentialRampToValueAtTime(38,t+0.09);
+    env.gain.setValueAtTime(0,t); env.gain.linearRampToValueAtTime(0.26,t+0.006); env.gain.exponentialRampToValueAtTime(0.0001,t+0.2);
+    o.connect(env); env.connect(master); o.start(t); o.stop(t+0.22); nodes.push(o);
+  }
+  function snare(t){
+    const dur=0.16,buf=ctx.createBuffer(1,Math.floor(ctx.sampleRate*dur),ctx.sampleRate);
+    const d=buf.getChannelData(0); for(let i=0;i<d.length;i++) d[i]=Math.random()*2-1;
+    const src=ctx.createBufferSource(); src.buffer=buf;
+    const bp=ctx.createBiquadFilter(); bp.type='bandpass'; bp.frequency.value=1500; bp.Q.value=0.7;
+    const env=ctx.createGain();
+    env.gain.setValueAtTime(0,t); env.gain.linearRampToValueAtTime(0.11,t+0.006); env.gain.exponentialRampToValueAtTime(0.0001,t+dur);
+    src.connect(bp); bp.connect(env); env.connect(master); src.start(t); nodes.push(src);
+  }
+  function hat(t,closed=true){
+    const dur=closed?0.04:0.13,buf=ctx.createBuffer(1,Math.floor(ctx.sampleRate*dur),ctx.sampleRate);
+    const d=buf.getChannelData(0); for(let i=0;i<d.length;i++) d[i]=(Math.random()*2-1)*Math.pow(1-i/d.length,closed?2:0.7);
+    const src=ctx.createBufferSource(); src.buffer=buf;
+    const hf=ctx.createBiquadFilter(); hf.type='highpass'; hf.frequency.value=closed?8500:6000;
+    const env=ctx.createGain();
+    env.gain.setValueAtTime(0,t); env.gain.linearRampToValueAtTime(closed?0.062:0.10,t+0.004); env.gain.exponentialRampToValueAtTime(0.0001,t+dur);
+    src.connect(hf); hf.connect(env); env.connect(master); src.start(t); nodes.push(src);
+  }
+
+  let _loopOn=true,_nextT=t0;
+  function scheduleSection(t){
+    CHORDS.forEach((chord,i)=>{
+      const bt=t+i*bar;
+      chord.forEach((f,j)=>pluck(bt+j*0.038,f,0.082-j*0.011,bar*0.88));
+      bass(bt,BASS[i],beat*1.7); bass(bt+beat*2+swing,BASS[i]*(Math.random()>0.5?1.25:1),beat*1.3);
+      kick(bt); kick(bt+beat*2+(Math.random()>0.7?-swing:0));
+      snare(bt+beat+swing*0.4); snare(bt+beat*3+swing*0.3);
+      for(let h=0;h<8;h++) hat(bt+h*beat*0.5+(h%2?swing:0),h!==2&&h!==6);
+    });
+    MEL.forEach(([bOff,freq,dur])=>pluck(t+bOff*beat,freq,0.046,dur*beat));
+  }
+
+  scheduleSection(_nextT); _nextT+=bar*4;
+  const sched=setInterval(()=>{
+    if(!_loopOn) return;
+    if(_nextT < ctx.currentTime+bar*5){ scheduleSection(_nextT); _nextT+=bar*4; while(nodes.length>220) nodes.shift(); }
+  },900);
+  nodes._sched=sched; nodes._loopOn=()=>{ _loopOn=false; clearInterval(sched); };
+  return nodes;
 }
 
 function startPomoSound(){
   if(!_pomoSoundOn) return;
   try{
-    if(!_pomoAudioCtx) _pomoAudioCtx=new(window.AudioContext||window.webkitAudioContext)();
+    if(!_pomoAudioCtx) _pomoAudioCtx = new(window.AudioContext||window.webkitAudioContext)();
+    if(_pomoAudioCtx.state==='suspended') _pomoAudioCtx.resume();
     stopPomoSound();
-    const NOTES=[261.63,293.66,329.63,392.00,440.00,523.25]; let _ni=0;
-    function _note(){
-      if(!_pomoSoundOn) return;
-      const t=_pomoAudioCtx.currentTime,osc=_pomoAudioCtx.createOscillator(),g=_pomoAudioCtx.createGain();
-      osc.type='sine'; osc.frequency.value=NOTES[_ni%NOTES.length];
-      g.gain.setValueAtTime(0,t); g.gain.linearRampToValueAtTime(0.06,t+0.08); g.gain.exponentialRampToValueAtTime(0.001,t+1.9);
-      osc.connect(g); g.connect(_pomoAudioCtx.destination); osc.start(t); osc.stop(t+1.9); _ni++;
-    }
-    _note(); _pomoSoundNode={interval:setInterval(_note,2400)};
-  }catch(e){console.warn('Audio:',e);}
+    const ctx = _pomoAudioCtx;
+
+    const master = ctx.createGain();
+    master.gain.setValueAtTime(0, ctx.currentTime);
+    master.gain.linearRampToValueAtTime(_soundVol*0.78, ctx.currentTime+3);
+    master.connect(ctx.destination);
+
+    let modeNodes;
+    if(_soundMode==='cafe')       modeNodes = buildCafeMode(ctx, master);
+    else if(_soundMode==='ocean') modeNodes = buildOceanMode(ctx, master);
+    else                          modeNodes = buildDeepMode(ctx, master);
+
+    _pomoSoundNode = {
+      masterGain: master,
+      nodes: modeNodes,
+      stop(){
+        if(modeNodes._loopOn) modeNodes._loopOn();
+        const t = ctx.currentTime;
+        try{ master.gain.setValueAtTime(master.gain.value,t); master.gain.linearRampToValueAtTime(0,t+2); }catch(_){}
+        (modeNodes||[]).forEach(n=>{ try{n.stop&&n.stop(t+2.2);}catch(_){} });
+      }
+    };
+  }catch(e){ console.warn('Study Audio error:', e); }
 }
 
 function stopPomoSound(){
-  try{ if(_pomoSoundNode){ if(_pomoSoundNode.interval)clearInterval(_pomoSoundNode.interval); if(_pomoSoundNode.src)try{_pomoSoundNode.src.stop();}catch(_){} _pomoSoundNode=null; } }catch(e){}
+  try{
+    if(_pomoSoundNode){
+      if(_pomoSoundNode.stop) _pomoSoundNode.stop();
+      _pomoSoundNode = null;
+    }
+  }catch(e){}
 }
 
 function setPomoMode(mode, silent){
@@ -7112,6 +8026,7 @@ function onPomoEnd(){
     } else {
       toast('🍅 Session '+_pomoTodaySessions+' done! Take a breather.');
       setPomoMode('short', true);
+      if(typeof maybeShowPostPomoCheckin === 'function') maybeShowPostPomoCheckin();
     }
   } else {
     toast('✓ Break over — back to it!');
@@ -7643,6 +8558,10 @@ document.addEventListener('DOMContentLoaded', function(){
   <button class="ft-pause" id="ft-pause" onclick="event.stopPropagation();togglePomoFromFloat()" title="Pause/Resume">⏸</button>
 </div>
 <script>
+
+
+
+
 // ── COUNTDOWN ──
 function getCountdowns(){try{return JSON.parse(localStorage.getItem('fn_countdowns')||'[]');}catch(e){return[];}}
 function saveCountdowns(a){localStorage.setItem('fn_countdowns',JSON.stringify(a));}
@@ -7865,6 +8784,7 @@ function launchConfetti(){
 <script>
 (function(){
 
+var APP_URL = "https://menmory.netlify.app";
 var EJSVC = "service_iq92tte";
 var EJSTPL = "template_86xck16";
 var EJSPK = "hGW7vjG5bJZbW2Vls";
@@ -7890,8 +8810,20 @@ function prefVal(key, def){
 
 async function sendMenmoryEmail(subject, bodyHtml){
   var toEmail = getEmailAddr();
-  if(!toEmail) return false;
+  if(!toEmail){ console.warn("Menmory email: no address saved"); return false; }
   try{
+    // Use EmailJS SDK (loaded via script tag above)
+    if(typeof emailjs !== "undefined"){
+      emailjs.init(EJSPK);
+      await emailjs.send(EJSVC, EJSTPL, {
+        to_email: toEmail,
+        subject: subject,
+        message_html: bodyHtml,
+        app_name: "Menmory"
+      });
+      return true;
+    }
+    // Fallback: REST API
     var r = await fetch("https://api.emailjs.com/api/v1.0/email/send", {
       method: "POST",
       headers: {"Content-Type": "application/json"},
@@ -7902,14 +8834,13 @@ async function sendMenmoryEmail(subject, bodyHtml){
         template_params: {
           to_email: toEmail,
           subject: subject,
-          message_html: bodyHtml,
-          app_name: "Menmory"
+          message_html: bodyHtml
         }
       })
     });
     return r.ok;
   } catch(e){
-    console.warn("EmailJS error:", e);
+    console.warn("EmailJS send error:", e);
     return false;
   }
 }
@@ -7929,7 +8860,8 @@ window.notifStudyReminder = async function(cardsDue){
   if(!prefVal("studyReminder", true)) return;
   var body = "<p>Hey there!</p>"
     + "<p>You have <strong>" + cardsDue + " flashcard" + (cardsDue !== 1 ? "s" : "") + " due</strong> for review today in Menmory.</p>"
-    + "<p>Keeping up with reviews is the key to long-term retention. Your brain is ready - go crush it!</p>";
+    + "<p>Keeping up with reviews is the key to long-term retention. Your brain is ready - go crush it!</p>"
+    + "<p style='margin-top:20px'><a href='" + APP_URL + "' style='background:#1a6b3c;color:#fff;padding:12px 24px;border-radius:10px;text-decoration:none;font-weight:700;display:inline-block'>Open Menmory</a></p>";
   var ok = await sendMenmoryEmail("Menmory: " + cardsDue + " cards due today", emailWrap("Time to review!", "📚", body));
   if(ok && typeof toast === "function") toast("📧 Study reminder sent!");
 };
@@ -7950,7 +8882,8 @@ window.notifStreakWarning = async function(streakDays){
   if(!prefVal("streakWarning", true)) return;
   var body = "<p>Do not break your streak!</p>"
     + "<p>You are on a <strong>" + streakDays + "-day study streak</strong> and you have not reviewed any cards today yet.</p>"
-    + "<p>Even 5 minutes of review will keep your streak alive and your memory sharp.</p>";
+    + "<p>Even 5 minutes of review will keep your streak alive and your memory sharp.</p>"
+    + "<p style='margin-top:20px'><a href='" + APP_URL + "' style='background:#b45309;color:#fff;padding:12px 24px;border-radius:10px;text-decoration:none;font-weight:700;display:inline-block'>Save my streak</a></p>";
   await sendMenmoryEmail("Menmory: Streak at risk - " + streakDays + " days", emailWrap("Streak Warning", "🔥", body));
 };
 
@@ -8065,6 +8998,213 @@ document.addEventListener("DOMContentLoaded", function(){
 });
 
 })();
+</script>
+
+
+<script>
+// ══════════════════════════════════════════════════════
+// ENERGY CHECK-IN SYSTEM
+// ══════════════════════════════════════════════════════
+var CHECKIN_WINDOWS = [
+  { id: 'morning',   start: 6,  end: 10, label: 'morning'   },
+  { id: 'afternoon', start: 12, end: 15, label: 'afternoon'  },
+  { id: 'evening',   start: 19, end: 22, label: 'evening'    }
+];
+
+// Store the active window & context so buttons don't need inline JSON
+var _checkinWin = null;
+var _checkinPostPomo = false;
+
+function _getCheckinState(){
+  try{
+    var s = JSON.parse(localStorage.getItem('mn_checkin_state') || '{}');
+    if(s.date !== todayStr()) s = { date: todayStr(), morning: false, afternoon: false, evening: false };
+    return s;
+  } catch(e){ return { date: todayStr(), morning: false, afternoon: false, evening: false }; }
+}
+function _saveCheckinState(s){ localStorage.setItem('mn_checkin_state', JSON.stringify(s)); }
+
+function _currentWindow(){
+  var h = new Date().getHours();
+  for(var i = 0; i < CHECKIN_WINDOWS.length; i++){
+    if(h >= CHECKIN_WINDOWS[i].start && h < CHECKIN_WINDOWS[i].end) return CHECKIN_WINDOWS[i];
+  }
+  return null;
+}
+
+function maybeShowCheckin(delay){
+  setTimeout(function(){
+    var win = _currentWindow();
+    if(!win) return;
+    var s = _getCheckinState();
+    if(s[win.id]) return;
+    showEnergyCheckin(win, false);
+  }, delay || 1200);
+}
+
+function maybeShowPostPomoCheckin(){
+  setTimeout(function(){ showEnergyCheckin(null, true); }, 2500);
+}
+
+function showEnergyCheckin(win, isPostPomo){
+  if(document.getElementById('energy-checkin-bg')) return;
+  _checkinWin = win;
+  _checkinPostPomo = isPostPomo;
+
+  var titleText = isPostPomo ? 'Session done! How do you feel?' : 'Quick check-in';
+  var subText   = isPostPomo ? 'Rate your energy after that session.'
+    : (win ? 'Good ' + win.label + '! How\'s your energy right now?' : 'How\'s your energy right now?');
+
+  var bg = document.createElement('div');
+  bg.id = 'energy-checkin-bg';
+  bg.innerHTML =
+    '<div id="energy-checkin">' +
+      '<div class="ec-title">' + titleText + '</div>' +
+      '<div class="ec-sub">' + subText + '</div>' +
+      '<div class="ec-btns">' +
+        '<button class="ec-btn low"  onclick="selectEnergy(\'low\')" ><span class="ec-emoji">😴</span><span class="ec-lbl">Low</span></button>' +
+        '<button class="ec-btn mid"  onclick="selectEnergy(\'mid\')" ><span class="ec-emoji">😐</span><span class="ec-lbl">Medium</span></button>' +
+        '<button class="ec-btn high" onclick="selectEnergy(\'high\')"><span class="ec-emoji">⚡</span><span class="ec-lbl">High</span></button>' +
+      '</div>' +
+      '<button class="ec-skip" onclick="dismissCheckin()">Skip for now</button>' +
+    '</div>';
+  document.body.appendChild(bg);
+}
+
+function dismissCheckin(){
+  var bg = document.getElementById('energy-checkin-bg');
+  if(bg) bg.remove();
+  if(_checkinWin){
+    var s = _getCheckinState();
+    s[_checkinWin.id] = true;
+    _saveCheckinState(s);
+  }
+  _checkinWin = null;
+}
+
+function selectEnergy(level){
+  var win = _checkinWin;
+  var isPostPomo = _checkinPostPomo;
+
+  if(win){
+    var s = _getCheckinState();
+    s[win.id] = true;
+    s.lastLevel = level;
+    s.lastTime = new Date().toISOString();
+    _saveCheckinState(s);
+  }
+  localStorage.setItem('mn_last_energy', JSON.stringify({ level: level, time: new Date().toISOString() }));
+
+  var btn = document.querySelector('.ec-btn.' + level);
+  if(btn) btn.classList.add('picked');
+
+  setTimeout(function(){
+    dismissCheckin();
+    _showEnergyResponseBubble(level, isPostPomo);
+  }, 350);
+}
+
+function _showEnergyResponseBubble(level, isPostPomo){
+  var dueCount  = (typeof getDueCards === 'function') ? getDueCards().length : 0;
+  var taskCount = (typeof reminders !== 'undefined') ? reminders.filter(function(r){ return !r.done; }).length : 0;
+  var c = (typeof CHARS !== 'undefined' && CHARS[currentChar]) ? CHARS[currentChar] : { name: 'Your coach', badge: '👋' };
+
+  // Per-coach expressive messages keyed by [coachId][level][isPostPomo]
+  var coachMsgs = {
+    zack: {
+      low: {
+        open:  'Ayy real talk — low energy days hit different, and that\'s okay fr 💙 But you\'re already HERE which is lowkey a massive W. Even 5 cards counts. Start tiny, build the momentum.' + (dueCount > 0 ? ' You\'ve got ' + dueCount + ' cards waiting — let\'s at least dent that.' : ''),
+        pomo:  'Bro you just finished a whole session on LOW energy?? That\'s actually unhinged in the best way 💪 No cap that takes way more discipline than doing it on a good day. Rest up properly, you\'ve earned it fr.'
+      },
+      mid: {
+        open:  'Mid energy? Ngl that\'s the IDEAL study state fr — not too wired, not crashing 🧠 Your brain is literally primed to retain right now. ' + (taskCount > 0 ? 'You\'ve got ' + taskCount + ' things on your plate — pick the one that\'s been living in your head rent-free and START.' : 'What are we locking in on today? Let\'s get it 🔥'),
+        pomo:  'Solid session bestie, real ones know medium energy sessions hit harder than hype ones 💪 ' + (dueCount > 0 ? dueCount + ' cards still due — one more quick pass and you\'re DONE done.' : 'Take a proper break, you\'ve actually earned it this time.')
+      },
+      high: {
+        open:  'YOOO high energy?? This is your villain arc moment fr, the universe is HANDING you a W today 🚀🔥 ' + (dueCount > 0 ? 'You\'ve got ' + dueCount + ' cards due — let\'s absolutely BODY them right now. No excuses, no delays. GO.' : 'Tell me what subject we\'re going hard on and I will personally hype you through every single card.'),
+        pomo:  'HIGH energy AFTER a session?! You\'re literally built different rn 🔥🔥 This is flow state — do NOT waste it. While you\'ve got this, let\'s push for round two. What\'s next?'
+      }
+    },
+    rex: {
+      low: {
+        open:  'Low energy is a condition, not an excuse. ' + (dueCount > 0 ? dueCount + ' cards are due.' : 'Work still exists.') + ' Do 10 minutes. Slow reps still build the habit. Start now.',
+        pomo:  'Session complete. Low energy noted — rest briefly, then assess what\'s next. ' + (dueCount > 0 ? dueCount + ' cards remain due. ' : '') + 'Consistency doesn\'t take days off.'
+      },
+      mid: {
+        open:  'Medium energy. Sufficient. ' + (taskCount > 0 ? taskCount + ' tasks pending — prioritise the hardest one. That\'s where your focus goes first.' : 'Identify your priority. Work the list.') + ' No warmup needed. Begin.',
+        pomo:  'Session done. Medium energy post-focus is expected — your brain spent real resources. ' + (dueCount > 0 ? dueCount + ' cards still due. One more pass.' : 'Take a timed break. 10 minutes. Then return.')
+      },
+      high: {
+        open:  'High energy. Good. ' + (dueCount > 0 ? 'You have ' + dueCount + ' cards due — clear them now while your focus is sharp.' : 'Use it. Pick your hardest subject and don\'t stop until you hit the wall.') + ' Don\'t waste this state on easy tasks.',
+        pomo:  'High energy after a session. Unusual. Use it. ' + (dueCount > 0 ? dueCount + ' cards still due — finish them.' : 'Identify the next block and go again.') + ' Flow states are rare. Don\'t walk away from one.'
+      }
+    },
+    priya: {
+      low: {
+        open:  'Oh, low energy today 🌿 That\'s completely okay — your body is telling you something and that\'s worth listening to. ' + (dueCount > 0 ? 'You have ' + dueCount + ' cards due, but even just a gentle 10-minute pass counts as real progress.' : 'Even just reading through one note today is enough.') + ' Be kind to yourself while you work 💛',
+        pomo:  'You finished that session even on low energy — I hope you know how much that says about you 🌸 That kind of quiet determination is so powerful. Please rest properly now, no guilt whatsoever. You showed up and that is always enough 💛'
+      },
+      mid: {
+        open:  'Medium energy is honestly such a peaceful place to study from 🌿 Not rushing, not crashing — just present. ' + (taskCount > 0 ? 'You have ' + taskCount + ' things to get through. Start with whichever one feels least heavy right now.' : 'What feels most manageable to start with today? We\'ll take it one step at a time 💛'),
+        pomo:  'A solid session 🌸 Medium energy after focusing is completely normal — your brain has been working hard and it deserves acknowledgement. ' + (dueCount > 0 ? 'There are still ' + dueCount + ' cards due when you\'re ready, no rush.' : 'Take a real break before the next one. You\'ve genuinely earned it 💛')
+      },
+      high: {
+        open:  'High energy — that\'s wonderful! 🌟 I love when the stars align like this for you. ' + (dueCount > 0 ? 'You have ' + dueCount + ' cards due and honestly right now is such a beautiful time to work through them.' : 'Tell me what you\'d love to focus on today — let\'s make the most of this feeling together 🌿'),
+        pomo:  'High energy after a session — your brain is genuinely thriving right now 🌿 If it feels right, this could be a lovely moment to keep going. But also — you know yourself best. What does your body say? 💛'
+      }
+    },
+    milo: {
+      low: {
+        open:  'Low energy? Your brain called in sick but forgot to tell the rest of you 😂 Listen, even legendary students have off days — Newton discovered gravity because he was too tired to move. ' + (dueCount > 0 ? 'You\'ve got ' + dueCount + ' cards due. Let\'s do them slowly, dramatically, like we\'re in a study montage in slow motion.' : 'We\'ll go gentle. Think of it as studying in power-saving mode 🔋'),
+        pomo:  'Wait — you just completed a whole Pomodoro on LOW ENERGY?! 😂 That\'s like running a marathon in flip flops. Objectively unhinged. Objectively impressive. Rest now, you absolute menace. You\'ve earned a dramatic collapse on the couch.'
+      },
+      mid: {
+        open:  'Medium energy — the Toyota Corolla of study moods 😂 Reliable, gets the job done, nobody writes songs about it but EVERYBODY secretly respects it. ' + (taskCount > 0 ? 'You\'ve got ' + taskCount + ' tasks. Let\'s tackle them before they start sending passive aggressive reminders.' : 'What are we studying? Choose wisely, I\'ve got a joke prepared for every subject 🎭'),
+        pomo:  'Solid session! Medium energy after focusing is basically your brain saying "I did the thing and I\'m mildly pleased about it" 😂 ' + (dueCount > 0 ? dueCount + ' cards still due — one more round and you\'ll have officially defeated procrastination. Mostly.' : 'Take a real break. Not a "I\'ll just check my phone for 2 minutes" break. A REAL one 😂')
+      },
+      high: {
+        open:  'HIGH ENERGY?! 🎉 THE STUDENT HAS AWAKENED. This is your final form. This is what the anime opening was building to 😂 ' + (dueCount > 0 ? 'You have ' + dueCount + ' cards due and honestly right now you could review them all AND explain them to a confused goldfish. LET\'S GO.' : 'Pick a subject — ANY subject — and let\'s absolutely demolish it. I\'ll bring the jokes, you bring the brainpower 🧠🔥'),
+        pomo:  'High energy AFTER a focus session?! 😂 Who ARE you?? Normal humans are tired, you\'re out here LEVELLING UP. This is flow state — scientifically proven to last exactly as long as you don\'t check social media. Stay in it. What\'s next?'
+      }
+    }
+  };
+
+  var coachKey = (typeof currentChar !== 'undefined' && coachMsgs[currentChar]) ? currentChar : 'zack';
+  var levelMsgs = coachMsgs[coachKey][level] || coachMsgs[coachKey]['mid'];
+  var msg = isPostPomo ? levelMsgs.pomo : levelMsgs.open;
+
+  // Show as an in-place bubble on whatever page the user is on
+  var old = document.getElementById('energy-response-bubble');
+  if(old) old.remove();
+
+  var wrap = document.createElement('div');
+  wrap.id = 'energy-response-bubble';
+  wrap.style.cssText = 'position:fixed;bottom:90px;left:12px;right:12px;z-index:9000;animation:ianIn .35s cubic-bezier(.34,1.3,.64,1);cursor:pointer;';
+  wrap.onclick = function(e){
+    if(e.target.closest('button')) return; // let X handle itself
+    var el = document.getElementById('energy-response-bubble');
+    if(el) el.remove();
+    if(typeof navTo === 'function') navTo('chat', null);
+    if(typeof setBN === 'function') setBN('chat');
+  };
+  wrap.innerHTML =
+    '<div style="background:var(--paper);border:1.5px solid var(--line);border-radius:16px;padding:1rem 1.1rem;box-shadow:0 8px 32px rgba(0,0,0,.18);display:flex;gap:.75rem;align-items:flex-start;">' +
+      '<div style="font-size:1.3rem;flex-shrink:0;margin-top:.05rem;">' + (c.badge || '👋') + '</div>' +
+      '<div style="flex:1;min-width:0;">' +
+        '<div style="font-size:.67rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.07em;margin-bottom:.3rem;">' + c.name + '</div>' +
+        '<div style="font-size:.88rem;color:var(--ink);line-height:1.5;">' + msg + '</div>' +
+        '<div style="font-size:.68rem;color:var(--muted);margin-top:.55rem;">Tap to continue in chat →</div>' +
+      '</div>' +
+      '<button onclick="document.getElementById(\'energy-response-bubble\').remove()" style="background:none;border:none;color:var(--muted);font-size:1.1rem;cursor:pointer;padding:.1rem .2rem;flex-shrink:0;">×</button>' +
+    '</div>';
+  document.body.appendChild(wrap);
+
+  // Auto-dismiss after 10s
+  setTimeout(function(){
+    var el = document.getElementById('energy-response-bubble');
+    if(el) el.remove();
+  }, 10000);
+}
 </script>
 </body>
 </html>
