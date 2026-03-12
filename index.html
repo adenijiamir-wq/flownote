@@ -3343,8 +3343,30 @@ function _clearAllUserData(){
     'fn_streak_date','fn_push_sub',
     'mn_age_verified','mn_email_cfg','mn_email_prefs',
     'mn_study_email_sent','mn_cd_check_date','mn_checkin_state',
-    'fn_feedback','fn_countdowns'
+    'fn_feedback','fn_countdowns',
+    // Avatar & appearance — clears old profile pic/emoji so new account is fresh
+    'fn_avatar','fn_avatar_img','fn_accent','fn_theme_pref',
+    // Permission flags, daily chat counter, reminder fired log
+    'fn_perm_mic_asked','fn_perm_notif_asked',
+    'fn_chat_count','fn_fired',
+    // Pomodoro, notification settings, energy check-in, minor flag
+    'fn_pomo_today','fn_notifs','mn_last_energy','mn_is_minor',
+    // Goal-seen banners (prefix cleared separately below)
   ].forEach(function(k){ localStorage.removeItem(k); });
+
+  // Remove per-coach chat history (keys like fn_chat_html_zack, fn_chat_hist_rex …)
+  // Also remove goal-seen banner flags (mn_goal_seen_<date>)
+  Object.keys(localStorage).forEach(function(k){
+    if(k.startsWith('fn_chat_html_') || k.startsWith('fn_chat_hist_') || k.startsWith('mn_goal_seen_')){
+      localStorage.removeItem(k);
+    }
+  });
+
+  // Reset runtime variables — these are module-level vars initialised at startup.
+  // Without resetting them here, switching accounts in the same session keeps stale values.
+  if(typeof currentAvatar !== 'undefined')   currentAvatar   = '🙂';
+  if(typeof currentAccent !== 'undefined')   currentAccent   = 'emerald';
+  if(typeof currentThemePref !== 'undefined') currentThemePref = 'system';
 }
 function signOut(){
   showConfirm('Sign out?','You can log back in anytime.',async function(){
@@ -3385,7 +3407,8 @@ async function deleteMyAccount(){
 
 function openPrivacyPolicy(){
   if(typeof closeFWModal==='function') closeFWModal();
-  var html = "<div class='fw-modal-bg' id='fw-modal-bg' onclick='if(event.target===this)closeFWModal()'>";
+  // z-index must beat the auth screen (z-index:9999) so the modal is visible before login too
+  var html = "<div class='fw-modal-bg' id='fw-modal-bg' style='z-index:10001' onclick='if(event.target===this)closeFWModal()'>";
   html += "<div class='fw-modal' style='max-height:88dvh;overflow-y:auto'>";
   html += "<div class='fw-modal-title'>🔒 Privacy Policy</div>";
   html += "<div style='font-size:.75rem;color:var(--muted);margin-bottom:1rem'>Last updated: March 2026</div>";
@@ -3427,6 +3450,7 @@ function validateEmail(e){return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e);}
 
 async function doSignUp(){
   authClearErrors();
+  if(!window._fbFns||!window._fbAuth){authError('signup-error','Still connecting to server — please wait a moment and try again.');return;}
   const email=document.getElementById('signup-email').value.trim();
   const pass=document.getElementById('signup-password').value;
   const confirm=document.getElementById('signup-confirm').value;
@@ -3455,6 +3479,7 @@ async function doSignUp(){
 
 async function doLogIn(){
   authClearErrors();
+  if(!window._fbFns||!window._fbAuth){authError('login-error','Still connecting to server — please wait a moment and try again.');return;}
   const email=document.getElementById('login-email').value.trim();
   const pass=document.getElementById('login-password').value;
   if(!email||!validateEmail(email)){authError('login-error','Please enter your email address.');return;}
@@ -3482,6 +3507,7 @@ async function doLogIn(){
 
 async function doGoogleSignIn(){
   authClearErrors();
+  if(!window._fbFns||!window._fbAuth||!window._fbGoogleProvider){authError('signup-error','Still connecting to server — please wait a moment and try again.');authError('login-error','Still connecting to server — please wait a moment and try again.');return;}
   try{
     window._fbUserReady = null; // prevent onAuthStateChanged race
     const cred = await window._fbFns.signInWithPopup(window._fbAuth, window._fbGoogleProvider);
@@ -3657,6 +3683,29 @@ window.addEventListener('DOMContentLoaded',()=>{
     new Date().toLocaleDateString('en-GB',{weekday:'long',day:'numeric',month:'long'});
 
   // Wait for Firebase auth to initialise
+  // Show a subtle "connecting…" state so buttons feel disabled before Firebase loads
+  (function(){
+    var _authBtns = ['signup-btn','login-btn'];
+    var _gBtns = document.querySelectorAll('.auth-google-btn');
+    _authBtns.forEach(function(id){var b=document.getElementById(id);if(b){b.disabled=true;b.style.opacity='.55';}});
+    _gBtns.forEach(function(b){b.disabled=true;b.style.opacity='.55';});
+    function _enableAuthBtns(){
+      _authBtns.forEach(function(id){var b=document.getElementById(id);if(b){b.disabled=false;b.style.opacity='';}});
+      _gBtns.forEach(function(b){b.disabled=false;b.style.opacity='';});
+    }
+    // Re-enable once Firebase signals it's ready (or after fallback timeout)
+    var _origReady = null;
+    Object.defineProperty(window,'_fbFns',{
+      configurable:true,
+      set:function(v){
+        Object.defineProperty(window,'_fbFns',{configurable:true,writable:true,value:v});
+        if(v) _enableAuthBtns();
+      }
+    });
+    // Fallback: always enable after 4s regardless
+    setTimeout(_enableAuthBtns, 4000);
+  })();
+
   window._fbUserReady = async (user) => {
     window._fbUserReady = null; // only fire once
     if(user){
@@ -9139,7 +9188,8 @@ function prefVal(key, def){
 (function _ejsInit(){
   function tryInit(){
     if(typeof emailjs !== "undefined"){
-      emailjs.init(EJSPK);
+      // v4 requires an options object, not a bare string
+      emailjs.init({ publicKey: EJSPK });
       console.log("Menmory: EmailJS initialised");
     } else {
       setTimeout(tryInit, 300);
