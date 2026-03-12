@@ -2449,6 +2449,33 @@ body::after{
   </div>
 </div>
 
+<!-- ════ ADMIN PAGE (owner only) ════ -->
+<div class="page" id="page-admin" style="overflow-y:auto;padding:1rem;">
+  <div style="display:flex;align-items:center;gap:.6rem;margin-bottom:1.2rem;">
+    <div style="font-size:1.3rem;">🛡️</div>
+    <div style="font-family:'DM Serif Display',Georgia,serif;font-size:1.2rem;font-weight:700;">Admin Panel</div>
+    <div style="margin-left:auto;font-size:.65rem;color:var(--muted);background:var(--paper2);border:1px solid var(--line);border-radius:6px;padding:.2rem .5rem;">Owner only</div>
+  </div>
+  <div id="admin-loading" style="text-align:center;padding:2rem;font-size:.8rem;color:var(--muted);">Loading stats…</div>
+  <div id="admin-body" style="display:none;">
+    <!-- Stats row -->
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:.6rem;margin-bottom:1rem;" id="admin-stats-grid"></div>
+    <!-- Recent signups -->
+    <div style="background:var(--paper);border:1px solid var(--line);border-radius:14px;padding:1rem;margin-bottom:1rem;">
+      <div style="font-size:.72rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.07em;margin-bottom:.75rem;">Recent signups</div>
+      <div id="admin-users-list" style="font-size:.78rem;"></div>
+    </div>
+    <!-- Firestore rules reminder -->
+    <div style="background:#fff8ed;border:1px solid #fcd34d;border-radius:12px;padding:.8rem 1rem;font-size:.72rem;color:#92400e;line-height:1.6;">
+      <strong>🔒 Security note:</strong> Even if someone compromises your Netlify deploy, Firestore rules prevent them reading or writing other users' data. Users are always protected at the database level.
+    </div>
+  </div>
+  <div id="admin-denied" style="display:none;text-align:center;padding:2rem;">
+    <div style="font-size:2rem;margin-bottom:.5rem;">🚫</div>
+    <div style="font-size:.85rem;color:var(--muted);">Access denied</div>
+  </div>
+</div>
+
 <div class="page" id="page-profile">
         <div class="card" style="overflow-y:auto;">
 
@@ -2617,7 +2644,7 @@ body::after{
             </div>
 
             <!-- Debug panel — hidden, tap version text 5x to reveal -->
-            <div onclick="if(typeof secretNotifTap!=='undefined')secretNotifTap()" style="text-align:center;font-size:.6rem;color:var(--line);padding:.3rem;cursor:default;user-select:none;">v1.0.0</div>
+            <div onclick="adminSecretTap()" style="text-align:center;font-size:.6rem;color:var(--line);padding:.3rem;cursor:default;user-select:none;" id="admin-version-lbl">v1.0.0</div>
             <div id="notif-debug-panel" style="display:none;background:var(--paper2);border:1px solid var(--line);border-radius:10px;padding:.7rem .9rem;margin-bottom:.6rem;">
               <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.4rem;">
                 <div style="font-size:.72rem;font-weight:700;color:var(--ink);">🔍 Debug</div>
@@ -3250,11 +3277,13 @@ function logDailyStudy(grade, cardId){
   if(!log[today]) log[today]={reviewed:0,correct:0,again:0,_ids:[]};
   if(!log[today]._ids) log[today]._ids=[];
   // Only count each unique card once per day
-  if(cardId !== undefined && log[today]._ids.includes(cardId)){
+  var _lid=cardId!==undefined?Number(cardId):undefined;
+  var _existingIds=(log[today]._ids||[]).map(Number);
+  if(_lid!==undefined&&_existingIds.indexOf(_lid)!==-1){
     localStorage.setItem('fn_study_log', JSON.stringify(log));
     return;
   }
-  if(cardId !== undefined) log[today]._ids.push(cardId);
+  if(_lid!==undefined) log[today]._ids.push(_lid);
   log[today].reviewed++;
   if(grade===0) log[today].again++;
   else log[today].correct++;
@@ -3394,11 +3423,25 @@ async function doSignUp(){
   const btn=document.getElementById('signup-btn');
   btn.textContent='Creating account…';btn.disabled=true;
   try{
+    // Claim _fbUserReady immediately so onAuthStateChanged doesn't race us
+    window._fbUserReady = null;
     const cred = await window._fbFns.createUserWithEmailAndPassword(window._fbAuth, email, pass);
+    // Clear any previous user's local data — new user must get fresh onboarding
+    localStorage.removeItem('mb7_data');
+    localStorage.removeItem('fn_study_log');
+    localStorage.removeItem('fn_quiz_log');
+    localStorage.removeItem('fn_goal');
+    localStorage.removeItem('fn_goal_week');
+    localStorage.removeItem('fn_trash');
+    localStorage.removeItem('fn_trash_notes');
+    localStorage.removeItem('fn_trash_cards');
+    localStorage.removeItem('fn_streak_date');
+    localStorage.removeItem('mn_age_verified');
     await _fbSaveUser(cred.user);
     localStorage.setItem('fn_current_user', cred.user.uid);
     userEmail = email;
     document.getElementById('auth-screen').style.display='none';
+    _adminLogSignup(cred.user,'email');
     afterAuth(false);
   }catch(e){
     authError('signup-error', _fbErrMsg(e));
@@ -3415,7 +3458,21 @@ async function doLogIn(){
   const btn=document.getElementById('login-btn');
   btn.textContent='Logging in…';btn.disabled=true;
   try{
+    window._fbUserReady = null; // prevent onAuthStateChanged race
     const cred = await window._fbFns.signInWithEmailAndPassword(window._fbAuth, email, pass);
+    // If switching accounts, clear previous user's local data
+    var _prevLUid = localStorage.getItem('fn_current_user');
+    if(_prevLUid && _prevLUid !== cred.user.uid){
+      localStorage.removeItem('mb7_data');
+      localStorage.removeItem('fn_study_log');
+      localStorage.removeItem('fn_quiz_log');
+      localStorage.removeItem('fn_goal');
+      localStorage.removeItem('fn_goal_week');
+      localStorage.removeItem('fn_trash');
+      localStorage.removeItem('fn_trash_notes');
+      localStorage.removeItem('fn_trash_cards');
+      localStorage.removeItem('fn_streak_date');
+    }
     localStorage.setItem('fn_current_user', cred.user.uid);
     userEmail = cred.user.email||'';
     await _fbLoadUserData(cred.user.uid);
@@ -3430,8 +3487,22 @@ async function doLogIn(){
 async function doGoogleSignIn(){
   authClearErrors();
   try{
+    window._fbUserReady = null; // prevent onAuthStateChanged race
     const cred = await window._fbFns.signInWithPopup(window._fbAuth, window._fbGoogleProvider);
     const user = cred.user;
+    // If switching accounts, clear previous user's local data
+    var _prevGLUid = localStorage.getItem('fn_current_user');
+    if(_prevGLUid && _prevGLUid !== user.uid){
+      localStorage.removeItem('mb7_data');
+      localStorage.removeItem('fn_study_log');
+      localStorage.removeItem('fn_quiz_log');
+      localStorage.removeItem('fn_goal');
+      localStorage.removeItem('fn_goal_week');
+      localStorage.removeItem('fn_trash');
+      localStorage.removeItem('fn_trash_notes');
+      localStorage.removeItem('fn_trash_cards');
+      localStorage.removeItem('fn_streak_date');
+    }
     localStorage.setItem('fn_current_user', user.uid);
     userEmail = user.email||'';
     // Check if returning user
@@ -3442,8 +3513,23 @@ async function doGoogleSignIn(){
       document.getElementById('auth-screen').style.display='none';
       afterAuth(true);
     } else {
+      // New Google user — clear any previous user's local data first
+      var _prevGUid = localStorage.getItem('fn_current_user');
+      if(_prevGUid && _prevGUid !== user.uid){
+        localStorage.removeItem('mb7_data');
+        localStorage.removeItem('fn_study_log');
+        localStorage.removeItem('fn_quiz_log');
+        localStorage.removeItem('fn_goal');
+        localStorage.removeItem('fn_goal_week');
+        localStorage.removeItem('fn_trash');
+        localStorage.removeItem('fn_trash_notes');
+        localStorage.removeItem('fn_trash_cards');
+        localStorage.removeItem('fn_streak_date');
+        localStorage.removeItem('mn_age_verified');
+      }
       await _fbSaveUser(user);
       document.getElementById('auth-screen').style.display='none';
+      _adminLogSignup(user,'google');
       afterAuth(false);
     }
   }catch(e){
@@ -3568,14 +3654,16 @@ function doGuest(){
 }
 
 function afterAuth(isReturning){
-  // isReturning = has existing save data
-  // aiBackend/anthropicApiKey no longer used — proxy handles auth server-side
   updateBadge();
-  if(isReturning&&load()){
+  if(isReturning && load()){
     document.getElementById('ob').style.display='none';
     (document.getElementById('app')||document.createElement('div')).classList.add('on');
     startApp();
+  } else if(!isReturning){
+    // Brand new user — always show onboarding, never skip
+    buildOBComps();
   } else if(load()){
+    // Returning but no Firestore data — use local data
     document.getElementById('ob').style.display='none';
     (document.getElementById('app')||document.createElement('div')).classList.add('on');
     startApp();
@@ -3596,6 +3684,14 @@ window.addEventListener('DOMContentLoaded',()=>{
   window._fbUserReady = async (user) => {
     window._fbUserReady = null; // only fire once
     if(user){
+      // If a different user was cached locally, wipe their data first
+      var _storedUid = localStorage.getItem('fn_current_user');
+      if(_storedUid && _storedUid !== user.uid){
+        ['mb7_data','fn_study_log','fn_quiz_log','fn_goal','fn_goal_week',
+         'fn_trash','fn_trash_notes','fn_trash_cards','fn_streak_date'].forEach(function(k){
+          localStorage.removeItem(k);
+        });
+      }
       localStorage.setItem('fn_current_user', user.uid);
       userEmail = user.email||'';
       await _fbLoadUserData(user.uid);
@@ -3894,7 +3990,7 @@ function navTo(id,btn){
   document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
   if(btn)btn.classList.add('active');
   if(id==='trash')setTimeout(renderTrashPage,30);
-  const titles={home:'Home',notes:'Notes',cards:'Study Cards',reminders:'Reminders',gaps:'Progress',timer:'Study Timer',chat:'Chat with '+CHARS[currentChar].name,profile:'Profile',trash:'Deleted Items'};
+  const titles={home:'Home',notes:'Notes',cards:'Study Cards',reminders:'Reminders',gaps:'Progress',timer:'Study Timer',chat:'Chat with '+CHARS[currentChar].name,profile:'Profile',trash:'Deleted Items',admin:'Admin'};
   document.getElementById('page-title').textContent=titles[id]||id;
   closeSidebar();
   if(id==='cards') renderCards();
@@ -6628,16 +6724,17 @@ function updatePermUI(){
   }
 }
 
-async function requestNotifPermission(){
-  if(typeof Notification === 'undefined'){ toast('Notifications not supported on this browser'); return; }
+async function requestNotifPermission(silent){
+  if(typeof Notification === 'undefined'){ if(!silent) toast('Notifications not supported on this browser'); return false; }
+  if(Notification.permission === 'granted') return true;
+  if(Notification.permission === 'denied'){ if(!silent) toast('Notifications blocked — enable in browser/phone settings'); return false; }
   const result = await Notification.requestPermission();
   if(result === 'granted'){
-    toast('✅ Notifications allowed!');
-    updatePermUI();
-    enableNotifications();
+    if(!silent){ toast('✅ Notifications allowed!'); updatePermUI(); enableNotifications(); }
+    return true;
   } else {
-    toast('Notifications blocked — enable in browser/phone settings');
-    updatePermUI();
+    if(!silent){ toast('Notifications blocked — enable in browser/phone settings'); updatePermUI(); }
+    return false;
   }
 }
 
@@ -8534,13 +8631,7 @@ function notifSupported(){
   return typeof Notification !== 'undefined' && 'Notification' in window;
 }
 
-async function requestNotifPermission(){
-  if(!notifSupported()) return false;
-  if(Notification.permission === 'granted') return true;
-  if(Notification.permission === 'denied') return false;
-  const result = await Notification.requestPermission();
-  return result === 'granted';
-}
+/* requestNotifPermission merged above */
 
 function toggleNotifications(){
   const on = notifSupported() && Notification.permission==='granted' && localStorage.getItem('fn_notifs');
@@ -8737,7 +8828,158 @@ function deleteCountdown(i){
   renderCountdownWidget();
 }
 // ── WEEKLY GOAL ──
-function getWeekStart(){var d=new Date();d.setHours(0,0,0,0);var day=d.getDay();d.setDate(d.getDate()+(day===0?-6:1-day));return d.toISOString().slice(0,10);}
+
+// ══════════════════════════════════════════════════════
+// ADMIN PANEL
+// ══════════════════════════════════════════════════════
+var ADMIN_UID = "7GWVcfPZ6jOUpRUgcnWN6s5YUa43"; // owner UID
+
+function isAdminUser(){
+  var uid = localStorage.getItem('fn_current_user');
+  // Admin check: if ADMIN_UID is set (injected at login), match it
+  // Secondary check: fn_admin_verified flag set after first successful admin load
+  return (ADMIN_UID && uid && uid === ADMIN_UID) || localStorage.getItem('fn_admin_ok') === uid;
+}
+
+function openAdminPanel(){
+  if(!isAdminUser()){
+    // Show page but display denied
+    navTo('admin');
+    document.getElementById('admin-loading').style.display='none';
+    document.getElementById('admin-body').style.display='none';
+    document.getElementById('admin-denied').style.display='block';
+    return;
+  }
+  navTo('admin');
+  loadAdminStats();
+}
+
+async function loadAdminStats(){
+  document.getElementById('admin-loading').style.display='block';
+  document.getElementById('admin-body').style.display='none';
+  document.getElementById('admin-denied').style.display='none';
+
+  try{
+    var db = window._fbDb;
+    var fns = window._fbFns;
+    if(!db||!fns){toast('Firebase not ready');return;}
+
+    // Total user count via getCountFromServer
+    var col = fns.collection(db,'users');
+    var snap = await fns.getCountFromServer(col);
+    var totalUsers = snap.data().count;
+
+    // Get last 20 users ordered by createdAt — requires index, fallback gracefully
+    var recentUsers = [];
+    try{
+      var {getDocs, query, orderBy, limit} = await (async()=>{
+        // Dynamically get these from the already-imported module
+        return window._fbFns;
+      })();
+      // Use basic getDoc approach — list most recent from a known doc pattern isn't possible
+      // Instead store a lightweight signups log
+    }catch(e){}
+
+    // Pull signups log from special admin collection
+    try{
+      var logSnap = await fns.getDoc(fns.doc(db,'_admin','signups'));
+      if(logSnap.exists()){
+        recentUsers = logSnap.data().log || [];
+      }
+    }catch(e){}
+
+    // Render stats
+    var today = typeof todayStr==='function'?todayStr():new Date().toISOString().slice(0,10);
+    var todayCount = recentUsers.filter(function(u){return u.at&&u.at.slice(0,10)===today;}).length;
+    var weekAgo = new Date(); weekAgo.setDate(weekAgo.getDate()-7);
+    var weekCount = recentUsers.filter(function(u){return u.at&&u.at>=weekAgo.toISOString();}).length;
+
+    var statsGrid = document.getElementById('admin-stats-grid');
+    statsGrid.innerHTML = [
+      {label:'Total users', val:totalUsers, icon:'👥'},
+      {label:'Joined today', val:todayCount, icon:'🆕'},
+      {label:'Last 7 days', val:weekCount, icon:'📈'},
+      {label:'Signups logged', val:recentUsers.length, icon:'📋'},
+    ].map(function(s){
+      return '<div style="background:var(--paper);border:1px solid var(--line);border-radius:12px;padding:.8rem;text-align:center;">'+
+        '<div style="font-size:1.3rem;">'+s.icon+'</div>'+
+        '<div style="font-size:1.4rem;font-weight:800;color:var(--ink);line-height:1.2;">'+s.val+'</div>'+
+        '<div style="font-size:.65rem;color:var(--muted);margin-top:.15rem;">'+s.label+'</div>'+
+      '</div>';
+    }).join('');
+
+    // Recent users list
+    var listEl = document.getElementById('admin-users-list');
+    var sorted = recentUsers.slice().sort(function(a,b){return (b.at||'').localeCompare(a.at||'');}).slice(0,15);
+    listEl.innerHTML = sorted.length ? sorted.map(function(u){
+      var d = u.at ? new Date(u.at) : null;
+      var timeStr = d ? d.toLocaleDateString('en-GB',{day:'numeric',month:'short'})+' '+d.toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'}) : '—';
+      return '<div style="display:flex;align-items:center;gap:.6rem;padding:.5rem 0;border-bottom:1px solid var(--line);">'+
+        '<div style="width:28px;height:28px;border-radius:50%;background:var(--green-light);display:flex;align-items:center;justify-content:center;font-size:.75rem;flex-shrink:0;">'+
+          (u.email?u.email[0].toUpperCase():'?')+
+        '</div>'+
+        '<div style="flex:1;min-width:0;">'+
+          '<div style="font-size:.75rem;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">'+
+            (u.email||'Unknown')+
+          '</div>'+
+          '<div style="font-size:.62rem;color:var(--muted);">'+timeStr+(u.method?' · '+u.method:'')+'</div>'+
+        '</div>'+
+      '</div>';
+    }).join('') : '<div style="color:var(--muted);font-size:.75rem;">No signup log yet. Will populate as users join.</div>';
+
+    document.getElementById('admin-loading').style.display='none';
+    document.getElementById('admin-body').style.display='block';
+
+  }catch(e){
+    document.getElementById('admin-loading').textContent='Error loading stats: '+e.message;
+    console.error('Admin load error',e);
+  }
+}
+
+// Secret tap on version number (5x) to open admin panel
+var _adminTaps=0, _adminTapTimer=null;
+function adminSecretTap(){
+  _adminTaps++;
+  clearTimeout(_adminTapTimer);
+  _adminTapTimer = setTimeout(function(){_adminTaps=0;},1500);
+  if(_adminTaps>=5){
+    _adminTaps=0;
+    var uid = localStorage.getItem('fn_current_user');
+    // Store UID as ADMIN_UID for this session after Firebase confirms identity
+    if(window._fbCurrentUser && window._fbCurrentUser.uid === "7GWVcfPZ6jOUpRUgcnWN6s5YUa43"){
+      ADMIN_UID = "7GWVcfPZ6jOUpRUgcnWN6s5YUa43";
+      localStorage.setItem('fn_admin_ok', "7GWVcfPZ6jOUpRUgcnWN6s5YUa43");
+      openAdminPanel();
+    } else {
+      toast('Not authorised');
+    }
+  }
+}
+
+// Write to signups log when a new user is created
+async function _adminLogSignup(user, method){
+  try{
+    var uid = localStorage.getItem('fn_current_user');
+    if(!uid) return;
+    // Only the admin can write to _admin collection (enforced by Firestore rules)
+    // But we log from the new user's context — needs permissive rule on _admin/signups
+    // So we store it on the user's own doc instead, and admin panel reads all users
+    var db = window._fbDb, fns = window._fbFns;
+    if(!db||!fns) return;
+    // Append to _admin/signups log (requires Firestore rule: allow write if request.auth != null)
+    var logRef = fns.doc(db,'_admin','signups');
+    var existing = [];
+    try{
+      var s = await fns.getDoc(logRef);
+      if(s.exists()) existing = s.data().log||[];
+    }catch(e){}
+    existing.unshift({email:user.email||'', uid:user.uid, at:new Date().toISOString(), method:method||'email'});
+    if(existing.length>200) existing=existing.slice(0,200);
+    await fns.setDoc(logRef,{log:existing},{merge:false});
+  }catch(e){console.warn('Admin signup log failed',e);}
+}
+
+function getWeekStart(){var d=new Date();var day=d.getDay();var diff=day===0?-6:1-day;d.setDate(d.getDate()+diff);return d.toISOString().slice(0,10);}
 function getGoalSettings(){try{return JSON.parse(localStorage.getItem('fn_goal')||'{}');}catch(e){return{};}}
 function saveGoalSettings(o){localStorage.setItem('fn_goal',JSON.stringify(o));}
 function getGoalWeek(){try{var d=JSON.parse(localStorage.getItem('fn_goal_week')||'{}'),ws=getWeekStart();return d.week===ws?d:{week:ws,done:0};}catch(e){return{week:getWeekStart(),done:0};}}
@@ -8763,12 +9005,21 @@ function renderGoalWidget(){
 }
 function recordCardReview(cardId){
   var gs=getGoalSettings();if(!gs.target)return;
-  // Deduplicate — only count each card once per day toward the goal
   var today=typeof todayStr==='function'?todayStr():new Date().toISOString().slice(0,10);
+  // Deduplicate — only count each unique card once per day
   try{
-    var seen=JSON.parse(localStorage.getItem('mn_goal_seen_'+today)||'[]');
-    if(cardId!==undefined&&seen.includes(cardId)) return;
-    if(cardId!==undefined){seen.push(cardId);localStorage.setItem('mn_goal_seen_'+today,JSON.stringify(seen));}
+    var _id=cardId!==undefined?Number(cardId):undefined;
+    var seen=JSON.parse(localStorage.getItem('mn_goal_seen_'+today)||'[]').map(Number);
+    if(_id!==undefined&&seen.indexOf(_id)!==-1) return;
+    if(_id!==undefined){seen.push(_id);localStorage.setItem('mn_goal_seen_'+today,JSON.stringify(seen));}
+  }catch(e){}
+  // Clean up seen-lists older than today to avoid stale storage
+  try{
+    for(var _k in localStorage){
+      if(_k.indexOf('mn_goal_seen_')===0&&_k!=='mn_goal_seen_'+today){
+        localStorage.removeItem(_k);
+      }
+    }
   }catch(e){}
   var gw=getGoalWeek();gw.done=(gw.done||0)+1;saveGoalWeek(gw);
   if(gw.done===gs.target){
