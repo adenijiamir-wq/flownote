@@ -1859,7 +1859,7 @@ body::after{
   <!-- Step 1: Name -->
   <!-- Step 0: Age gate (COPPA) -->
   <div class="ob-screen show" id="ob0">
-    <div class="ob-prog"><div class="ob-prog-dot on"></div><div class="ob-prog-dot"></div><div class="ob-prog-dot"></div><div class="ob-prog-dot"></div><div class="ob-prog-dot"></div><div class="ob-prog-dot"></div></div>
+    <div class="ob-prog"><div class="ob-prog-dot on"></div><div class="ob-prog-dot"></div><div class="ob-prog-dot"></div><div class="ob-prog-dot"></div><div class="ob-prog-dot"></div><div class="ob-prog-dot"></div><div class="ob-prog-dot"></div></div>
     <span class="ob-welcome-emoji">🎂</span>
     <div class="ob-h">Quick one —<br/><em>how old are you?</em></div>
     <div class="ob-sub">We ask to keep Menmory safe for everyone.</div>
@@ -1870,7 +1870,7 @@ body::after{
 
   <!-- Step 1: Name -->
   <div class="ob-screen" id="ob1">
-    <div class="ob-prog"><div class="ob-prog-dot done"></div><div class="ob-prog-dot on"></div><div class="ob-prog-dot"></div><div class="ob-prog-dot"></div><div class="ob-prog-dot"></div><div class="ob-prog-dot"></div></div>
+    <div class="ob-prog"><div class="ob-prog-dot done"></div><div class="ob-prog-dot on"></div><div class="ob-prog-dot"></div><div class="ob-prog-dot"></div><div class="ob-prog-dot"></div><div class="ob-prog-dot"></div><div class="ob-prog-dot"></div></div>
     <span class="ob-welcome-emoji">👋</span>
     <div class="ob-h">Welcome.<br/><em>What's your name?</em></div>
     <div class="ob-sub">Let's make this feel like it was built for you.</div>
@@ -1881,7 +1881,7 @@ body::after{
 
   <!-- Step 2: Subjects -->
   <div class="ob-screen" id="ob2">
-    <div class="ob-prog"><div class="ob-prog-dot done"></div><div class="ob-prog-dot done"></div><div class="ob-prog-dot on"></div><div class="ob-prog-dot"></div><div class="ob-prog-dot"></div><div class="ob-prog-dot"></div></div>
+    <div class="ob-prog"><div class="ob-prog-dot done"></div><div class="ob-prog-dot done"></div><div class="ob-prog-dot on"></div><div class="ob-prog-dot"></div><div class="ob-prog-dot"></div><div class="ob-prog-dot"></div><div class="ob-prog-dot"></div></div>
     <div class="ob-h">What are you<br/><em>studying?</em></div>
     <div class="ob-sub">Pick everything that applies — you can always change this later.</div>
     <div class="sub-grid" id="ob-sub-grid">
@@ -1908,7 +1908,7 @@ body::after{
 
   <!-- Step 3: Struggles -->
   <div class="ob-screen" id="ob3">
-    <div class="ob-prog"><div class="ob-prog-dot done"></div><div class="ob-prog-dot done"></div><div class="ob-prog-dot done"></div><div class="ob-prog-dot on"></div><div class="ob-prog-dot"></div><div class="ob-prog-dot"></div></div>
+    <div class="ob-prog"><div class="ob-prog-dot done"></div><div class="ob-prog-dot done"></div><div class="ob-prog-dot done"></div><div class="ob-prog-dot on"></div><div class="ob-prog-dot"></div><div class="ob-prog-dot"></div><div class="ob-prog-dot"></div></div>
     <div class="ob-h">What's been<br/><em>hardest?</em></div>
     <div class="ob-sub">Be honest — this helps your coach actually personalise their advice for you.</div>
     <div class="sg-grid">
@@ -1937,7 +1937,7 @@ body::after{
 
   <!-- Step 4: Coach -->
   <div class="ob-screen" id="ob4">
-    <div class="ob-prog"><div class="ob-prog-dot done"></div><div class="ob-prog-dot done"></div><div class="ob-prog-dot done"></div><div class="ob-prog-dot done"></div><div class="ob-prog-dot on"></div><div class="ob-prog-dot"></div></div>
+    <div class="ob-prog"><div class="ob-prog-dot done"></div><div class="ob-prog-dot done"></div><div class="ob-prog-dot done"></div><div class="ob-prog-dot done"></div><div class="ob-prog-dot on"></div><div class="ob-prog-dot"></div><div class="ob-prog-dot"></div></div>
     <div class="ob-h">Pick your<br/><em>coach.</em></div>
     <div class="ob-sub">They'll know your subjects, track your gaps, and check in on you. Switch anytime in Profile.</div>
     <div class="comp-grid" id="ob-comp-grid"></div>
@@ -1946,7 +1946,7 @@ body::after{
 
   <!-- Step 5: First reminder -->
   <div class="ob-screen" id="ob5">
-    <div class="ob-prog"><div class="ob-prog-dot done"></div><div class="ob-prog-dot done"></div><div class="ob-prog-dot done"></div><div class="ob-prog-dot done"></div><div class="ob-prog-dot done"></div><div class="ob-prog-dot on"></div></div>
+    <div class="ob-prog"><div class="ob-prog-dot done"></div><div class="ob-prog-dot done"></div><div class="ob-prog-dot done"></div><div class="ob-prog-dot done"></div><div class="ob-prog-dot done"></div><div class="ob-prog-dot on"></div><div class="ob-prog-dot"></div></div>
     <div class="ob-h">One last thing —<br/><em>set a reminder.</em></div>
     <div class="ob-sub">A single daily nudge goes a long way. You can add more inside the app.</div>
     <label class="ob-label">What's the reminder?</label>
@@ -1956,8 +1956,21 @@ body::after{
       <input class="ob-input" type="time" id="ob-r-time"/>
       <select class="ob-input" id="ob-r-ampm" style="max-width:85px;"><option>AM</option><option>PM</option></select>
     </div>
-    <button class="ob-btn" onclick="finishOB()">Take me in 🚀</button>
-    <button class="ob-ghost" onclick="finishOB()">Skip for now</button>
+    <button class="ob-btn" onclick="goOB(6)">Continue →</button>
+    <button class="ob-ghost" onclick="goOB(6)">Skip for now</button>
+  </div>
+
+  <!-- Step 6: Email setup -->
+  <div class="ob-screen" id="ob6">
+    <div class="ob-prog"><div class="ob-prog-dot done"></div><div class="ob-prog-dot done"></div><div class="ob-prog-dot done"></div><div class="ob-prog-dot done"></div><div class="ob-prog-dot done"></div><div class="ob-prog-dot done"></div><div class="ob-prog-dot on"></div></div>
+    <span class="ob-welcome-emoji">📧</span>
+    <div class="ob-h">Get reminded<br/><em>even when offline.</em></div>
+    <div class="ob-sub">Enter your email and Menmory will send reminders directly to your inbox — even when the app is closed.</div>
+    <label class="ob-label">Your email</label>
+    <input class="ob-input" id="ob-email" type="email" placeholder="you@example.com" autocomplete="email" onkeydown="if(event.key==='Enter')finishOBWithEmail()"/>
+    <div id="ob-email-err" style="color:#ef4444;font-size:.78rem;margin:-8px 0 8px;display:none;">Please enter a valid email address.</div>
+    <button class="ob-btn" onclick="finishOBWithEmail()">Let's go 🚀</button>
+    <button class="ob-ghost" onclick="finishOB()">Skip — I'll do this later</button>
   </div>
 
 </div>
@@ -2621,6 +2634,11 @@ body::after{
             <!-- Actions -->
             <div class="prof-section-label">Actions</div>
             <div style="display:flex;flex-direction:column;gap:.5rem;margin-bottom:1rem;">
+              <button onclick="openEmailNotifSettings()" style="background:var(--green-light);border:1.5px solid var(--green);color:var(--green);border-radius:10px;padding:.6rem 1rem;font-family:inherit;font-size:.82rem;font-weight:600;cursor:pointer;text-align:left;display:flex;align-items:center;gap:.6rem;">
+                <span style="font-size:1rem;flex-shrink:0;">📧</span>
+                Email Notifications
+                <span style="margin-left:auto;font-size:.75rem;opacity:.7;">▶</span>
+              </button>
               <button onclick="reportProblem()" style="background:none;border:1px solid var(--line);color:var(--ink);border-radius:10px;padding:.6rem 1rem;font-family:inherit;font-size:.82rem;font-weight:600;cursor:pointer;text-align:left;display:flex;align-items:center;gap:.6rem;">
                 <svg style="width:16px;height:16px;flex-shrink:0;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
                 Report a problem
@@ -3882,11 +3900,66 @@ function finishOB(){
   document.getElementById('ob').style.display='none';
   (document.getElementById('app')||document.createElement('div')).classList.add('on');
   save();
-  // Sync to Firestore immediately (don't rely on the 2s debounce alone —
-  // if the app closes before that fires, onboarded:true never reaches the cloud
-  // and the user gets onboarding again on their next login from another device)
   if(typeof fbSyncData === 'function') fbSyncData();
   startApp();
+}
+
+function finishOBWithEmail(){
+  const emailInput = document.getElementById('ob-email');
+  const emailErr = document.getElementById('ob-email-err');
+  const email = emailInput ? emailInput.value.trim() : '';
+  // Validate — must look like an email
+  if(email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){
+    emailErr.style.display='block';
+    emailInput.focus();
+    return;
+  }
+  emailErr.style.display='none';
+  // Save email if provided
+  if(email && typeof saveEmailAddr === 'function'){
+    saveEmailAddr(email);
+    // Mark email as set so nudge never shows
+    localStorage.setItem('mn_email_set','1');
+  }
+  finishOB();
+}
+
+// ── Email nudge system ──
+// Shows a persistent banner if user has no email set after 24h
+function _checkEmailNudge(){
+  if(localStorage.getItem('mn_email_set')) return; // already set
+  if(typeof getEmailAddr==='function' && getEmailAddr()){ localStorage.setItem('mn_email_set','1'); return; }
+  const firstSeen = localStorage.getItem('mn_nudge_first_seen');
+  const now = Date.now();
+  if(!firstSeen){ localStorage.setItem('mn_nudge_first_seen', String(now)); return; }
+  const hoursSince = (now - parseInt(firstSeen)) / 3600000;
+  // Show after 24h, then every 3 days until they set it
+  const lastShown = parseInt(localStorage.getItem('mn_nudge_last_shown')||'0');
+  const hoursSinceShown = (now - lastShown) / 3600000;
+  if(hoursSince < 24) return;
+  if(lastShown && hoursSinceShown < 72) return;
+  localStorage.setItem('mn_nudge_last_shown', String(now));
+  _showEmailNudge();
+}
+
+function _showEmailNudge(){
+  if(document.getElementById('email-nudge-bar')) return; // already showing
+  const bar = document.createElement('div');
+  bar.id = 'email-nudge-bar';
+  bar.style.cssText = 'position:fixed;bottom:72px;left:12px;right:12px;z-index:4000;background:#1a6b3c;color:#fff;border-radius:14px;padding:14px 16px;box-shadow:0 4px 20px rgba(0,0,0,.3);display:flex;align-items:center;gap:12px;animation:slideUp .35s cubic-bezier(.22,1,.36,1)';
+  bar.innerHTML = `
+    <span style="font-size:1.4rem;flex-shrink:0">📧</span>
+    <div style="flex:1;min-width:0">
+      <div style="font-weight:700;font-size:.88rem;margin-bottom:2px">Your reminders won't send!</div>
+      <div style="font-size:.75rem;opacity:.85">Add your email so Menmory can reach you even when the app is closed.</div>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:6px;flex-shrink:0">
+      <button onclick="openEmailNotifSettings();document.getElementById('email-nudge-bar').remove();" style="background:#fff;color:#1a6b3c;border:none;border-radius:8px;padding:6px 12px;font-weight:700;font-size:.78rem;cursor:pointer;font-family:inherit;white-space:nowrap">Add email</button>
+      <button onclick="document.getElementById('email-nudge-bar').remove();" style="background:rgba(255,255,255,.15);color:#fff;border:none;border-radius:8px;padding:4px 12px;font-size:.72rem;cursor:pointer;font-family:inherit;">Later</button>
+    </div>`;
+  document.body.appendChild(bar);
+  // Auto-dismiss after 12 seconds
+  setTimeout(()=>{ const b=document.getElementById('email-nudge-bar'); if(b) b.remove(); }, 12000);
 }
 
 // ══════════════════════════════════════════════════════
@@ -3926,6 +3999,8 @@ function startApp(){
   scheduleAllReminders();
   startNotifPoller();
   maybeShowCheckin(1500);
+  // Check if user has set email — nudge them if not
+  setTimeout(_checkEmailNudge, 4000);
   // Show permission prompts if not yet asked
   setTimeout(showStartupPermissions, 1500);
   // Subscribe to push if already permitted
@@ -9420,6 +9495,7 @@ window.saveEmailNotifSettings = function(){
   var email = (document.getElementById("en-email").value || "").trim();
   if(!email){ if(typeof toast === "function") toast("Enter your email address"); return; }
   saveEmailAddr(email);
+  localStorage.setItem('mn_email_set','1'); // dismiss nudge permanently
   saveEmailPrefs({
     studyReminder: document.getElementById("en-t-study").checked,
     countdowns: document.getElementById("en-t-cd").checked,
