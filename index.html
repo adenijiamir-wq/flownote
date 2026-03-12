@@ -3440,16 +3440,7 @@ async function doSignUp(){
     window._fbUserReady = null;
     const cred = await window._fbFns.createUserWithEmailAndPassword(window._fbAuth, email, pass);
     // Clear any previous user's local data — new user must get fresh onboarding
-    localStorage.removeItem('mb7_data');
-    localStorage.removeItem('fn_study_log');
-    localStorage.removeItem('fn_quiz_log');
-    localStorage.removeItem('fn_goal');
-    localStorage.removeItem('fn_goal_week');
-    localStorage.removeItem('fn_trash');
-    localStorage.removeItem('fn_trash_notes');
-    localStorage.removeItem('fn_trash_cards');
-    localStorage.removeItem('fn_streak_date');
-    localStorage.removeItem('mn_age_verified');
+    _clearAllUserData();
     await _fbSaveUser(cred.user);
     localStorage.setItem('fn_current_user', cred.user.uid);
     userEmail = email;
@@ -9331,12 +9322,31 @@ window.testNotifEmail = async function(){
   if(!email){ if(typeof toast === "function") toast("Enter your email first"); return; }
   saveEmailAddr(email);
   if(typeof toast === "function") toast("Sending test email...");
+  // Check EmailJS is loaded
+  if(typeof emailjs === "undefined"){
+    if(typeof toast === "function") toast("❌ EmailJS library not loaded — check your internet connection");
+    return;
+  }
   var body = "<p>Your Menmory email notifications are working!</p>"
     + "<p>You will now receive study reminders, countdown alerts, and streak warnings right in your inbox.</p>"
     + "<p style='background:#e8f4ed;border-radius:10px;padding:12px 16px;border-left:4px solid #1a6b3c'><strong>Keep studying consistently</strong> - spaced repetition only works when you show up!</p>";
-  var ok = await sendMenmoryEmail("Menmory notifications connected!", emailWrap("Test Successful!", "✅", body));
-  if(ok){ if(typeof toast === "function") toast("✅ Test email sent! Check your inbox."); }
-  else { if(typeof toast === "function") toast("❌ Failed - please check your Gmail service connection"); }
+  try{
+    var templateParams = {
+      to_email: email,
+      subject: "Menmory notifications connected!",
+      message: emailWrap("Test Successful!", "✅", body),
+      message_html: emailWrap("Test Successful!", "✅", body),
+      app_name: "Menmory"
+    };
+    var resp = await emailjs.send("service_iq92tte", "template_86xck16", templateParams);
+    console.log("EmailJS test resp:", resp);
+    if(typeof toast === "function") toast("✅ Test email sent! Check your inbox.");
+  } catch(e){
+    console.error("EmailJS test error:", e);
+    var msg = e && e.text ? e.text : (e && e.message ? e.message : JSON.stringify(e));
+    if(typeof toast === "function") toast("❌ EmailJS error: " + msg);
+
+  }
 };
 
 document.addEventListener("DOMContentLoaded", function(){
