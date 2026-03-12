@@ -3333,12 +3333,25 @@ function getMemoryGaps(){
 // ══════════════════════════════════════════════════════
 // AUTH — localStorage now, swap for Supabase later
 // ══════════════════════════════════════════════════════
+function _clearAllUserData(){
+  // Clear ALL user-specific keys so the next account gets a fresh state
+  [
+    'fn_current_user','mb7_data',
+    'fn_study_log','fn_quiz_log',
+    'fn_goal','fn_goal_week',
+    'fn_trash','fn_trash_notes','fn_trash_cards',
+    'fn_streak_date','fn_push_sub',
+    'mn_age_verified','mn_email_cfg','mn_email_prefs',
+    'mn_study_email_sent','mn_cd_check_date','mn_checkin_state',
+    'fn_feedback','fn_countdowns'
+  ].forEach(function(k){ localStorage.removeItem(k); });
+}
 function signOut(){
   showConfirm('Sign out?','You can log back in anytime.',async function(){
     if(window._fbAuth){
       try{ await window._fbFns.fbSignOut(window._fbAuth); }catch(e){}
     }
-    localStorage.removeItem('fn_current_user');
+    _clearAllUserData();
     location.reload();
   },'Sign out');
 }
@@ -3463,15 +3476,7 @@ async function doLogIn(){
     // If switching accounts, clear previous user's local data
     var _prevLUid = localStorage.getItem('fn_current_user');
     if(_prevLUid && _prevLUid !== cred.user.uid){
-      localStorage.removeItem('mb7_data');
-      localStorage.removeItem('fn_study_log');
-      localStorage.removeItem('fn_quiz_log');
-      localStorage.removeItem('fn_goal');
-      localStorage.removeItem('fn_goal_week');
-      localStorage.removeItem('fn_trash');
-      localStorage.removeItem('fn_trash_notes');
-      localStorage.removeItem('fn_trash_cards');
-      localStorage.removeItem('fn_streak_date');
+      _clearAllUserData();
     }
     localStorage.setItem('fn_current_user', cred.user.uid);
     userEmail = cred.user.email||'';
@@ -3493,15 +3498,7 @@ async function doGoogleSignIn(){
     // If switching accounts, clear previous user's local data
     var _prevGLUid = localStorage.getItem('fn_current_user');
     if(_prevGLUid && _prevGLUid !== user.uid){
-      localStorage.removeItem('mb7_data');
-      localStorage.removeItem('fn_study_log');
-      localStorage.removeItem('fn_quiz_log');
-      localStorage.removeItem('fn_goal');
-      localStorage.removeItem('fn_goal_week');
-      localStorage.removeItem('fn_trash');
-      localStorage.removeItem('fn_trash_notes');
-      localStorage.removeItem('fn_trash_cards');
-      localStorage.removeItem('fn_streak_date');
+      _clearAllUserData();
     }
     localStorage.setItem('fn_current_user', user.uid);
     userEmail = user.email||'';
@@ -3514,19 +3511,7 @@ async function doGoogleSignIn(){
       afterAuth(true);
     } else {
       // New Google user — clear any previous user's local data first
-      var _prevGUid = localStorage.getItem('fn_current_user');
-      if(_prevGUid && _prevGUid !== user.uid){
-        localStorage.removeItem('mb7_data');
-        localStorage.removeItem('fn_study_log');
-        localStorage.removeItem('fn_quiz_log');
-        localStorage.removeItem('fn_goal');
-        localStorage.removeItem('fn_goal_week');
-        localStorage.removeItem('fn_trash');
-        localStorage.removeItem('fn_trash_notes');
-        localStorage.removeItem('fn_trash_cards');
-        localStorage.removeItem('fn_streak_date');
-        localStorage.removeItem('mn_age_verified');
-      }
+      _clearAllUserData();
       await _fbSaveUser(user);
       document.getElementById('auth-screen').style.display='none';
       _adminLogSignup(user,'google');
@@ -3684,13 +3669,9 @@ window.addEventListener('DOMContentLoaded',()=>{
   window._fbUserReady = async (user) => {
     window._fbUserReady = null; // only fire once
     if(user){
-      // If a different user was cached locally, wipe their data first
       var _storedUid = localStorage.getItem('fn_current_user');
       if(_storedUid && _storedUid !== user.uid){
-        ['mb7_data','fn_study_log','fn_quiz_log','fn_goal','fn_goal_week',
-         'fn_trash','fn_trash_notes','fn_trash_cards','fn_streak_date'].forEach(function(k){
-          localStorage.removeItem(k);
-        });
+        _clearAllUserData();
       }
       localStorage.setItem('fn_current_user', user.uid);
       userEmail = user.email||'';
@@ -9181,14 +9162,17 @@ async function sendMenmoryEmail(subject, bodyHtml){
   var toEmail = getEmailAddr();
   if(!toEmail){ console.warn("Menmory email: no address saved"); return false; }
   console.log("Menmory: sending email to", toEmail, "| subject:", subject);
+  // Template params — field names must match your EmailJS template variables exactly
+  var templateParams = {
+    to_email: toEmail,
+    subject: subject,
+    message: bodyHtml,        // EmailJS default template uses {{message}}
+    message_html: bodyHtml,   // kept as fallback in case template uses {{message_html}}
+    app_name: "Menmory"
+  };
   try{
     if(typeof emailjs !== "undefined"){
-      var resp = await emailjs.send(EJSVC, EJSTPL, {
-        to_email: toEmail,
-        subject: subject,
-        message_html: bodyHtml,
-        app_name: "Menmory"
-      });
+      var resp = await emailjs.send(EJSVC, EJSTPL, templateParams);
       console.log("Menmory: EmailJS response", resp);
       return true;
     }
@@ -9200,13 +9184,13 @@ async function sendMenmoryEmail(subject, bodyHtml){
         service_id: EJSVC,
         template_id: EJSTPL,
         user_id: EJSPK,
-        template_params: {
-          to_email: toEmail,
-          subject: subject,
-          message_html: bodyHtml
-        }
+        template_params: templateParams
       })
     });
+    if(!r.ok){
+      var errText = await r.text();
+      console.warn("EmailJS REST error:", r.status, errText);
+    }
     return r.ok;
   } catch(e){
     console.warn("EmailJS send error:", e);
