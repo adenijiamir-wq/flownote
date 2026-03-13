@@ -1,11 +1,14 @@
 // netlify/functions/reminder-check.js
 // Runs every minute via Netlify Scheduled Functions.
-// Reads all users from Firestore, checks for due reminders, sends emails via Resend.
+// Handles: task reminders (1 day / 1 hour / 5 min / at-time)
+//          countdown alerts (7d / 3d / 1d / day-of)
+//          morning digest (8am)
 
 const { initializeApp, cert, getApps } = require("firebase-admin/app");
 const { getFirestore } = require("firebase-admin/firestore");
 
-// ── Init Firebase Admin (only once across warm invocations) ──
+const APP_URL = "https://menmory.netlify.app";
+
 function getDb() {
   if (!getApps().length) {
     const sa = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT);
@@ -14,29 +17,21 @@ function getDb() {
   return getFirestore();
 }
 
-// ── Email via Resend ──
 async function sendEmail(to, subject, html) {
-  const r = await fetch("https://api.resend.com/emails", {
+  const r = await fetch("https://api.brevo.com/v3/smtp/email", {
     method: "POST",
-    headers: {
-      "Authorization": `Bearer ${process.env.RESEND_API_KEY}`,
-      "Content-Type": "application/json"
-    },
+    headers: { "api-key": process.env.BREVO_API_KEY, "Content-Type": "application/json" },
     body: JSON.stringify({
-      from: "Menmory <onboarding@resend.dev>",
-      to: [to],
+      sender: { name: "Menmory", email: "relay.your.problem@gmail.com" },
+      to: [{ email: to }],
       subject,
-      html
+      htmlContent: html
     })
   });
-  if (!r.ok) {
-    const err = await r.text();
-    throw new Error(`Resend error ${r.status}: ${err}`);
-  }
-  return await r.json();
+  if (!r.ok) throw new Error(`Brevo ${r.status}: ${await r.text()}`);
+  return r.json();
 }
 
-// ── HTML email wrapper (matches the app's style) ──
 function emailWrap(title, emoji, body) {
   return `<div style="font-family:system-ui,sans-serif;max-width:520px;margin:0 auto;background:#faf9f6;border-radius:16px;overflow:hidden;border:1px solid #e2dfd8">
     <div style="background:#1a6b3c;padding:24px 28px;text-align:center">
@@ -48,21 +43,20 @@ function emailWrap(title, emoji, body) {
   </div>`;
 }
 
-// ── Time helpers ──
-function todayStr() {
-  return new Date().toISOString().slice(0, 10);
+function openBtn() {
+  return `<p style="margin-top:20px"><a href="${APP_URL}" style="background:#1a6b3c;color:#fff;padding:12px 24px;border-radius:10px;text-decoration:none;font-weight:700;display:inline-block">Open Menmory</a></p>`;
 }
 
-// Convert "2:45 PM" / "14:45" → total minutes since midnight
+function todayStr(d) { return (d || new Date()).toISOString().slice(0, 10); }
+
 function timeToMinutes(raw) {
   if (!raw) return -1;
   raw = raw.trim();
   const ampm = raw.match(/(\d+):(\d+)\s*(AM|PM)/i);
   if (ampm) {
     let h = parseInt(ampm[1]), m = parseInt(ampm[2]);
-    const period = ampm[3].toUpperCase();
-    if (period === "AM" && h === 12) h = 0;
-    if (period === "PM" && h !== 12) h += 12;
+    if (ampm[3].toUpperCase() === "AM" && h === 12) h = 0;
+    if (ampm[3].toUpperCase() === "PM" && h !== 12) h += 12;
     return h * 60 + m;
   }
   const h24 = raw.match(/^(\d+):(\d+)$/);
@@ -70,19 +64,19 @@ function timeToMinutes(raw) {
   return -1;
 }
 
-// ── Main handler ──
-exports.handler = async function() {
-  const APP_URL = "https://menmory.netlify.app";
+function daysUntil(dateStr) {
+  const today = new Date(); today.setHours(0, 0, 0, 0);
+  return Math.round((new Date(dateStr + "T00:00:00") - today) / 86400000);
+}
 
+exports.handler = async function () {
   try {
     const db = getDb();
     const now = new Date();
-    const today = todayStr();
+    const today = todayStr(now);
     const nowMin = now.getHours() * 60 + now.getMinutes();
 
-    // Get all users who have a notifEmail set
     const usersSnap = await db.collection("users").where("notifEmail", "!=", "").get();
-
     let sent = 0, checked = 0;
 
     for (const userDoc of usersSnap.docs) {
@@ -90,129 +84,158 @@ exports.handler = async function() {
       const data = userDoc.data();
       const email = data.notifEmail;
       const prefs = data.notifPrefs || {};
-      const userName = data.displayName || "there";
-
       if (!email) continue;
 
-      // Parse appData (stored as JSON string)
       let appData = {};
       try { appData = typeof data.appData === "string" ? JSON.parse(data.appData) : (data.appData || {}); }
       catch { continue; }
 
       const reminders = appData.reminders || [];
-      const name = appData.userName || userName;
+      const name = appData.userName || data.displayName || "there";
       checked++;
 
-      // ── Reminder emails ──
-      if (prefs.studyReminder !== false) {
-        // Track which reminders we've emailed today — stored in Firestore
-        const firedRef = db.collection("emailFired").doc(uid);
-        const firedSnap = await firedRef.get();
-        const firedToday = (firedSnap.exists && firedSnap.data()[today]) ? firedSnap.data()[today] : {};
-        let firedChanged = false;
+      const firedRef = db.collection("emailFired").doc(uid);
+      const firedSnap = await firedRef.get();
+      const firedAll = firedSnap.exists ? firedSnap.data() : {};
+      const firedToday = firedAll[today] || {};
+      let firedChanged = false;
 
+      async function tryFire(key, subject, html) {
+        if (firedToday[key]) return;
+        firedToday[key] = true;
+        firedChanged = true;
+        try {
+          await sendEmail(email, subject, html);
+          sent++;
+          console.log(`[${uid}] ${key}`);
+        } catch (e) {
+          console.error(`[${uid}] FAIL ${key}:`, e.message);
+        }
+      }
+
+      // ── 1. TASK REMINDERS ──
+      if (prefs.taskReminder !== false) {
         for (const r of reminders) {
           if (r.done) continue;
           const raw = r.time || r.startTime || "";
           if (!raw) continue;
-
-          // Only fire for today / everyday / everyweek tasks
-          const isToday = r.date === today || r.date === "everyday" || r.date === "everyweek";
-          if (!isToday) continue;
-
           const rMin = timeToMinutes(raw);
           if (rMin < 0) continue;
+          const em = r.emoji || "🔔";
+          const isToday = r.date === today || r.date === "everyday" || r.date === "everyweek";
+          const isFuture = !isToday && r.date > today && r.date !== "everyday" && r.date !== "everyweek";
+          const id = String(r.id);
 
-          // Fire if within the current minute (±1 min tolerance)
-          const diff = nowMin - rMin;
-          if (diff < 0 || diff > 1) continue;
-
-          const key = "r" + r.id;
-          if (firedToday[key]) continue; // already sent today
-
-          firedToday[key] = true;
-          firedChanged = true;
-
-          const reminderHtml = emailWrap(
-            "Reminder",
-            r.emoji || "🔔",
-            `<p>Hey <strong>${name}</strong>!</p>
-             <p>Your reminder just went off:</p>
-             <div style="background:#e8f4ed;border-radius:12px;padding:16px 20px;margin:16px 0;border-left:4px solid #1a6b3c">
-               <div style="font-size:1.3rem;margin-bottom:6px">${r.emoji || "🔔"}</div>
-               <strong style="font-size:1rem">${r.text}</strong><br>
-               <span style="color:#1a6b3c;font-weight:600;font-size:.85rem">${raw}</span>
-             </div>
-             <p style="margin-top:20px">
-               <a href="${APP_URL}" style="background:#1a6b3c;color:#fff;padding:12px 24px;border-radius:10px;text-decoration:none;font-weight:700;display:inline-block">Open Menmory</a>
-             </p>`
-          );
-
-          try {
-            await sendEmail(email, `${r.emoji || "🔔"} Reminder: ${r.text}`, reminderHtml);
-            sent++;
-            console.log(`Sent reminder email to ${uid} for "${r.text}"`);
-          } catch (e) {
-            console.error(`Failed to send reminder to ${uid}:`, e.message);
+          if (isToday) {
+            // 1 hour before
+            if (rMin - 60 - nowMin >= 0 && rMin - 60 - nowMin <= 1) {
+              await tryFire(`r${id}_1h`, `⏰ In 1 hour: ${r.text}`,
+                emailWrap("1 Hour Away", em,
+                  `<p>Hey <strong>${name}</strong>! Heads up — this reminder fires in <strong>1 hour</strong>:</p>
+                   <div style="background:#e8f4ed;border-radius:12px;padding:16px 20px;margin:16px 0;border-left:4px solid #1a6b3c">
+                     <div style="font-size:1.3rem">${em}</div><strong>${r.text}</strong><br>
+                     <span style="color:#1a6b3c;font-weight:600;font-size:.85rem">⏰ ${raw}</span>
+                   </div>${openBtn()}`));
+            }
+            // 5 min before
+            if (rMin - 5 - nowMin >= 0 && rMin - 5 - nowMin <= 1) {
+              await tryFire(`r${id}_5m`, `🔔 In 5 minutes: ${r.text}`,
+                emailWrap("5 Minutes Away", em,
+                  `<p>Hey <strong>${name}</strong>! This reminder fires in <strong>5 minutes</strong>:</p>
+                   <div style="background:#fff3cd;border-radius:12px;padding:16px 20px;margin:16px 0;border-left:4px solid #f59e0b">
+                     <div style="font-size:1.3rem">${em}</div><strong>${r.text}</strong><br>
+                     <span style="color:#b45309;font-weight:600;font-size:.85rem">⏰ ${raw}</span>
+                   </div>${openBtn()}`));
+            }
+            // At time
+            if (nowMin - rMin >= 0 && nowMin - rMin <= 1) {
+              await tryFire(`r${id}_at`, `${em} Reminder: ${r.text}`,
+                emailWrap("Reminder", em,
+                  `<p>Hey <strong>${name}</strong>! Your reminder just fired:</p>
+                   <div style="background:#e8f4ed;border-radius:12px;padding:16px 20px;margin:16px 0;border-left:4px solid #1a6b3c">
+                     <div style="font-size:1.3rem">${em}</div><strong>${r.text}</strong><br>
+                     <span style="color:#1a6b3c;font-weight:600;font-size:.85rem">⏰ ${raw}</span>
+                   </div>${openBtn()}`));
+            }
           }
-        }
 
-        if (firedChanged) {
-          await firedRef.set({ [today]: firedToday }, { merge: true });
+          // Future task: 1 day before (sent at 8am)
+          if (isFuture && daysUntil(r.date) === 1 && nowMin >= 480 && nowMin <= 481) {
+            await tryFire(`r${id}_1d`, `📅 Tomorrow: ${r.text}`,
+              emailWrap("Due Tomorrow", "📅",
+                `<p>Hey <strong>${name}</strong>! This task is due <strong>tomorrow</strong>:</p>
+                 <div style="background:#e8f4ed;border-radius:12px;padding:16px 20px;margin:16px 0;border-left:4px solid #1a6b3c">
+                   <div style="font-size:1.3rem">${em}</div><strong>${r.text}</strong><br>
+                   <span style="color:#1a6b3c;font-weight:600;font-size:.85rem">⏰ ${raw}</span>
+                 </div>${openBtn()}`));
+          }
         }
       }
 
-      // ── Morning digest at exactly 8:00am ──
-      if (prefs.digest !== false && nowMin >= 480 && nowMin <= 481) {
-        const digestRef = db.collection("emailFired").doc(uid);
-        const digestSnap = await digestRef.get();
-        const digestFired = digestSnap.exists ? (digestSnap.data()["digest_" + today] || false) : false;
+      // ── 2. COUNTDOWN ALERTS (at 8am) ──
+      if (prefs.countdowns !== false && nowMin >= 480 && nowMin <= 481) {
+        let countdowns = [];
+        try {
+          const raw = data.countdowns;
+          if (raw) countdowns = typeof raw === "string" ? JSON.parse(raw) : raw;
+        } catch {}
 
-        if (!digestFired) {
+        for (const cd of countdowns) {
+          if (!cd.date || !cd.title) continue;
+          const days = daysUntil(cd.date);
+          if (![0, 1, 3, 7].includes(days)) continue;
+          const cdKey = `cd_${cd.id || cd.title}_${days}d`;
+          const urgency = days === 0 ? "TODAY 🚨" : days === 1 ? "tomorrow" : `in ${days} days`;
+          const subj = days === 0 ? `🚨 Today: ${cd.title}` : days === 1 ? `📅 Tomorrow: ${cd.title}` : `⏳ ${cd.title} is in ${days} days`;
+
+          await tryFire(cdKey, subj,
+            emailWrap("Countdown Alert", "⏳",
+              `<p>Hey <strong>${name}</strong>! Your countdown is <strong>${urgency}</strong>:</p>
+               <div style="background:#e8f4ed;border-radius:12px;padding:20px 24px;margin:16px 0;border-left:4px solid #1a6b3c;text-align:center">
+                 <div style="font-size:2.5rem;font-weight:900;color:#1a6b3c">${days === 0 ? "🎯" : days}</div>
+                 ${days !== 0 ? `<div style="font-size:.8rem;color:#666">days left</div>` : ""}
+                 <div style="font-size:1.1rem;font-weight:700;margin-top:8px">${cd.title}</div>
+               </div>
+               <p>${days === 0 ? "This is it — you've got this! 💪" : "Make sure you're prepared and ready to go!"}</p>
+               ${openBtn()}`));
+        }
+      }
+
+      // ── 3. MORNING DIGEST (at 8am) ──
+      if (prefs.digest !== false && nowMin >= 480 && nowMin <= 481) {
+        const digestKey = `digest_${today}`;
+        if (!firedAll[digestKey]) {
           const todayTasks = reminders.filter(r =>
             !r.done && (r.date === today || r.date === "everyday" || r.date === "everyweek")
           );
-
           if (todayTasks.length > 0) {
             const rows = todayTasks.map(r =>
               `<tr>
                 <td style="padding:8px 12px;font-size:.9rem">${r.emoji || "🔔"} ${r.text}</td>
-                <td style="padding:8px 12px;font-size:.85rem;color:#1a6b3c;font-weight:600;white-space:nowrap">${r.time || r.startTime || ""}</td>
-              </tr>`
-            ).join("");
+                <td style="padding:8px 12px;font-size:.85rem;color:#1a6b3c;font-weight:600;white-space:nowrap">${r.time || r.startTime || "–"}</td>
+              </tr>`).join("");
 
-            const digestHtml = emailWrap(
-              "Today's Tasks",
-              "☀️",
-              `<p>Hey <strong>${name}</strong>! Here's what's on your plate today:</p>
-               <table style="width:100%;border-collapse:collapse;margin:12px 0;background:#f9f9f9;border-radius:10px;overflow:hidden">
-                 <tr style="background:#1a6b3c;color:#fff">
-                   <th style="padding:8px 12px;text-align:left;font-size:.8rem">TASK</th>
-                   <th style="padding:8px 12px;text-align:left;font-size:.8rem">TIME</th>
-                 </tr>
-                 ${rows}
-               </table>
-               <p style="margin-top:20px">
-                 <a href="${APP_URL}" style="background:#1a6b3c;color:#fff;padding:12px 24px;border-radius:10px;text-decoration:none;font-weight:700;display:inline-block">Open Menmory</a>
-               </p>`
-            );
-
-            try {
-              await sendEmail(email, "Menmory: Your tasks for today ☀️", digestHtml);
-              sent++;
-              await digestRef.set({ ["digest_" + today]: true }, { merge: true });
-              console.log(`Sent morning digest to ${uid}`);
-            } catch (e) {
-              console.error(`Failed to send digest to ${uid}:`, e.message);
-            }
+            await tryFire(`digest_${today}`, "Menmory: Your tasks for today ☀️",
+              emailWrap("Today's Tasks", "☀️",
+                `<p>Hey <strong>${name}</strong>! Here's what's on your plate today:</p>
+                 <table style="width:100%;border-collapse:collapse;margin:12px 0;background:#f9f9f9;border-radius:10px;overflow:hidden">
+                   <tr style="background:#1a6b3c;color:#fff">
+                     <th style="padding:8px 12px;text-align:left;font-size:.8rem">TASK</th>
+                     <th style="padding:8px 12px;text-align:left;font-size:.8rem">TIME</th>
+                   </tr>${rows}
+                 </table>${openBtn()}`));
           }
         }
+      }
+
+      if (firedChanged) {
+        firedAll[today] = firedToday;
+        await firedRef.set(firedAll, { merge: true });
       }
     }
 
     console.log(`reminder-check: checked=${checked} sent=${sent}`);
     return { statusCode: 200, body: JSON.stringify({ checked, sent }) };
-
   } catch (e) {
     console.error("reminder-check fatal:", e);
     return { statusCode: 500, body: e.message };
