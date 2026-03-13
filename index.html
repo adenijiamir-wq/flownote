@@ -3925,41 +3925,70 @@ function finishOBWithEmail(){
 }
 
 // ── Email nudge system ──
-// Shows a persistent banner if user has no email set after 24h
+// Shows a modal if user has no email set after 1 hour, returns every day
 function _checkEmailNudge(){
-  if(localStorage.getItem('mn_email_set')) return; // already set
+  if(localStorage.getItem('mn_email_set')) return;
   if(typeof getEmailAddr==='function' && getEmailAddr()){ localStorage.setItem('mn_email_set','1'); return; }
   const firstSeen = localStorage.getItem('mn_nudge_first_seen');
   const now = Date.now();
   if(!firstSeen){ localStorage.setItem('mn_nudge_first_seen', String(now)); return; }
   const hoursSince = (now - parseInt(firstSeen)) / 3600000;
-  // Show after 24h, then every 3 days until they set it
-  const lastShown = parseInt(localStorage.getItem('mn_nudge_last_shown')||'0');
-  const hoursSinceShown = (now - lastShown) / 3600000;
-  if(hoursSince < 24) return;
-  if(lastShown && hoursSinceShown < 72) return;
-  localStorage.setItem('mn_nudge_last_shown', String(now));
+  if(hoursSince < 1) return; // wait 1 hour before first nudge
+  // Show once per app session (track by session key)
+  const sessionKey = 'mn_nudge_session_' + new Date().toDateString();
+  if(localStorage.getItem(sessionKey)) return;
+  localStorage.setItem(sessionKey, '1');
   _showEmailNudge();
 }
 
 function _showEmailNudge(){
-  if(document.getElementById('email-nudge-bar')) return; // already showing
-  const bar = document.createElement('div');
-  bar.id = 'email-nudge-bar';
-  bar.style.cssText = 'position:fixed;bottom:72px;left:12px;right:12px;z-index:4000;background:#1a6b3c;color:#fff;border-radius:14px;padding:14px 16px;box-shadow:0 4px 20px rgba(0,0,0,.3);display:flex;align-items:center;gap:12px;animation:slideUp .35s cubic-bezier(.22,1,.36,1)';
-  bar.innerHTML = `
-    <span style="font-size:1.4rem;flex-shrink:0">📧</span>
-    <div style="flex:1;min-width:0">
-      <div style="font-weight:700;font-size:.88rem;margin-bottom:2px">Your reminders won't send!</div>
-      <div style="font-size:.75rem;opacity:.85">Add your email so Menmory can reach you even when the app is closed.</div>
-    </div>
-    <div style="display:flex;flex-direction:column;gap:6px;flex-shrink:0">
-      <button onclick="openEmailNotifSettings();document.getElementById('email-nudge-bar').remove();" style="background:#fff;color:#1a6b3c;border:none;border-radius:8px;padding:6px 12px;font-weight:700;font-size:.78rem;cursor:pointer;font-family:inherit;white-space:nowrap">Add email</button>
-      <button onclick="document.getElementById('email-nudge-bar').remove();" style="background:rgba(255,255,255,.15);color:#fff;border:none;border-radius:8px;padding:4px 12px;font-size:.72rem;cursor:pointer;font-family:inherit;">Later</button>
+  if(document.getElementById('email-nudge-modal')) return;
+  const overlay = document.createElement('div');
+  overlay.id = 'email-nudge-modal';
+  overlay.style.cssText = 'position:fixed;inset:0;z-index:9000;background:rgba(0,0,0,.6);display:flex;align-items:flex-end;justify-content:center;animation:fadeIn .2s ease';
+  overlay.innerHTML = `
+    <div style="background:var(--paper,#faf9f6);border-radius:20px 20px 0 0;padding:28px 24px 36px;width:100%;max-width:520px;box-shadow:0 -8px 40px rgba(0,0,0,.25)">
+      <div style="text-align:center;margin-bottom:16px">
+        <div style="font-size:2.4rem;margin-bottom:8px">📧</div>
+        <div style="font-weight:800;font-size:1.1rem;color:var(--ink,#0f0f0f);margin-bottom:6px">Your reminders won't send!</div>
+        <div style="font-size:.85rem;color:var(--muted,#6b6b6b);line-height:1.5">Without your email, Menmory can't reach you when the app is closed. You'll miss your own reminders.</div>
+      </div>
+      <input id="nudge-email-input" type="email" placeholder="Enter your email address" autocomplete="email"
+        style="width:100%;box-sizing:border-box;padding:14px 16px;border:2px solid var(--green,#1a6b3c);border-radius:12px;font-size:.95rem;font-family:inherit;background:var(--paper2,#f2f0eb);color:var(--ink,#0f0f0f);margin-bottom:8px;outline:none"/>
+      <div id="nudge-email-err" style="color:#ef4444;font-size:.78rem;margin-bottom:8px;display:none">Please enter a valid email address.</div>
+      <button onclick="_nudgeSaveEmail()" style="width:100%;background:#1a6b3c;color:#fff;border:none;border-radius:12px;padding:14px;font-size:.95rem;font-weight:700;cursor:pointer;font-family:inherit;margin-bottom:10px">
+        Save & get reminders 🔔
+      </button>
+      <button onclick="_nudgeDismiss()" style="width:100%;background:none;border:none;color:var(--muted,#6b6b6b);font-size:.8rem;cursor:pointer;font-family:inherit;padding:6px">
+        Remind me later
+      </button>
     </div>`;
-  document.body.appendChild(bar);
-  // Auto-dismiss after 12 seconds
-  setTimeout(()=>{ const b=document.getElementById('email-nudge-bar'); if(b) b.remove(); }, 12000);
+  document.body.appendChild(overlay);
+  // Focus the input after animation
+  setTimeout(()=>{ const inp=document.getElementById('nudge-email-input'); if(inp) inp.focus(); }, 300);
+}
+
+function _nudgeSaveEmail(){
+  const inp = document.getElementById('nudge-email-input');
+  const err = document.getElementById('nudge-email-err');
+  const email = inp ? inp.value.trim() : '';
+  if(!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){
+    if(err) err.style.display='block';
+    if(inp) inp.focus();
+    return;
+  }
+  if(err) err.style.display='none';
+  if(typeof saveEmailAddr==='function') saveEmailAddr(email);
+  localStorage.setItem('mn_email_set','1');
+  const modal = document.getElementById('email-nudge-modal');
+  if(modal) modal.remove();
+  if(typeof toast==='function') toast('📧 Email saved! You\'ll get reminder emails now.');
+}
+
+function _nudgeDismiss(){
+  const modal = document.getElementById('email-nudge-modal');
+  if(modal) modal.remove();
+  // Will show again next session (next day when they open the app)
 }
 
 // ══════════════════════════════════════════════════════
@@ -9354,6 +9383,7 @@ function prefVal(key, def){
   var p = getEmailPrefs();
   return (p[key] !== undefined) ? p[key] : def;
 }
+window.prefVal = prefVal;
 
 async function sendMenmoryEmail(subject, bodyHtml){
   if(isMinor()) return false;
@@ -9378,6 +9408,7 @@ async function sendMenmoryEmail(subject, bodyHtml){
     return false;
   }
 }
+window.sendMenmoryEmail = sendMenmoryEmail;
 
 function emailWrap(title, emoji, bodyContent){
   return "<div style='font-family:system-ui,sans-serif;max-width:520px;margin:0 auto;background:#faf9f6;border-radius:16px;overflow:hidden;border:1px solid #e2dfd8'>"
@@ -9389,6 +9420,7 @@ function emailWrap(title, emoji, bodyContent){
   + "<div style='padding:14px 28px;background:#f2f0eb;text-align:center;font-size:.75rem;color:#9e9b93'>Menmory - Your personal study OS</div>"
   + "</div>";
 }
+window.emailWrap = emailWrap;
 
 window.notifStudyReminder = async function(cardsDue){
   if(!prefVal("studyReminder", true)) return;
