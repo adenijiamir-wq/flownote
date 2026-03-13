@@ -47,7 +47,7 @@ exports.handler = async function(event) {
         'Content-Type': 'application/json'
       },
       body: JSON.stringify({
-        sender: { name: 'Menmory', email: 'adenijiamir@gmail.com' },
+        sender: { name: 'Menmory', email: 'relay.your.problem@gmail.com' },
         to: [{ email: to_email }],
         subject: subject,
         htmlContent: message_html
