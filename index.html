@@ -8657,41 +8657,48 @@ function checkAndFireReminders(){
   var firedToday=fired[today]||{};
   var data; try{ data=JSON.parse(localStorage.getItem('mb7_data')||'{}'); }catch(e){ nlog('data fail'); return; }
   var changed=false;
+  var hasEmail = typeof window.sendMenmoryEmail==='function' && typeof window.getEmailAddr==='function' && window.getEmailAddr();
+
   (data.reminders||[]).forEach(function(r){
     if(r.done) return;
     var raw=r.time||r.startTime||''; if(!raw) return;
     var t24=timeTo24(raw); if(!t24){ nlog('t24 fail:'+raw); return; }
     if(r.date!==today&&r.date!=='everyday'&&r.date!=='everyweek') return;
-    var key='r'+r.id; if(firedToday[key]) return;
     var p=t24.split(':'), rMin=parseInt(p[0])*60+parseInt(p[1]);
-    if(nowMin>=rMin && nowMin-rMin<=5){
+    var diff=nowMin-rMin;
+    // Within the fire window (0-5 min past reminder time)
+    if(diff<0 || diff>5) return;
+
+    var key='r'+r.id;
+    var emailKey='email_r'+r.id;
+
+    // Fire notification if not fired yet today
+    if(!firedToday[key]){
       nlog('FIRE: '+r.text.slice(0,20));
       firedToday[key]=true; changed=true;
       fireNotif((r.emoji||'🔔')+' '+r.text, r.date==='everyday'?'Daily reminder':'Tap to view task', key);
-      // Send email for this reminder if user has email set up
-      if(typeof sendMenmoryEmail==='function' && typeof getEmailAddr==='function' && getEmailAddr()){
-        if(prefVal('taskReminder', true)){
-          var emailKey='email_r'+r.id;
-          if(!firedToday[emailKey]){
-            firedToday[emailKey]=true;
-            var reminderBody = "<p>Hey <strong>"+(data.userName||'there')+"</strong>!</p>"
-              + "<p>Your reminder just went off:</p>"
-              + "<div style='background:#e8f4ed;border-radius:12px;padding:16px 20px;margin:16px 0;border-left:4px solid #1a6b3c'>"
-              + "<div style='font-size:1.3rem;margin-bottom:6px'>"+(r.emoji||'🔔')+"</div>"
-              + "<strong style='font-size:1rem'>"+r.text+"</strong><br>"
-              + "<span style='color:#1a6b3c;font-weight:600;font-size:.85rem'>"+raw+"</span>"
-              + "</div>"
-              + "<p style='margin-top:20px'><a href='"+APP_URL+"' style='background:#1a6b3c;color:#fff;padding:12px 24px;border-radius:10px;text-decoration:none;font-weight:700;display:inline-block'>Open Menmory</a></p>";
-            sendMenmoryEmail((r.emoji||'🔔')+' Reminder: '+r.text, emailWrap('Reminder', r.emoji||'🔔', reminderBody));
-          }
-        }
+    }
+
+    // Fire email independently — even if notification already fired
+    if(hasEmail && !firedToday[emailKey]){
+      var taskPref = typeof window.prefVal==='function' ? window.prefVal('taskReminder',true) : true;
+      if(taskPref){
+        firedToday[emailKey]=true; changed=true;
+        var reminderBody = "<p>Hey <strong>"+(data.userName||'there')+"</strong>!</p>"
+          + "<p>Your reminder just went off:</p>"
+          + "<div style='background:#e8f4ed;border-radius:12px;padding:16px 20px;margin:16px 0;border-left:4px solid #1a6b3c'>"
+          + "<div style='font-size:1.3rem;margin-bottom:6px'>"+(r.emoji||'🔔')+"</div>"
+          + "<strong style='font-size:1rem'>"+r.text+"</strong><br>"
+          + "<span style='color:#1a6b3c;font-weight:600;font-size:.85rem'>"+raw+"</span>"
+          + "</div>"
+          + "<p style='margin-top:20px'><a href='"+(window.APP_URL||'https://menmory.netlify.app')+"' style='background:#1a6b3c;color:#fff;padding:12px 24px;border-radius:10px;text-decoration:none;font-weight:700;display:inline-block'>Open Menmory</a></p>";
+        window.sendMenmoryEmail((r.emoji||'🔔')+' Reminder: '+r.text, window.emailWrap('Reminder', r.emoji||'🔔', reminderBody));
+        nlog('email sent: '+r.text.slice(0,20));
       }
     }
   });
   if(changed){ fired[today]=firedToday; localStorage.setItem('fn_fired',JSON.stringify(fired)); }
-  // Keep SW schedule in sync with latest fired state
   syncScheduleToSW();
-  // Send morning digest once per day at 8am
   _maybeSendMorningDigest(data, today, nowMin);
 }
 
@@ -9347,6 +9354,7 @@ function launchConfetti(){
 (function(){
 
 var APP_URL = "https://menmory.netlify.app";
+window.APP_URL = APP_URL;
 // Emails are sent via /.netlify/functions/send-email — API key lives server-side only
 var EMAIL_FN_URL = "/.netlify/functions/send-email";
 
