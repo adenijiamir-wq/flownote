@@ -8967,7 +8967,15 @@ document.addEventListener('DOMContentLoaded', function(){
 
 // ── COUNTDOWN ──
 function getCountdowns(){try{return JSON.parse(localStorage.getItem('fn_countdowns')||'[]');}catch(e){return[];}}
-function saveCountdowns(a){localStorage.setItem('fn_countdowns',JSON.stringify(a));}
+function saveCountdowns(a){
+  localStorage.setItem('fn_countdowns',JSON.stringify(a));
+  try{
+    var uid=window._fbAuth&&window._fbAuth.currentUser&&window._fbAuth.currentUser.uid;
+    if(uid&&window._fbFns&&window._fbDb){
+      window._fbFns.setDoc(window._fbFns.doc(window._fbDb,'users',uid),{countdowns:JSON.stringify(a)},{merge:true});
+    }
+  }catch(e){}
+}
 function daysUntilDate(s){var t=new Date();t.setHours(0,0,0,0);return Math.ceil((new Date(s+'T00:00:00')-t)/86400000);}
 function closeFWModal(){var m=document.getElementById('fw-modal-bg');if(m)m.remove();}
 function _escH(s){var d=document.createElement('div');d.textContent=s;return d.innerHTML;}
