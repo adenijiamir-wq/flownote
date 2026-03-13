@@ -128,7 +128,7 @@ exports.handler = async function () {
 
           if (isToday) {
             // 1 hour before
-            if (rMin - 60 - nowMin >= 0 && rMin - 60 - nowMin <= 1) {
+            if (rMin - 60 - nowMin >= 0 && rMin - 60 - nowMin <= 3) {
               await tryFire(`r${id}_1h`, `⏰ In 1 hour: ${r.text}`,
                 emailWrap("1 Hour Away", em,
                   `<p>Hey <strong>${name}</strong>! Heads up — this reminder fires in <strong>1 hour</strong>:</p>
@@ -138,7 +138,7 @@ exports.handler = async function () {
                    </div>${openBtn()}`));
             }
             // 5 min before
-            if (rMin - 5 - nowMin >= 0 && rMin - 5 - nowMin <= 1) {
+            if (rMin - 5 - nowMin >= 0 && rMin - 5 - nowMin <= 3) {
               await tryFire(`r${id}_5m`, `🔔 In 5 minutes: ${r.text}`,
                 emailWrap("5 Minutes Away", em,
                   `<p>Hey <strong>${name}</strong>! This reminder fires in <strong>5 minutes</strong>:</p>
@@ -148,7 +148,7 @@ exports.handler = async function () {
                    </div>${openBtn()}`));
             }
             // At time
-            if (nowMin - rMin >= 0 && nowMin - rMin <= 1) {
+            if (nowMin - rMin >= 0 && nowMin - rMin <= 3) {
               await tryFire(`r${id}_at`, `${em} Reminder: ${r.text}`,
                 emailWrap("Reminder", em,
                   `<p>Hey <strong>${name}</strong>! Your reminder just fired:</p>
