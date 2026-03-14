@@ -104,7 +104,16 @@ onAuthStateChanged(auth, (user) => {
   --purple:#6d28d9;
   --purple-light:#f5f3ff;
   --r:12px;
+  --shadow-sm:0 1px 3px rgba(0,0,0,.06),0 1px 8px rgba(0,0,0,.04);
+  --shadow-md:0 4px 16px rgba(0,0,0,.08),0 1px 4px rgba(0,0,0,.04);
+  --shadow-lg:0 8px 32px rgba(0,0,0,.12),0 2px 8px rgba(0,0,0,.06);
 }
+
+/* ── Global polish ── */
+button{-webkit-tap-highlight-color:transparent;}
+.card{transition:box-shadow .2s;}
+.fw-modal{box-shadow:0 24px 64px rgba(0,0,0,.18),0 4px 16px rgba(0,0,0,.1)!important;}
+.auth-card{box-shadow:var(--shadow-lg)!important;}
 
 /* ═══════════════════════════════════════
    DARK MODE TOKENS
@@ -256,7 +265,7 @@ onAuthStateChanged(auth, (user) => {
 
 /* Auth screen */
 #auth-screen{position:fixed;inset:0;background:var(--paper);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:1.5rem;z-index:9999;overflow-y:auto;}
-.auth-card{width:100%;max-width:420px;animation:fadeUp .35s ease;}
+.auth-card{width:100%;max-width:420px;animation:fadeUp .35s ease;border-radius:24px;}
 .auth-logo{font-family:'DM Serif Display',Georgia,'Times New Roman',serif;font-size:1.55rem;color:var(--green);margin-bottom:2.2rem;display:flex;align-items:center;gap:.45rem;}
 .auth-logo span{color:var(--ink);}
 .auth-tagline{font-size:.82rem;color:var(--muted);margin-top:.25rem;font-weight:400;}
@@ -560,7 +569,7 @@ html,body{height:100%;overflow:hidden;font-family:'DM Sans',-apple-system,BlinkM
 /* ═══════════════════════════════════════
    SHARED COMPONENTS
 ═══════════════════════════════════════ */
-.card{background:var(--paper);border-radius:var(--r);border:1px solid var(--line);padding:1.1rem;}
+.card{background:var(--paper);border-radius:var(--r);border:1px solid var(--line);padding:1.1rem;box-shadow:0 1px 4px rgba(0,0,0,.04),0 4px 16px rgba(0,0,0,.04);}
 .card+.card{margin-top:.75rem;}
 .section-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:.9rem;}
 .section-title{font-family:'DM Serif Display',Georgia,'Times New Roman',serif;font-size:1.05rem;}
@@ -662,7 +671,7 @@ html,body{height:100%;overflow:hidden;font-family:'DM Sans',-apple-system,BlinkM
 .note-save-btn{background:var(--ink);color:var(--paper);border:none;border-radius:8px;padding:.4rem .9rem;font-family:'DM Sans',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:.78rem;font-weight:600;cursor:pointer;margin-left:auto;}
 .add-note-btn{display:flex;align-items:center;gap:.4rem;border:2px dashed var(--line);background:none;border-radius:var(--r);padding:.7rem 1rem;font-family:'DM Sans',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:.82rem;font-weight:500;color:var(--muted);cursor:pointer;width:100%;margin-bottom:1rem;transition:all .15s;}
 .add-note-btn:hover{border-color:var(--ink);color:var(--ink);}
-.note-card{background:var(--paper);border:1px solid var(--line);border-radius:var(--r);padding:.95rem 1rem;margin-bottom:.6rem;cursor:pointer;transition:all .18s;}
+.note-card{background:var(--paper);border:1px solid var(--line);border-radius:var(--r);padding:.95rem 1rem;margin-bottom:.6rem;cursor:pointer;transition:all .2s cubic-bezier(.22,1,.36,1);box-shadow:0 1px 3px rgba(0,0,0,.04);}
 .note-card:hover{border-color:var(--ink);transform:translateY(-1px);box-shadow:0 3px 12px rgba(0,0,0,.06);}
 .note-card-title{font-family:'DM Serif Display',Georgia,'Times New Roman',serif;font-size:.98rem;margin-bottom:.28rem;line-height:1.3;}
 .note-card-subject{display:inline-flex;align-items:center;border-radius:6px;padding:.18rem .5rem;font-size:.65rem;font-weight:700;margin-bottom:.45rem;letter-spacing:.02em;}
@@ -2365,8 +2374,8 @@ body::after{
         <!-- Controls -->
         <div style="display:flex;justify-content:center;align-items:center;gap:.9rem;margin-bottom:1.6rem;">
           <button onclick="resetPomo()" title="Reset" style="width:48px;height:48px;border-radius:50%;background:var(--paper2);border:1.5px solid var(--line);font-size:1.1rem;cursor:pointer;display:flex;align-items:center;justify-content:center;">↺</button>
-          <button onclick="togglePomo()" id="pomo-play-btn" style="width:72px;height:72px;border-radius:50%;background:var(--green);color:#fff;border:none;font-size:1.6rem;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 6px 24px rgba(26,107,60,.35);transition:transform .1s,box-shadow .1s;" onmousedown="this.style.transform='scale(.95)'" onmouseup="this.style.transform='scale(1)'">▶</button>
-          <button onclick="skipPomo()" title="Skip to next" style="width:48px;height:48px;border-radius:50%;background:var(--paper2);border:1.5px solid var(--line);font-size:1.1rem;cursor:pointer;display:flex;align-items:center;justify-content:center;">⏭</button>
+          <button onclick="togglePomo()" id="pomo-play-btn" style="width:72px;height:72px;border-radius:50%;background:var(--green);color:#fff;border:none;font-size:1.6rem;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 6px 24px rgba(26,107,60,.35);transition:transform .1s,box-shadow .1s;-webkit-tap-highlight-color:transparent;-webkit-appearance:none;appearance:none;outline:none;" onmousedown="this.style.transform='scale(.95)'" onmouseup="this.style.transform='scale(1)'" ontouchstart="this.style.transform='scale(.95)'" ontouchend="this.style.transform='scale(1)'">▶</button>
+          <button onclick="skipPomo()" title="Skip to next" style="width:48px;height:48px;border-radius:50%;background:var(--paper2);border:1.5px solid var(--line);font-size:1.1rem;cursor:pointer;display:flex;align-items:center;justify-content:center;-webkit-tap-highlight-color:transparent;-webkit-appearance:none;appearance:none;outline:none;">⏭</button>
         </div>
 
         <!-- Break tip (shown during breaks) -->
@@ -2590,78 +2599,107 @@ body::after{
           <!-- Account tab -->
           <div class="prof-panel" id="prof-panel-data">
 
-            <!-- Account info -->
-            <div class="prof-section-label">Account</div>
-            <div style="background:var(--paper2);border:1px solid var(--line);border-radius:12px;padding:.8rem 1rem;margin-bottom:1rem;display:flex;align-items:center;gap:.75rem;">
-              <div id="acct-avatar-sm" style="width:38px;height:38px;border-radius:50%;background:var(--green-light);border:2px solid var(--line);display:flex;align-items:center;justify-content:center;font-size:1.1rem;flex-shrink:0;overflow:hidden;"></div>
+            <!-- Hero account card -->
+            <div style="background:linear-gradient(135deg,var(--green) 0%,#145c32 100%);border-radius:16px;padding:1.2rem 1.1rem;margin-bottom:1.2rem;display:flex;align-items:center;gap:.9rem;position:relative;overflow:hidden;">
+              <div style="position:absolute;top:-18px;right:-18px;width:80px;height:80px;border-radius:50%;background:rgba(255,255,255,.07);"></div>
+              <div style="position:absolute;bottom:-24px;right:24px;width:56px;height:56px;border-radius:50%;background:rgba(255,255,255,.05);"></div>
+              <div id="acct-avatar-sm" style="width:48px;height:48px;border-radius:50%;background:rgba(255,255,255,.2);border:2.5px solid rgba(255,255,255,.4);display:flex;align-items:center;justify-content:center;font-size:1.3rem;flex-shrink:0;overflow:hidden;"></div>
               <div style="flex:1;min-width:0;">
-                <div id="acct-name" style="font-size:.88rem;font-weight:700;color:var(--ink);"></div>
-                <div id="acct-email" style="font-size:.68rem;color:var(--muted);margin-top:.1rem;"></div>
+                <div id="acct-name" style="font-size:1rem;font-weight:700;color:#fff;letter-spacing:-.01em;"></div>
+                <div id="acct-email" style="font-size:.68rem;color:rgba(255,255,255,.7);margin-top:.2rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"></div>
               </div>
             </div>
 
-            <!-- Permissions -->
-            <div class="prof-section-label">Permissions</div>
-            <div style="background:var(--paper2);border:1px solid var(--line);border-radius:12px;overflow:hidden;margin-bottom:1rem;">
-              <div style="display:flex;align-items:center;padding:.7rem 1rem;border-bottom:1px solid var(--line);">
+            <!-- Settings rows — Permissions -->
+            <div style="font-size:.62rem;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);margin-bottom:.4rem;margin-top:.1rem;">Permissions</div>
+            <div style="background:var(--paper2);border:1px solid var(--line);border-radius:14px;overflow:hidden;margin-bottom:1rem;">
+              <div style="display:flex;align-items:center;gap:.75rem;padding:.75rem 1rem;border-bottom:1px solid var(--line);">
+                <div style="width:32px;height:32px;border-radius:9px;background:var(--green-light);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="2.2" style="width:15px;height:15px;"><path d="M18 8h1a4 4 0 010 8h-1"/><path d="M2 8h16v9a4 4 0 01-4 4H6a4 4 0 01-4-4V8z"/><line x1="6" y1="1" x2="6" y2="4"/><line x1="10" y1="1" x2="10" y2="4"/><line x1="14" y1="1" x2="14" y2="4"/></svg>
+                </div>
                 <div style="flex:1;">
                   <div style="font-size:.82rem;font-weight:600;color:var(--ink);">Notifications</div>
-                  <div id="perm-notif-status" style="font-size:.65rem;color:var(--muted);margin-top:.1rem;">Tap to check</div>
+                  <div id="perm-notif-status" style="font-size:.62rem;color:var(--muted);margin-top:.1rem;">Tap to check</div>
                 </div>
-                <button id="perm-notif-btn" onclick="requestNotifPermission()" style="background:var(--green);color:#fff;border:none;border-radius:7px;padding:.35rem .75rem;font-size:.72rem;font-weight:600;cursor:pointer;font-family:inherit;">Allow</button>
+                <button id="perm-notif-btn" onclick="requestNotifPermission()" style="background:var(--green);color:#fff;border:none;border-radius:8px;padding:.3rem .7rem;font-size:.7rem;font-weight:700;cursor:pointer;font-family:inherit;letter-spacing:.01em;">Allow</button>
               </div>
-              <div style="display:flex;align-items:center;padding:.7rem 1rem;">
+              <div style="display:flex;align-items:center;gap:.75rem;padding:.75rem 1rem;">
+                <div style="width:32px;height:32px;border-radius:9px;background:var(--blue-light);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="var(--blue)" stroke-width="2.2" style="width:15px;height:15px;"><path d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z"/><path d="M19 10v2a7 7 0 01-14 0v-2M12 19v4M8 23h8"/></svg>
+                </div>
                 <div style="flex:1;">
                   <div style="font-size:.82rem;font-weight:600;color:var(--ink);">Microphone</div>
-                  <div id="perm-mic-status" style="font-size:.65rem;color:var(--muted);margin-top:.1rem;">Used for voice input</div>
+                  <div id="perm-mic-status" style="font-size:.62rem;color:var(--muted);margin-top:.1rem;">Used for voice input</div>
                 </div>
-                <button id="perm-mic-btn" onclick="requestMicPermission()" style="background:var(--green);color:#fff;border:none;border-radius:7px;padding:.35rem .75rem;font-size:.72rem;font-weight:600;cursor:pointer;font-family:inherit;">Allow</button>
+                <button id="perm-mic-btn" onclick="requestMicPermission()" style="background:var(--blue);color:#fff;border:none;border-radius:8px;padding:.3rem .7rem;font-size:.7rem;font-weight:700;cursor:pointer;font-family:inherit;letter-spacing:.01em;">Allow</button>
               </div>
             </div>
 
-            <!-- Deleted items — tappable row -->
-            <div class="prof-section-label">Data</div>
-            <div style="display:flex;flex-direction:column;gap:.5rem;margin-bottom:1.1rem;">
-              <button onclick="navTo('trash')" style="display:flex;align-items:center;justify-content:space-between;width:100%;background:var(--paper);border:1px solid var(--line);border-radius:12px;padding:.75rem 1rem;cursor:pointer;font-family:inherit;text-align:left;">
-                <div style="display:flex;align-items:center;gap:.65rem;">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:17px;height:17px;color:var(--muted);flex-shrink:0;"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4h6v2"/></svg>
-                  <span style="font-size:.82rem;font-weight:600;color:var(--ink);">Deleted Items</span>
+            <!-- Settings rows — Quick actions -->
+            <div style="font-size:.62rem;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);margin-bottom:.4rem;">Quick Actions</div>
+            <div style="background:var(--paper2);border:1px solid var(--line);border-radius:14px;overflow:hidden;margin-bottom:1rem;">
+              <button onclick="openEmailNotifSettings()" style="display:flex;align-items:center;gap:.75rem;width:100%;padding:.75rem 1rem;background:none;border:none;border-bottom:1px solid var(--line);cursor:pointer;font-family:inherit;text-align:left;-webkit-tap-highlight-color:transparent;">
+                <div style="width:32px;height:32px;border-radius:9px;background:#fef3c7;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:.95rem;">📧</div>
+                <span style="font-size:.82rem;font-weight:600;color:var(--ink);flex:1;">Email Notifications</span>
+                <svg viewBox="0 0 24 24" fill="none" stroke="var(--muted)" stroke-width="2" style="width:14px;height:14px;flex-shrink:0;"><path d="M9 18l6-6-6-6"/></svg>
+              </button>
+              <button onclick="navTo('trash')" style="display:flex;align-items:center;gap:.75rem;width:100%;padding:.75rem 1rem;background:none;border:none;border-bottom:1px solid var(--line);cursor:pointer;font-family:inherit;text-align:left;-webkit-tap-highlight-color:transparent;">
+                <div style="width:32px;height:32px;border-radius:9px;background:var(--paper);border:1px solid var(--line);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="var(--muted)" stroke-width="2" style="width:15px;height:15px;"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4h6v2"/></svg>
                 </div>
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:15px;height:15px;color:var(--muted);"><path d="M9 18l6-6-6-6"/></svg>
+                <span style="font-size:.82rem;font-weight:600;color:var(--ink);flex:1;">Deleted Items</span>
+                <svg viewBox="0 0 24 24" fill="none" stroke="var(--muted)" stroke-width="2" style="width:14px;height:14px;flex-shrink:0;"><path d="M9 18l6-6-6-6"/></svg>
+              </button>
+              <button onclick="reportProblem()" style="display:flex;align-items:center;gap:.75rem;width:100%;padding:.75rem 1rem;background:none;border:none;cursor:pointer;font-family:inherit;text-align:left;-webkit-tap-highlight-color:transparent;">
+                <div style="width:32px;height:32px;border-radius:9px;background:var(--purple-light);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="var(--purple)" stroke-width="2.2" style="width:15px;height:15px;"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                </div>
+                <span style="font-size:.82rem;font-weight:600;color:var(--ink);flex:1;">Report a Problem</span>
+                <svg viewBox="0 0 24 24" fill="none" stroke="var(--muted)" stroke-width="2" style="width:14px;height:14px;flex-shrink:0;"><path d="M9 18l6-6-6-6"/></svg>
               </button>
             </div>
 
-            <!-- Actions -->
-            <div class="prof-section-label">Actions</div>
-            <div style="display:flex;flex-direction:column;gap:.5rem;margin-bottom:1rem;">
-              <button onclick="openEmailNotifSettings()" style="background:var(--green-light);border:1.5px solid var(--green);color:var(--green);border-radius:10px;padding:.6rem 1rem;font-family:inherit;font-size:.82rem;font-weight:600;cursor:pointer;text-align:left;display:flex;align-items:center;gap:.6rem;">
-                <span style="font-size:1rem;flex-shrink:0;">📧</span>
-                Email Notifications
-                <span style="margin-left:auto;font-size:.75rem;opacity:.7;">▶</span>
+            <!-- Sign out -->
+            <div style="background:var(--paper2);border:1px solid var(--line);border-radius:14px;overflow:hidden;margin-bottom:1rem;">
+              <button onclick="openPrivacyPolicy()" style="display:flex;align-items:center;gap:.75rem;width:100%;padding:.75rem 1rem;background:none;border:none;border-bottom:1px solid var(--line);cursor:pointer;font-family:inherit;text-align:left;-webkit-tap-highlight-color:transparent;">
+                <div style="width:32px;height:32px;border-radius:9px;background:var(--paper);border:1px solid var(--line);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="var(--muted)" stroke-width="2" style="width:15px;height:15px;"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                </div>
+                <span style="font-size:.82rem;font-weight:600;color:var(--ink);flex:1;">Privacy Policy</span>
+                <svg viewBox="0 0 24 24" fill="none" stroke="var(--muted)" stroke-width="2" style="width:14px;height:14px;flex-shrink:0;"><path d="M9 18l6-6-6-6"/></svg>
               </button>
-              <button onclick="reportProblem()" style="background:none;border:1px solid var(--line);color:var(--ink);border-radius:10px;padding:.6rem 1rem;font-family:inherit;font-size:.82rem;font-weight:600;cursor:pointer;text-align:left;display:flex;align-items:center;gap:.6rem;">
-                <svg style="width:16px;height:16px;flex-shrink:0;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-                Report a problem
-              </button>
-              <button onclick="signOut()" style="background:none;border:1px solid var(--line);color:var(--ink);border-radius:10px;padding:.6rem 1rem;font-family:inherit;font-size:.82rem;font-weight:600;cursor:pointer;text-align:left;display:flex;align-items:center;gap:.6rem;">
-                <svg style="width:16px;height:16px;flex-shrink:0;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;" viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
-                Sign out
-              </button>
-              <button onclick="resetAccount()" style="background:none;border:1.5px solid #fca5a5;color:var(--red);border-radius:10px;padding:.6rem 1rem;font-family:inherit;font-size:.82rem;font-weight:600;cursor:pointer;text-align:left;display:flex;align-items:center;gap:.6rem;">
-                <svg style="width:16px;height:16px;flex-shrink:0;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;" viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4a1 1 0 011-1h4a1 1 0 011 1v2"/></svg>
-                Reset all data
-              </button>
-              <button onclick="deleteMyAccount()" style="background:#fff0f0;border:1.5px solid #ef4444;color:#ef4444;border-radius:10px;padding:.6rem 1rem;font-family:inherit;font-size:.82rem;font-weight:600;cursor:pointer;text-align:left;display:flex;align-items:center;gap:.6rem;">
-                <svg style="width:16px;height:16px;flex-shrink:0;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><line x1="12" y1="3" x2="12" y2="15"/><line x1="8" y1="7" x2="16" y2="7"/></svg>
-                Delete my account &amp; all data
-              </button>
-              <button onclick="openPrivacyPolicy()" style="background:none;border:1px solid var(--line);color:var(--muted);border-radius:10px;padding:.6rem 1rem;font-family:inherit;font-size:.82rem;font-weight:500;cursor:pointer;text-align:left;display:flex;align-items:center;gap:.6rem;">
-                <svg style="width:16px;height:16px;flex-shrink:0;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
-                Privacy Policy
+              <button onclick="signOut()" style="display:flex;align-items:center;gap:.75rem;width:100%;padding:.75rem 1rem;background:none;border:none;cursor:pointer;font-family:inherit;text-align:left;-webkit-tap-highlight-color:transparent;">
+                <div style="width:32px;height:32px;border-radius:9px;background:var(--paper);border:1px solid var(--line);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="var(--muted)" stroke-width="2.2" style="width:15px;height:15px;"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+                </div>
+                <span style="font-size:.82rem;font-weight:600;color:var(--ink);flex:1;">Sign Out</span>
               </button>
             </div>
 
-            <!-- Debug panel — hidden, tap version text 5x to reveal -->
+            <!-- Danger zone -->
+            <div style="font-size:.62rem;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--red);margin-bottom:.4rem;opacity:.7;">Danger Zone</div>
+            <div style="background:var(--red-light);border:1px solid #fca5a5;border-radius:14px;overflow:hidden;margin-bottom:1rem;">
+              <button onclick="resetAccount()" style="display:flex;align-items:center;gap:.75rem;width:100%;padding:.75rem 1rem;background:none;border:none;border-bottom:1px solid #fca5a5;cursor:pointer;font-family:inherit;text-align:left;-webkit-tap-highlight-color:transparent;">
+                <div style="width:32px;height:32px;border-radius:9px;background:rgba(192,57,43,.1);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="var(--red)" stroke-width="2.2" style="width:15px;height:15px;"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6M14 11v6"/></svg>
+                </div>
+                <div style="flex:1;">
+                  <div style="font-size:.82rem;font-weight:600;color:var(--red);">Reset All Data</div>
+                  <div style="font-size:.62rem;color:var(--red);opacity:.7;margin-top:.1rem;">Keeps your account, wipes content</div>
+                </div>
+              </button>
+              <button onclick="deleteMyAccount()" style="display:flex;align-items:center;gap:.75rem;width:100%;padding:.75rem 1rem;background:none;border:none;cursor:pointer;font-family:inherit;text-align:left;-webkit-tap-highlight-color:transparent;">
+                <div style="width:32px;height:32px;border-radius:9px;background:rgba(192,57,43,.1);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="var(--red)" stroke-width="2.2" style="width:15px;height:15px;"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                </div>
+                <div style="flex:1;">
+                  <div style="font-size:.82rem;font-weight:600;color:var(--red);">Delete Account &amp; All Data</div>
+                  <div style="font-size:.62rem;color:var(--red);opacity:.7;margin-top:.1rem;">Permanent — cannot be undone</div>
+                </div>
+              </button>
+            </div>
+
+            <!-- Hidden admin tap -->
             <div onclick="adminSecretTap()" style="text-align:center;font-size:.6rem;color:var(--line);padding:.3rem;cursor:default;user-select:none;" id="admin-version-lbl">v1.0.0</div>
             <div id="notif-debug-panel" style="display:none;background:var(--paper2);border:1px solid var(--line);border-radius:10px;padding:.7rem .9rem;margin-bottom:.6rem;">
               <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.4rem;">
@@ -2672,6 +2710,7 @@ body::after{
               <button onclick="if(typeof testInAppNotif!=='undefined')testInAppNotif()" style="width:100%;margin-top:.5rem;border:1.5px dashed var(--line);background:none;color:var(--muted);border-radius:8px;padding:.45rem;font-family:inherit;font-size:.72rem;cursor:pointer;">🧪 Test banner</button>
               <button onclick="if(typeof testIn30!=='undefined')testIn30()" id="test-30-btn" style="width:100%;margin-top:.4rem;border:1.5px dashed #22c55e;background:none;color:#22c55e;border-radius:8px;padding:.45rem;font-family:inherit;font-size:.72rem;cursor:pointer;">⏱ Test in 30s</button>
               <button onclick="if(typeof debugFireAll!=='undefined')debugFireAll()" style="width:100%;margin-top:.4rem;border:1.5px dashed #f59e0b;background:none;color:#f59e0b;border-radius:8px;padding:.45rem;font-family:inherit;font-size:.72rem;cursor:pointer;">⚡ Force-fire</button>
+              <button onclick="localStorage.removeItem('mn_checkin_state');var bg=document.getElementById('energy-checkin-bg');if(bg)bg.remove();showEnergyCheckin({id:'morning',label:'morning'},false)" style="width:100%;margin-top:.4rem;border:1.5px dashed #a78bfa;background:none;color:#7c3aed;border-radius:8px;padding:.45rem;font-family:inherit;font-size:.72rem;cursor:pointer;">😴 Test check-in</button>
             </div>
 
           </div>
@@ -8276,6 +8315,23 @@ function stopPomoSound(){
   }catch(e){}
 }
 
+// Handle app returning from background — if browser auto-suspended the AudioContext
+// (browsers sometimes do this), resume it so sound keeps playing continuously
+(function(){
+  document.addEventListener('visibilitychange', function(){
+    if(!_pomoAudioCtx || document.hidden) return;
+    // Page came back into view — if browser suspended the context, wake it up
+    if(_pomoAudioCtx.state === 'suspended'){
+      _pomoAudioCtx.resume().then(function(){
+        // Only restart if nodes drifted (context was suspended a long time)
+        if(_pomoSoundOn && _pomoRunning && !_pomoSoundNode){
+          startPomoSound();
+        }
+      }).catch(function(){});
+    }
+  });
+})();
+
 function setPomoMode(mode, silent){
   if(_pomoRunning && !silent){ clearInterval(_pomoInterval); _pomoRunning=false; stopPomoSound(); }
   _pomoMode = mode;
@@ -9650,9 +9706,12 @@ function showEnergyCheckin(win, isPostPomo){
   _checkinWin = win;
   _checkinPostPomo = isPostPomo;
 
-  var titleText = isPostPomo ? 'Session done! How do you feel?' : 'Quick check-in';
-  var subText   = isPostPomo ? 'Rate your energy after that session.'
-    : (win ? 'Good ' + win.label + '! How\'s your energy right now?' : 'How\'s your energy right now?');
+  var h = new Date().getHours();
+  var greetWord = h < 12 ? 'Morning' : h < 17 ? 'Afternoon' : 'Evening';
+  var titleText = isPostPomo ? 'How are you feeling?' : 'Hey — ' + greetWord + ' 👋';
+  var subText   = isPostPomo
+    ? 'That was a whole session. Be honest — how are you actually doing?'
+    : (win ? 'How\'s your energy right now? No wrong answer.' : 'How\'s your energy right now?');
 
   var bg = document.createElement('div');
   bg.id = 'energy-checkin-bg';
@@ -9708,62 +9767,64 @@ function _showEnergyResponseBubble(level, isPostPomo){
   var taskCount = (typeof reminders !== 'undefined') ? reminders.filter(function(r){ return !r.done; }).length : 0;
   var c = (typeof CHARS !== 'undefined' && CHARS[currentChar]) ? CHARS[currentChar] : { name: 'Your coach', badge: '👋' };
 
-  // Per-coach expressive messages keyed by [coachId][level][isPostPomo]
+  // LOW  = pure emotional presence, zero tasks/cards mentioned ever
+  // MID  = emotion first, ONE gentle nudge at the end only
+  // HIGH = celebrate the feeling, channel it, still asks what's behind it
   var coachMsgs = {
     zack: {
       low: {
-        open:  'Ayy real talk — low energy days hit different, and that\'s okay fr 💙 But you\'re already HERE which is lowkey a massive W. Even 5 cards counts. Start tiny, build the momentum.' + (dueCount > 0 ? ' You\'ve got ' + dueCount + ' cards waiting — let\'s at least dent that.' : ''),
-        pomo:  'Bro you just finished a whole session on LOW energy?? That\'s actually unhinged in the best way 💪 No cap that takes way more discipline than doing it on a good day. Rest up properly, you\'ve earned it fr.'
+        open:  'Hey... low energy today. That actually hits 💙 You don\'t have to explain it or push through it. I just want to know — what\'s going on with you right now? Is something making it feel heavy, or does it just feel like one of those days? Talk to me.',
+        pomo:  'You finished that whole session on low and honestly... that\'s a lot. Are you okay? Like actually — not "yeah I\'m fine" okay. How are you doing right now? Rest is the move, not more work. I\'m here 💙'
       },
       mid: {
-        open:  'Mid energy? Ngl that\'s the IDEAL study state fr — not too wired, not crashing 🧠 Your brain is literally primed to retain right now. ' + (taskCount > 0 ? 'You\'ve got ' + taskCount + ' things on your plate — pick the one that\'s been living in your head rent-free and START.' : 'What are we locking in on today? Let\'s get it 🔥'),
-        pomo:  'Solid session bestie, real ones know medium energy sessions hit harder than hype ones 💪 ' + (dueCount > 0 ? dueCount + ' cards still due — one more quick pass and you\'re DONE done.' : 'Take a proper break, you\'ve actually earned it this time.')
+        open:  'Medium energy — I see you showing up and that\'s real 🤝 What\'s the vibe today, like is this a tired-medium or a chill-medium? Either way, what\'s the one thing that\'s been sitting in your head? Not the whole list. Just that one.',
+        pomo:  'Solid session. Your brain actually worked hard there. How\'s your head feeling right now — like genuinely? ' + (dueCount > 0 ? 'There\'s still ' + dueCount + ' cards when you\'re ready, no rush.' : 'Take a real break, you\'ve earned it 🧠')
       },
       high: {
-        open:  'YOOO high energy?? This is your villain arc moment fr, the universe is HANDING you a W today 🚀🔥 ' + (dueCount > 0 ? 'You\'ve got ' + dueCount + ' cards due — let\'s absolutely BODY them right now. No excuses, no delays. GO.' : 'Tell me what subject we\'re going hard on and I will personally hype you through every single card.'),
-        pomo:  'HIGH energy AFTER a session?! You\'re literally built different rn 🔥🔥 This is flow state — do NOT waste it. While you\'ve got this, let\'s push for round two. What\'s next?'
+        open:  'WAIT you\'re actually feeling good?? That\'s everything 🔥 What\'s different today — did something happen or just one of those rare good days? I want to know. And while you\'ve got this energy — ' + (dueCount > 0 ? 'you\'ve got ' + dueCount + ' cards and right now you could absolutely body them.' : 'tell me what we\'re going hard on today.'),
+        pomo:  'High energy after a whole session?? You\'re built different fr 🔥 How does it actually feel — is this real flow or are you running on adrenaline? Either way, what\'s the next move?'
       }
     },
     rex: {
       low: {
-        open:  'Low energy is a condition, not an excuse. ' + (dueCount > 0 ? dueCount + ' cards are due.' : 'Work still exists.') + ' Do 10 minutes. Slow reps still build the habit. Start now.',
-        pomo:  'Session complete. Low energy noted — rest briefly, then assess what\'s next. ' + (dueCount > 0 ? dueCount + ' cards remain due. ' : '') + 'Consistency doesn\'t take days off.'
+        open:  'Low energy. I hear you — and I\'m not going to push you. What\'s actually going on? Don\'t give me the short answer. What\'s really making today feel like this?',
+        pomo:  'Session done on low. That took something real from you and I want you to know I see that. Before anything else — are you alright? Actually alright? Rest is not optional right now.'
       },
       mid: {
-        open:  'Medium energy. Sufficient. ' + (taskCount > 0 ? taskCount + ' tasks pending — prioritise the hardest one. That\'s where your focus goes first.' : 'Identify your priority. Work the list.') + ' No warmup needed. Begin.',
-        pomo:  'Session done. Medium energy post-focus is expected — your brain spent real resources. ' + (dueCount > 0 ? dueCount + ' cards still due. One more pass.' : 'Take a timed break. 10 minutes. Then return.')
+        open:  'Medium energy — steady. But I want to know what\'s underneath it. Tired from yesterday? Something on your mind? Tell me what\'s actually going on, then we identify the one thing worth your focus today.',
+        pomo:  'Good session. Your mind spent real resources there. How\'s the rest of you doing — not the study part, you. ' + (dueCount > 0 ? 'There are ' + dueCount + ' cards remaining when you\'re ready.' : 'One proper break before the next move.')
       },
       high: {
-        open:  'High energy. Good. ' + (dueCount > 0 ? 'You have ' + dueCount + ' cards due — clear them now while your focus is sharp.' : 'Use it. Pick your hardest subject and don\'t stop until you hit the wall.') + ' Don\'t waste this state on easy tasks.',
-        pomo:  'High energy after a session. Unusual. Use it. ' + (dueCount > 0 ? dueCount + ' cards still due — finish them.' : 'Identify the next block and go again.') + ' Flow states are rare. Don\'t walk away from one.'
+        open:  'High energy. Good. What\'s driving it — I want to know so we use it right. ' + (dueCount > 0 ? 'You have ' + dueCount + ' cards due and your focus is sharp. Clear them.' : 'Pick your hardest subject and go.') + ' What are we actually going after?',
+        pomo:  'High energy after a session — that\'s rare. Is it real or wired? Tell me and we\'ll figure out the right next move together.'
       }
     },
     priya: {
       low: {
-        open:  'Oh, low energy today 🌿 That\'s completely okay — your body is telling you something and that\'s worth listening to. ' + (dueCount > 0 ? 'You have ' + dueCount + ' cards due, but even just a gentle 10-minute pass counts as real progress.' : 'Even just reading through one note today is enough.') + ' Be kind to yourself while you work 💛',
-        pomo:  'You finished that session even on low energy — I hope you know how much that says about you 🌸 That kind of quiet determination is so powerful. Please rest properly now, no guilt whatsoever. You showed up and that is always enough 💛'
+        open:  'Oh, low energy today 🌿 I\'m not going to rush past that. How are you actually doing — not just the tiredness, but *how are you*? Sometimes our body says low when it really means something else. What does yours feel like it needs right now? I\'m here, no agenda 💛',
+        pomo:  'You finished that session running on low and I\'m genuinely moved by that 🌸 But please — how are you right now, honestly? Not the studying. *You*. Please rest. There is nothing more important than that right now 💛'
       },
       mid: {
-        open:  'Medium energy is honestly such a peaceful place to study from 🌿 Not rushing, not crashing — just present. ' + (taskCount > 0 ? 'You have ' + taskCount + ' things to get through. Start with whichever one feels least heavy right now.' : 'What feels most manageable to start with today? We\'ll take it one step at a time 💛'),
-        pomo:  'A solid session 🌸 Medium energy after focusing is completely normal — your brain has been working hard and it deserves acknowledgement. ' + (dueCount > 0 ? 'There are still ' + dueCount + ' cards due when you\'re ready, no rush.' : 'Take a real break before the next one. You\'ve genuinely earned it 💛')
+        open:  'Medium energy — I\'m glad you checked in 🌿 Can I ask, what\'s the texture of today? A good-medium, or a holding-it-together medium? Both are valid, I just want to understand where you actually are. Start with whatever feels least heavy 💛',
+        pomo:  'A real session 🌸 Medium energy after focusing means your mind genuinely worked. How are you feeling in your body right now? ' + (dueCount > 0 ? 'There are ' + dueCount + ' cards whenever you\'re ready — truly no rush.' : 'Rest before anything else. You\'ve earned it 💛')
       },
       high: {
-        open:  'High energy — that\'s wonderful! 🌟 I love when the stars align like this for you. ' + (dueCount > 0 ? 'You have ' + dueCount + ' cards due and honestly right now is such a beautiful time to work through them.' : 'Tell me what you\'d love to focus on today — let\'s make the most of this feeling together 🌿'),
-        pomo:  'High energy after a session — your brain is genuinely thriving right now 🌿 If it feels right, this could be a lovely moment to keep going. But also — you know yourself best. What does your body say? 💛'
+        open:  'You\'re feeling good today 🌟 I want to sit in that for a second before we do anything — what\'s making today feel lighter? Naming it helps you hold onto it. And when you\'re ready — ' + (dueCount > 0 ? 'you have ' + dueCount + ' cards due and this energy is such a gift for them 🌿' : 'tell me what feels exciting to work on today 🌿'),
+        pomo:  'High energy after a session — your whole system is humming 🌿 How does that feel from inside? If your body says keep going, trust it. If it says savour this, trust that too 💛'
       }
     },
     milo: {
       low: {
-        open:  'Low energy? Your brain called in sick but forgot to tell the rest of you 😂 Listen, even legendary students have off days — Newton discovered gravity because he was too tired to move. ' + (dueCount > 0 ? 'You\'ve got ' + dueCount + ' cards due. Let\'s do them slowly, dramatically, like we\'re in a study montage in slow motion.' : 'We\'ll go gentle. Think of it as studying in power-saving mode 🔋'),
-        pomo:  'Wait — you just completed a whole Pomodoro on LOW ENERGY?! 😂 That\'s like running a marathon in flip flops. Objectively unhinged. Objectively impressive. Rest now, you absolute menace. You\'ve earned a dramatic collapse on the couch.'
+        open:  'Low energy, huh 😌 Okay I\'m not gonna do the motivational speech thing, that\'s not what you need. What\'s actually going on? Is this a "didn\'t sleep" low, a "something happened" low, or a "vibes are just off" low? They\'re all different and I actually want to know which one.',
+        pomo:  'You finished a whole Pomodoro on low energy 😌 That\'s kind of remarkable, genuinely. But how are you actually doing though — not the session, *you*. What does your brain feel like it needs right now?'
       },
       mid: {
-        open:  'Medium energy — the Toyota Corolla of study moods 😂 Reliable, gets the job done, nobody writes songs about it but EVERYBODY secretly respects it. ' + (taskCount > 0 ? 'You\'ve got ' + taskCount + ' tasks. Let\'s tackle them before they start sending passive aggressive reminders.' : 'What are we studying? Choose wisely, I\'ve got a joke prepared for every subject 🎭'),
-        pomo:  'Solid session! Medium energy after focusing is basically your brain saying "I did the thing and I\'m mildly pleased about it" 😂 ' + (dueCount > 0 ? dueCount + ' cards still due — one more round and you\'ll have officially defeated procrastination. Mostly.' : 'Take a real break. Not a "I\'ll just check my phone for 2 minutes" break. A REAL one 😂')
+        open:  'Medium energy — honestly the most underrated study mood 😄 Not glamorous, just functional. But I\'m curious what\'s underneath the medium today. Good-medium? Tired-medium? "Three coffees that cancelled each other out" medium? Tell me and let\'s find the one thing actually worth your energy right now.',
+        pomo:  'Solid session — your brain just did a polite round of applause for itself 😄 How are you actually doing though, behind the study metrics? ' + (dueCount > 0 ? 'There\'s ' + dueCount + ' cards left when you\'re ready.' : 'Take a real break — I mean it, not a phone break.')
       },
       high: {
-        open:  'HIGH ENERGY?! 🎉 THE STUDENT HAS AWAKENED. This is your final form. This is what the anime opening was building to 😂 ' + (dueCount > 0 ? 'You have ' + dueCount + ' cards due and honestly right now you could review them all AND explain them to a confused goldfish. LET\'S GO.' : 'Pick a subject — ANY subject — and let\'s absolutely demolish it. I\'ll bring the jokes, you bring the brainpower 🧠🔥'),
-        pomo:  'High energy AFTER a focus session?! 😂 Who ARE you?? Normal humans are tired, you\'re out here LEVELLING UP. This is flow state — scientifically proven to last exactly as long as you don\'t check social media. Stay in it. What\'s next?'
+        open:  'HIGH ENERGY 🎉 I need to know what you had for breakfast. Genuinely though — what\'s got you feeling like this? Good news? Good sleep? Spite? Because whatever it is, let\'s point it at something. ' + (dueCount > 0 ? 'You\'ve got ' + dueCount + ' cards due and right now you could probably explain them to a confused seagull and it would understand.' : 'Tell me what we\'re conquering today 😄'),
+        pomo:  'High energy AFTER a session?! 😄 Who are you?? How are you feeling — like genuinely, not just hype? If this is real flow state, you have until the next distraction to use it. What\'s the move?'
       }
     }
   };
@@ -9779,12 +9840,22 @@ function _showEnergyResponseBubble(level, isPostPomo){
   var wrap = document.createElement('div');
   wrap.id = 'energy-response-bubble';
   wrap.style.cssText = 'position:fixed;bottom:90px;left:12px;right:12px;z-index:9000;animation:ianIn .35s cubic-bezier(.34,1.3,.64,1);cursor:pointer;';
+  var _bubbleLevel = level;
   wrap.onclick = function(e){
     if(e.target.closest('button')) return; // let X handle itself
     var el = document.getElementById('energy-response-bubble');
     if(el) el.remove();
     if(typeof navTo === 'function') navTo('chat', null);
     if(typeof setBN === 'function') setBN('chat');
+    // Pre-fill chat input so user can easily continue the conversation
+    setTimeout(function(){
+      var inp = document.getElementById('chat-input');
+      if(inp && !inp.value){
+        var seedMap = { low: 'I\'m feeling pretty low today because...', mid: 'My energy is medium today, I think because...', high: 'I\'m actually feeling really good today!' };
+        inp.value = seedMap[_bubbleLevel] || '';
+        inp.focus();
+      }
+    }, 400);
   };
   wrap.innerHTML =
     '<div style="background:var(--paper);border:1.5px solid var(--line);border-radius:16px;padding:1rem 1.1rem;box-shadow:0 8px 32px rgba(0,0,0,.18);display:flex;gap:.75rem;align-items:flex-start;">' +
@@ -9792,7 +9863,7 @@ function _showEnergyResponseBubble(level, isPostPomo){
       '<div style="flex:1;min-width:0;">' +
         '<div style="font-size:.67rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.07em;margin-bottom:.3rem;">' + c.name + '</div>' +
         '<div style="font-size:.88rem;color:var(--ink);line-height:1.5;">' + msg + '</div>' +
-        '<div style="font-size:.68rem;color:var(--muted);margin-top:.55rem;">Tap to continue in chat →</div>' +
+        '<div style="font-size:.68rem;color:var(--green);font-weight:600;margin-top:.55rem;">Tap to talk about it →</div>' +
       '</div>' +
       '<button onclick="document.getElementById(\'energy-response-bubble\').remove()" style="background:none;border:none;color:var(--muted);font-size:1.1rem;cursor:pointer;padding:.1rem .2rem;flex-shrink:0;">×</button>' +
     '</div>';
