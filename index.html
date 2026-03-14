@@ -1973,13 +1973,13 @@ body::after{
   <div class="ob-screen" id="ob6">
     <div class="ob-prog"><div class="ob-prog-dot done"></div><div class="ob-prog-dot done"></div><div class="ob-prog-dot done"></div><div class="ob-prog-dot done"></div><div class="ob-prog-dot done"></div><div class="ob-prog-dot done"></div><div class="ob-prog-dot on"></div></div>
     <span class="ob-welcome-emoji">📧</span>
-    <div class="ob-h">Get reminded<br/><em>even when offline.</em></div>
-    <div class="ob-sub">Enter your email and Menmory will send reminders directly to your inbox — even when the app is closed.</div>
+    <div class="ob-h">One more thing —<br/><em>confirm your email.</em></div>
+    <div class="ob-sub">We'll send your reminders here even when the app is closed. We already have it from your login — just confirm it's right.</div>
     <label class="ob-label">Your email</label>
     <input class="ob-input" id="ob-email" type="email" placeholder="you@example.com" autocomplete="email" onkeydown="if(event.key==='Enter')finishOBWithEmail()"/>
     <div id="ob-email-err" style="color:#ef4444;font-size:.78rem;margin:-8px 0 8px;display:none;">Please enter a valid email address.</div>
-    <button class="ob-btn" onclick="finishOBWithEmail()">Let's go 🚀</button>
-    <button class="ob-ghost" onclick="finishOB()">Skip — I'll do this later</button>
+    <button class="ob-btn" onclick="finishOBWithEmail()">Confirm &amp; finish 🚀</button>
+    <button class="ob-ghost" onclick="finishOB()" style="font-size:.72rem;opacity:.5;">Skip for now</button>
   </div>
 
 </div>
@@ -3927,6 +3927,15 @@ function goOB(n){
     userName=nm;
   }
   if(n===3) userSubjects=[...obSubjects];
+  // Pre-fill email step with their login email
+  if(n===6){
+    const emailInp=document.getElementById('ob-email');
+    if(emailInp && !emailInp.value){
+      var knownEmail = (typeof userEmail!=='undefined'&&userEmail) ? userEmail
+        : (window._fbCurrentUser&&window._fbCurrentUser.email ? window._fbCurrentUser.email : '');
+      if(knownEmail) emailInp.value=knownEmail;
+    }
+  }
   document.querySelectorAll('.ob-screen').forEach(s=>s.classList.remove('show'));
   const _obn=document.getElementById('ob'+n);if(_obn)_obn.classList.add('show');
 }
