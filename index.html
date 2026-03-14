@@ -9384,16 +9384,23 @@ function saveEmailPrefs(o){
   _syncEmailCfgToFirestore(getEmailAddr(), o);
 }
 function _syncEmailCfgToFirestore(email, prefs){
-  var uid = localStorage.getItem('fn_current_user');
-  if(!uid || uid==='guest' || !window._fbDb || !window._fbFns) return;
-  if(typeof isMinor === 'function' && isMinor()) return;
-  try{
-    window._fbFns.setDoc(
-      window._fbFns.doc(window._fbDb, 'users', uid),
-      { notifEmail: email||'', notifPrefs: prefs||{} },
-      { merge: true }
-    );
-  }catch(e){ console.warn('Email cfg sync failed', e); }
+  function doSync(){
+    var uid = localStorage.getItem('fn_current_user');
+    if(!uid || uid==='guest') return false;
+    if(!window._fbDb || !window._fbFns) return false;
+    if(typeof isMinor === 'function' && isMinor()) return true;
+    try{
+      window._fbFns.setDoc(
+        window._fbFns.doc(window._fbDb, 'users', uid),
+        { notifEmail: email||'', notifPrefs: prefs||{} },
+        { merge: true }
+      ).then(function(){ console.log('Email synced to Firestore:', email); })
+       .catch(function(e){ console.warn('Email sync failed:', e); });
+      return true;
+    }catch(e){ console.warn('Email cfg sync error', e); return false; }
+  }
+  // Try immediately, then retry after 2s if Firebase not ready yet
+  if(!doSync()) setTimeout(doSync, 2000);
 }
 function prefVal(key, def){
   var p = getEmailPrefs();
