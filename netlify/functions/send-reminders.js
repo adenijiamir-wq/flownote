@@ -1,96 +1,62 @@
-// Netlify Scheduled Function — fires every minute
-// Reads push subscriptions + reminders from Firestore, sends Web Push
+// netlify/functions/send-reminders.js
+// Fires every minute — sends Web Push + Email for due reminders
 
 const VAPID_PUBLIC  = process.env.VAPID_PUBLIC_KEY;
 const VAPID_PRIVATE = process.env.VAPID_PRIVATE_KEY;
 const VAPID_EMAIL   = 'mailto:relay.your.problem@gmail.com';
 const FB_PROJECT    = process.env.FIREBASE_PROJECT_ID || 'flow-note-dc460';
 const FB_KEY        = process.env.FIREBASE_API_KEY;
+const BREVO_KEY     = process.env.BREVO_API_KEY;
+const SENDER_EMAIL  = 'relay.your.problem@gmail.com';
 
-// ── Minimal Web Push sender (no npm needed) ──────────────────────
-// Uses Node 18+ built-in crypto + fetch
 const { createSign } = require('crypto');
 
 function b64url(buf) {
   return Buffer.from(buf).toString('base64')
     .replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '');
 }
-
 function b64urlDecode(str) {
   str = str.replace(/-/g, '+').replace(/_/g, '/');
   while (str.length % 4) str += '=';
   return Buffer.from(str, 'base64');
 }
-
 async function makeVapidJwt(audience) {
   const header = b64url(JSON.stringify({ typ: 'JWT', alg: 'ES256' }));
   const now = Math.floor(Date.now() / 1000);
-  const payload = b64url(JSON.stringify({
-    aud: audience,
-    exp: now + 3600,
-    sub: VAPID_EMAIL
-  }));
-
+  const payload = b64url(JSON.stringify({ aud: audience, exp: now + 3600, sub: VAPID_EMAIL }));
   const unsigned = `${header}.${payload}`;
-
-  // Use Node crypto with ES256 (P-256)
   const keyBuf = b64urlDecode(VAPID_PRIVATE);
-  const sign = createSign('SHA256');
-  sign.update(unsigned);
-
-  // We need to import the raw private key as EC key
   const { subtle } = globalThis.crypto || require('crypto').webcrypto;
-  const key = await subtle.importKey(
-    'raw', keyBuf,
-    { name: 'ECDSA', namedCurve: 'P-256' }, false, ['sign']
-  );
+  const key = await subtle.importKey('raw', keyBuf, { name: 'ECDSA', namedCurve: 'P-256' }, false, ['sign']);
   const sig = await subtle.sign({ name: 'ECDSA', hash: 'SHA-256' }, key, Buffer.from(unsigned));
   return `${unsigned}.${b64url(sig)}`;
 }
-
 async function sendPush(subscription, payload) {
   try {
     const url = new URL(subscription.endpoint);
     const audience = `${url.protocol}//${url.host}`;
     const jwt = await makeVapidJwt(audience);
-
     const { subtle } = globalThis.crypto || require('crypto').webcrypto;
-
-    // ECDH key exchange
     const serverKey = await subtle.generateKey({ name: 'ECDH', namedCurve: 'P-256' }, true, ['deriveBits']);
     const clientKey = await subtle.importKey('raw', b64urlDecode(subscription.keys.p256dh), { name: 'ECDH', namedCurve: 'P-256' }, false, []);
     const sharedBits = await subtle.deriveBits({ name: 'ECDH', public: clientKey }, serverKey.privateKey, 256);
-
-    // Auth secret
     const auth = b64urlDecode(subscription.keys.auth);
-
-    // HKDF for content encryption key + nonce
     const encoder = new TextEncoder();
     const salt = globalThis.crypto.getRandomValues(new Uint8Array(16));
-
     const ikm = await subtle.importKey('raw', sharedBits, 'HKDF', false, ['deriveBits']);
     const prk = await subtle.deriveBits({ name: 'HKDF', hash: 'SHA-256', salt: auth, info: encoder.encode('Content-Encoding: auth\0') }, ikm, 256);
-
-    // Export server public key
     const serverPub = await subtle.exportKey('raw', serverKey.publicKey);
-
     const cekInfo = concat(encoder.encode('Content-Encoding: aesgcm\0'), new Uint8Array(1), b64urlDecode(subscription.keys.p256dh), new Uint8Array(serverPub));
     const nonceInfo = concat(encoder.encode('Content-Encoding: nonce\0'), new Uint8Array(1), b64urlDecode(subscription.keys.p256dh), new Uint8Array(serverPub));
-
     const prkKey = await subtle.importKey('raw', prk, 'HKDF', false, ['deriveBits']);
     const cekBits = await subtle.deriveBits({ name: 'HKDF', hash: 'SHA-256', salt, info: cekInfo }, prkKey, 128);
     const nonceBits = await subtle.deriveBits({ name: 'HKDF', hash: 'SHA-256', salt, info: nonceInfo }, prkKey, 96);
-
-    // Encrypt
     const encKey = await subtle.importKey('raw', cekBits, 'AES-GCM', false, ['encrypt']);
     const msgBuf = encoder.encode(typeof payload === 'string' ? payload : JSON.stringify(payload));
-    // Pad
     const padded = new Uint8Array(msgBuf.length + 2);
     padded.set(msgBuf, 2);
     const encrypted = await subtle.encrypt({ name: 'AES-GCM', iv: nonceBits }, encKey, padded);
-
     const body = concat(salt, new Uint8Array([0, 0, 16, 0]), new Uint8Array(serverPub), new Uint8Array(encrypted));
-
     const res = await fetch(subscription.endpoint, {
       method: 'POST',
       headers: {
@@ -109,7 +75,6 @@ async function sendPush(subscription, payload) {
     return 0;
   }
 }
-
 function concat(...arrays) {
   const total = arrays.reduce((n, a) => n + a.length, 0);
   const out = new Uint8Array(total);
@@ -118,28 +83,71 @@ function concat(...arrays) {
   return out;
 }
 
-// ── Firestore REST ───────────────────────────────────────────────
+// ── Firestore REST ──────────────────────────────────────────────
+function parseDoc(doc) {
+  const fields = doc.fields || {};
+  const out = {};
+  for (const [k, v] of Object.entries(fields)) {
+    if (v.stringValue  !== undefined) out[k] = v.stringValue;
+    else if (v.integerValue !== undefined) out[k] = parseInt(v.integerValue);
+    else if (v.booleanValue !== undefined) out[k] = v.booleanValue;
+    else if (v.arrayValue)  out[k] = (v.arrayValue.values || []).map(i => i.stringValue || i.mapValue || i);
+    else if (v.mapValue)    out[k] = v.mapValue;
+  }
+  return out;
+}
 async function firestoreList(collection) {
   const url = `https://firestore.googleapis.com/v1/projects/${FB_PROJECT}/databases/(default)/documents/${collection}?key=${FB_KEY}`;
   const res = await fetch(url);
   if (!res.ok) return [];
   const json = await res.json();
   return (json.documents || []).map(doc => {
-    const fields = doc.fields || {};
-    const out = {};
-    for (const [k, v] of Object.entries(fields)) {
-      if (v.stringValue !== undefined) out[k] = v.stringValue;
-      else if (v.integerValue !== undefined) out[k] = parseInt(v.integerValue);
-      else if (v.booleanValue !== undefined) out[k] = v.booleanValue;
-      else if (v.arrayValue) out[k] = (v.arrayValue.values || []).map(i => i.stringValue || i.mapValue || i);
-      else if (v.mapValue) out[k] = v.mapValue; // raw
-    }
+    const out = parseDoc(doc);
     out._id = doc.name.split('/').pop();
     return out;
   });
 }
+async function firestoreGet(collection, docId) {
+  const url = `https://firestore.googleapis.com/v1/projects/${FB_PROJECT}/databases/(default)/documents/${collection}/${docId}?key=${FB_KEY}`;
+  const res = await fetch(url);
+  if (!res.ok) return null;
+  return parseDoc(await res.json());
+}
 
-// ── Time helpers ─────────────────────────────────────────────────
+// ── Email via Brevo ─────────────────────────────────────────────
+async function sendEmail(to, subject, reminderText, emoji) {
+  if (!BREVO_KEY || !to) return;
+  const html =
+    "<div style='font-family:system-ui,sans-serif;max-width:520px;margin:0 auto;background:#faf9f6;border-radius:16px;overflow:hidden;border:1px solid #e2dfd8'>" +
+    "<div style='background:#1a6b3c;padding:20px 24px;text-align:center'>" +
+    "<span style='font-size:2rem'>" + (emoji || '🔔') + "</span>" +
+    "<h1 style='color:#fff;margin:8px 0 0;font-size:1.1rem;font-weight:700'>Reminder</h1>" +
+    "</div>" +
+    "<div style='padding:20px 24px;color:#0f0f0f;font-size:1rem;line-height:1.6'>" +
+    "<p>" + reminderText + "</p>" +
+    "<a href='https://menmory.netlify.app' style='display:inline-block;margin-top:12px;background:#1a6b3c;color:#fff;padding:10px 20px;border-radius:8px;text-decoration:none;font-weight:600;font-size:.9rem'>Open Menmory →</a>" +
+    "</div>" +
+    "<div style='padding:12px 24px;background:#f2f0eb;text-align:center;font-size:.75rem;color:#9e9b93'>Menmory — Your personal study OS</div>" +
+    "</div>";
+  try {
+    const res = await fetch('https://api.brevo.com/v3/smtp/email', {
+      method: 'POST',
+      headers: { 'api-key': BREVO_KEY, 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        sender: { name: 'Menmory', email: SENDER_EMAIL },
+        to: [{ email: to }],
+        subject,
+        htmlContent: html
+      })
+    });
+    const data = await res.json();
+    console.log('Email sent to', to, '→', res.status, data.messageId || data.message || '');
+  } catch(e) {
+    console.warn('Email error:', e.message);
+  }
+}
+
+// ── Time helpers ────────────────────────────────────────────────
 function nowHHMM() {
   const d = new Date();
   return String(d.getHours()).padStart(2,'0') + ':' + String(d.getMinutes()).padStart(2,'0');
@@ -159,7 +167,7 @@ function timeTo24(raw) {
   return String(h).padStart(2,'0') + ':' + String(mn).padStart(2,'0');
 }
 
-// ── Main handler ─────────────────────────────────────────────────
+// ── Main ────────────────────────────────────────────────────────
 exports.handler = async () => {
   if (!VAPID_PUBLIC || !VAPID_PRIVATE) {
     console.error('Missing VAPID keys');
@@ -185,6 +193,19 @@ exports.handler = async () => {
     try { Object.assign(fired, JSON.parse(doc.fired || '{}')); } catch(e) {}
     const firedToday = fired[today] || {};
 
+    // Get this user's email settings — same UID as pushData doc
+    let userEmail = null;
+    let emailPrefs = {};
+    try {
+      const userDoc = await firestoreGet('users', doc._id);
+      if (userDoc) {
+        userEmail = userDoc.notifEmail || null;
+        emailPrefs = typeof userDoc.notifPrefs === 'string'
+          ? JSON.parse(userDoc.notifPrefs)
+          : (userDoc.notifPrefs || {});
+      }
+    } catch(e) {}
+
     for (const r of reminders) {
       if (r.done) continue;
       const t24 = timeTo24(r.time || r.startTime || '');
@@ -194,10 +215,17 @@ exports.handler = async () => {
       if (firedToday[key]) continue;
 
       const title = (r.emoji || '🔔') + ' ' + r.text;
-      const body = r.date === 'everyday' ? 'Daily reminder' : 'Tap to view';
-      const status = await sendPush(sub, JSON.stringify({ title, body, tag: key }));
+      const pushBody = r.date === 'everyday' ? 'Daily reminder' : 'Tap to view';
+
+      // Web Push (existing, untouched)
+      const status = await sendPush(sub, JSON.stringify({ title, body: pushBody, tag: key }));
       console.log(`Push to ${doc._id}: ${status} — ${title}`);
       if (status >= 200 && status < 300) sent++;
+
+      // Email (new) — fires alongside push if user has email saved
+      if (userEmail) {
+        await sendEmail(userEmail, title, r.text, r.emoji || '🔔');
+      }
     }
   }
 
