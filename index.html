@@ -3007,6 +3007,20 @@ body::after{
     <label style="font-size:.68rem;font-weight:700;text-transform:uppercase;letter-spacing:.09em;color:var(--muted);display:block;margin-bottom:.4rem;">Topic <span style="font-weight:400;text-transform:none;">(optional)</span></label>
     <input id="gen-topic-input" placeholder="e.g. Calculus — Derivatives" style="width:100%;box-sizing:border-box;background:var(--paper2);border:1.5px solid var(--line);border-radius:10px;padding:.55rem .8rem;font-family:inherit;font-size:.82rem;color:var(--ink);margin-bottom:1rem;"/>
 
+    <div style="margin-bottom:.75rem;">
+      <div style="font-size:.62rem;font-weight:700;text-transform:uppercase;letter-spacing:.09em;color:var(--muted);margin-bottom:.35rem;">When to start reviewing?</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:.3rem;" id="gen-when-btns">
+        <button onclick="setGenWhen(this,1)"  class="card-when-btn">Tomorrow</button>
+        <button onclick="setGenWhen(this,3)"  class="card-when-btn">3 days</button>
+        <button onclick="setGenWhen(this,7)"  class="card-when-btn">1 week</button>
+        <button onclick="setGenWhen(this,14)" class="card-when-btn">2 weeks</button>
+      </div>
+      <div style="display:flex;align-items:center;gap:.5rem;margin-top:.3rem;">
+        <input type="date" id="gen-when-date" style="flex:1;background:var(--paper2);border:1.5px solid var(--line);border-radius:8px;padding:.38rem .6rem;font-family:inherit;font-size:.73rem;color:var(--ink);cursor:pointer;" onchange="setGenWhenDate(this.value)"/>
+        <span style="font-size:.63rem;color:var(--muted);white-space:nowrap;">Pick a date</span>
+      </div>
+    </div>
+
     <div class="m-btns">
       <button class="btn-c" onclick="closeGenModal()">Cancel</button>
       <button class="btn-ok" id="gen-modal-go" onclick="runGenModal()">Generate ✨</button>
@@ -4233,7 +4247,14 @@ function navTo(id,btn){
   const titles={home:'Home',notes:'Notes',cards:'Study Cards',reminders:'Reminders',gaps:'Progress',timer:'Study Timer',chat:'Chat with '+CHARS[currentChar].name,profile:'Profile',trash:'Deleted Items',admin:'Admin'};
   document.getElementById('page-title').textContent=titles[id]||id;
   closeSidebar();
-  if(id==='cards') renderCards();
+  if(id==='cards'){
+    renderCards();
+    // Clear the badge dot when user opens the cards page — they've seen it
+    var bnBadge=document.getElementById('bn-cards-badge');
+    var navBadge=document.getElementById('review-badge');
+    if(bnBadge) bnBadge.style.display='none';
+    if(navBadge) navBadge.style.display='none';
+  }
   if(id==='gaps') renderGaps();
   if(id==='timer') populatePomoSubjects();
     updatePomoStats();
@@ -4742,6 +4763,10 @@ function suggestCount(text){
 }
 
 function openGenModal(mode, noteId){
+  _genWhenDays = null;
+  _genWhenExactDate = null;
+  document.querySelectorAll('#gen-when-btns .card-when-btn').forEach(b=>b.classList.remove('active'));
+  const di = document.getElementById('gen-when-date'); if(di) di.value='';
   _genMode = mode;
   _genNoteId = noteId || null;
   _genType = 'mixed';
@@ -4839,6 +4864,7 @@ async function runGenModal(){
 // CARD GENERATION FROM NOTE (with count + topic)
 // ══════════════════════════════════════════════════════
 async function genCardsFromNote(noteId, body, subject, count, topic){
+  if(!_genWhenDays && !_genWhenExactDate){ toast('Please pick when to start reviewing first!'); return; }
   if(!body||body.length<30){toast('Note is too short to generate cards from.');return;}
   toast('✨ Generating '+count+' cards…');
   try{
@@ -4869,7 +4895,7 @@ Rules:
           sourceNoteId:noteId,
           created:new Date().toISOString(),
           reps:0,lapses:0,ease:2.5,interval:1,
-          nextReview:tomorrowStr()
+          nextReview:(_genWhenExactDate || (function(){ var d=new Date(); d.setDate(d.getDate()+(_genWhenDays||7)); return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); })())
         });
         added++;
       }
@@ -5097,6 +5123,21 @@ function closeQuizModal(){
   document.getElementById('quiz-modal').style.display = 'none';
 }
 let _cardWhenDays = 7;
+let _genWhenDays = null; // user must pick before generating
+function setGenWhen(btn, days){
+  _genWhenDays = days;
+  _genWhenExactDate = null;
+  document.querySelectorAll('#gen-when-btns .card-when-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  const di = document.getElementById('gen-when-date'); if(di) di.value='';
+}
+var _genWhenExactDate = null;
+function setGenWhenDate(val){
+  if(!val) return;
+  _genWhenExactDate = val;
+  _genWhenDays = null;
+  document.querySelectorAll('#gen-when-btns .card-when-btn').forEach(b=>b.classList.remove('active'));
+}
 let _cardWhenExact = null; // specific date override
 function setCardWhen(btn, days){
   _cardWhenDays = days;
@@ -8560,7 +8601,23 @@ function populatePomoSubjects(){
 
 function renderNextAction(){
   var el=document.getElementById('home-next-action');
-  if(el)el.innerHTML='';
+  if(!el) return;
+  var due = typeof getDueCards==='function' ? getDueCards().length : 0;
+  if(due > 0){
+    el.style.display='block';
+    el.innerHTML =
+      '<div onclick="navTo(\'cards\',document.getElementById(\'nav-cards\'));setBN(\'cards\');setTimeout(function(){startStudySession&&startStudySession()},300)" '+
+      'style="background:linear-gradient(135deg,var(--green) 0%,#145c32 100%);border-radius:14px;padding:.85rem 1rem;display:flex;align-items:center;gap:.75rem;cursor:pointer;margin-bottom:.55rem;">' +
+      '<div style="width:38px;height:38px;border-radius:50%;background:rgba(255,255,255,.18);display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:1.2rem;">🃏</div>' +
+      '<div style="flex:1;">' +
+        '<div style="font-size:.92rem;font-weight:800;color:#fff;line-height:1.2;">' + due + ' card' + (due>1?'s':'') + ' due now</div>' +
+        '<div style="font-size:.68rem;color:rgba(255,255,255,.75);margin-top:.15rem;">Tap to start your review session →</div>' +
+      '</div>' +
+      '</div>';
+  } else {
+    el.style.display='none';
+    el.innerHTML='';
+  }
 }
 
 // ══════════════════════════════════════════════════════
