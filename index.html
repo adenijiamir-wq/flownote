@@ -2231,8 +2231,10 @@ body::after{
           </div>
           <!-- Progress bar -->
           <div class="fc-progress-bar"><div class="fc-progress-bar-fill" id="fc-progress-bar-fill" style="width:0%"></div></div>
-          <!-- Counter -->
-          <div style="display:flex;align-items:center;justify-content:flex-end;margin-bottom:.75rem;">
+          <!-- Counter + back button -->
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:.75rem;">
+            <button id="fc-back-btn" onclick="prevSessionCard()" style="background:none;border:1px solid var(--line);border-radius:8px;padding:.2rem .6rem;font-size:.72rem;color:var(--muted);cursor:pointer;font-family:inherit;display:none;-webkit-tap-highlight-color:transparent;">← Back</button>
+            <span style="flex:1;"></span>
             <span style="font-size:.72rem;font-weight:600;color:var(--muted);" id="fc-progress">1 / 1</span>
           </div>
           <!-- 3D Flashcard wrapper (never destroyed) -->
@@ -4921,6 +4923,7 @@ let _quizIdx = 0;
 let _quizScore = 0;
 let _quizTotal = 0;
 let _quizAnswered = false;
+let _quizWrongItems = []; // tracks {q, correctAnswer} for wrong answers
 
 async function genQuizFromNote(note, count, type, topic){
   toast('🧠 Generating quiz…');
@@ -4975,6 +4978,7 @@ function startQuiz(questions, title, subject, topic){
   _quizQuestions = questions;
   _quizIdx = 0;
   _quizScore = 0;
+  _quizWrongItems = [];
   _quizTotal = questions.length;
   _quizAnswered = false;
   _quizSubject = subject || title || 'General';
@@ -5029,7 +5033,8 @@ function answerMCQ(btn, chosen, correct, explanation, idx){
   if(_quizAnswered) return;
   _quizAnswered = true;
   const isCorrect = chosen.trim() === correct.trim();
-  if(isCorrect) _quizScore++;
+  if(isCorrect){ _quizScore++; }
+  else { _quizWrongItems.push({q: _quizQuestions[_quizIdx]?.q||'', correct: correct}); }
 
   // Color all options
   const opts = document.querySelectorAll('#mcq-options button');
@@ -5060,19 +5065,32 @@ async function checkOpenAnswer(modelAnswer, explanation, btn){
 
   try{
     const verdict = await askAI(
-      `Grade this open ended answer. Be fair and encouraging.
+      `You are grading a student's open-ended quiz answer. Be generous — accept answers that show the student understands the concept even if they use different words.
 Question: ${_quizQuestions[_quizIdx].q}
 Model answer: ${modelAnswer}
 Student answer: ${userAnswer}
 
-Reply with ONLY: {"correct":true/false,"feedback":"1 sentence feedback"}`,
-      '', 200
+Rules:
+- Mark correct if the student demonstrates understanding of the core concept
+- Do NOT require word-for-word matches
+- Do NOT penalise for missing minor details
+- Award partial credit as correct if the main idea is right
+- Only mark wrong if the answer is clearly incorrect or shows a misconception
+
+Reply with ONLY valid JSON (no markdown): {"correct":true/false,"feedback":"1 encouraging sentence — if wrong, gently explain what was missing"}`,
+      '', 250
     );
     let result;
     try{ result = JSON.parse(verdict.replace(/```json|```/g,'').trim()); }
-    catch{ result = {correct: userAnswer.length>10, feedback:'Good attempt!'}; }
+    catch{
+      // Fallback: try to extract true/false from raw text
+      const raw = verdict.toLowerCase();
+      const looksCorrect = raw.includes('"correct":true') || raw.includes('correct: true') || raw.includes('correct":\ntrue');
+      result = {correct: looksCorrect, feedback: 'Good attempt — keep going!'};
+    }
 
-    if(result.correct) _quizScore++;
+    if(result.correct){ _quizScore++; }
+    else { _quizWrongItems.push({q: _quizQuestions[_quizIdx]?.q||'', correct: modelAnswer}); }
     const feedback = document.getElementById('quiz-feedback-area');
     feedback.style.display = 'block';
     feedback.style.background = result.correct ? '#dcfce7' : '#fef9c3';
@@ -5123,6 +5141,97 @@ function showQuizResults(){
   document.getElementById('quiz-result-title').textContent = title;
   document.getElementById('quiz-result-score').textContent = _quizScore+' / '+_quizTotal+' correct ('+pct+'%)';
   document.getElementById('quiz-results').style.display = 'block';
+
+  // Fire coach summary bubble after a short delay
+  setTimeout(function(){ _showQuizCoachBubble(pct, _quizWrongItems.slice(), _quizSubject); }, 800);
+}
+
+function _showQuizCoachBubble(pct, wrongItems, subject){
+  var old = document.getElementById('post-quiz-bubble'); if(old) old.remove();
+  var c = (typeof CHARS!=='undefined'&&CHARS[currentChar]) ? CHARS[currentChar] : {name:'Coach',badge:'👋'};
+  var wrongCount = wrongItems.length;
+  var totalQ = _quizTotal;
+  var correctCount = totalQ - wrongCount;
+  var wrongTopics = wrongItems.slice(0,3).map(function(w){ return '"'+w.q.slice(0,50)+(w.q.length>50?'…':'')+'"'; }).join(', ');
+
+  var msg = '';
+  var tier = pct>=75?'high':pct>=50?'mid':'low';
+  var coachKey = (typeof currentChar!=='undefined') ? currentChar : 'zack';
+
+  if(coachKey==='zack'){
+    if(tier==='high') msg = 'Bro '+pct+'%?? That\'s actually cold fr 🔥 You clearly know your '+subject+' stuff. '+(wrongCount>0?'The '+wrongCount+' you missed are worth a quick look — tap Progress to see the breakdown.':'Check Progress to see your full stats, it\'s looking good ngl.');
+    else if(tier==='mid') msg = 'Solid — '+correctCount+'/'+totalQ+' right on '+subject+'. '+(wrongCount>0?'You slipped on '+wrongCount+' — mainly around: '+wrongTopics+'. Worth revisiting those. Check Progress for the full picture 📊':'No major gaps spotted. Progress has your full breakdown.');
+    else msg = 'Okay '+pct+'% hurts a little ngl 😅 But this is what quizzes are for. You struggled with: '+wrongTopics+'. Tap Progress — it\'ll show you exactly where to focus.';
+  } else if(coachKey==='rex'){
+    if(tier==='high') msg = pct+'%. Strong. '+subject+' is solid ground for you. '+(wrongCount>0?wrongCount+' missed — review them in Progress before they become gaps.':'Progress shows your full breakdown.');
+    else if(tier==='mid') msg = correctCount+'/'+totalQ+' on '+subject+'. '+(wrongCount>0?'Gaps identified: '+wrongTopics+'. These need work. Progress tab has the full report.':'Clean session. Check Progress for your trend data.');
+    else msg = pct+'% is not where you need to be on '+subject+'. Struggled on: '+wrongTopics+'. Open Progress, find the pattern, fix it.';
+  } else if(coachKey==='priya'){
+    if(tier==='high') msg = 'Oh this is wonderful — '+pct+'% on '+subject+' 🌟 You should feel really proud. '+(wrongCount>0?'The '+wrongCount+' you missed are in Progress whenever you\'re ready 💛':'Check Progress when you get a chance — it\'s showing something lovely 🌿');
+    else if(tier==='mid') msg = 'You got '+correctCount+' right on '+subject+', and that matters 🌿 '+(wrongCount>0?'A few areas to revisit: '+wrongTopics+'. Progress has a full breakdown 💛':'Progress has your full picture whenever you\'re curious 💛');
+    else msg = 'I know '+pct+'% feels disappointing, but this is how we find what to work on 🌸 Areas that need love: '+wrongTopics+'. Please check Progress — it\'ll show you where to put your energy next 💛';
+  } else {
+    if(tier==='high') msg = pct+'%!! Okay you\'re carrying the team (the team being you) 😄 '+subject+' clearly respects you. '+(wrongCount>0?'The '+wrongCount+' you missed — Progress has the full post-match analysis 📊':'Check Progress for your stats 👀');
+    else if(tier==='mid') msg = 'A solid '+correctCount+'/'+totalQ+' — not the main character arc but a decent side quest 😄 You fumbled: '+wrongTopics+'. Progress has the full breakdown.';
+    else msg = 'Okay '+pct+'% is a story arc, not a finale 😄 The questions that defeated you: '+wrongTopics+'. Progress tab has the autopsy report.';
+  }
+
+  var wrap = document.createElement('div');
+  wrap.id = 'post-quiz-bubble';
+  wrap.style.cssText = 'position:fixed;bottom:90px;left:12px;right:12px;z-index:9100;animation:ianIn .35s cubic-bezier(.34,1.3,.64,1);cursor:pointer;';
+  wrap.onclick = function(e){
+    if(e.target.closest('button')) return;
+    wrap.remove();
+    if(typeof navTo==='function') navTo('gaps', document.getElementById('nav-gaps'));
+    if(typeof setBN==='function') setBN('gaps');
+  };
+  wrap.innerHTML =
+    '<div style="background:var(--paper);border:1.5px solid var(--green);border-radius:16px;padding:1rem 1.1rem;box-shadow:0 8px 32px rgba(0,0,0,.2);display:flex;gap:.75rem;align-items:flex-start;">' +
+      '<div style="font-size:1.3rem;flex-shrink:0;margin-top:.05rem;">'+c.badge+'</div>' +
+      '<div style="flex:1;min-width:0;">' +
+        '<div style="font-size:.67rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.07em;margin-bottom:.3rem;">'+c.name+'</div>' +
+        '<div style="font-size:.85rem;color:var(--ink);line-height:1.5;">'+msg+'</div>' +
+        '<div style="font-size:.68rem;color:var(--green);font-weight:600;margin-top:.5rem;">Tap to open Progress \u2192</div>' +
+      '</div>' +
+      '<button onclick="document.getElementById(\'post-quiz-bubble\').remove()" style="background:none;border:none;color:var(--muted);font-size:1.1rem;cursor:pointer;padding:.1rem .2rem;flex-shrink:0;">\u00d7</button>' +
+    '</div>';
+  document.body.appendChild(wrap);
+  setTimeout(function(){ var el=document.getElementById('post-quiz-bubble'); if(el) el.remove(); }, 14000);
+}
+
+function _showSessionCoachBubble(reviewed, total){
+  var old = document.getElementById('post-session-bubble'); if(old) old.remove();
+  if(reviewed < 2) return;
+  var c = (typeof CHARS!=='undefined'&&CHARS[currentChar]) ? CHARS[currentChar] : {name:'Coach',badge:'👋'};
+  var coachKey = (typeof currentChar!=='undefined') ? currentChar : 'zack';
+  var msg = '';
+
+  if(coachKey==='zack') msg = reviewed+'/'+total+' cards reviewed fr 🃏 Progress has the full breakdown — which ones you nailed, which got requeued. Worth a look to see where the gaps are.';
+  else if(coachKey==='rex') msg = reviewed+' of '+total+' cards done. Progress shows your retention rate and weak spots. Check it.';
+  else if(coachKey==='priya') msg = 'You reviewed '+reviewed+' cards today 🌿 Progress has your full trend and any areas that might need a little more love. Tap whenever you\'re ready 💛';
+  else msg = reviewed+'/'+total+' cards — not nothing! 😄 Progress has the breakdown of what your brain actually retained vs what it\'s still negotiating with.';
+
+  var wrap = document.createElement('div');
+  wrap.id = 'post-session-bubble';
+  wrap.style.cssText = 'position:fixed;bottom:90px;left:12px;right:12px;z-index:9100;animation:ianIn .35s cubic-bezier(.34,1.3,.64,1);cursor:pointer;';
+  wrap.onclick = function(e){
+    if(e.target.closest('button')) return;
+    wrap.remove();
+    if(typeof navTo==='function') navTo('gaps', document.getElementById('nav-gaps'));
+    if(typeof setBN==='function') setBN('gaps');
+  };
+  wrap.innerHTML =
+    '<div style="background:var(--paper);border:1.5px solid var(--line);border-radius:16px;padding:1rem 1.1rem;box-shadow:0 8px 32px rgba(0,0,0,.2);display:flex;gap:.75rem;align-items:flex-start;">' +
+      '<div style="font-size:1.3rem;flex-shrink:0;margin-top:.05rem;">'+c.badge+'</div>' +
+      '<div style="flex:1;min-width:0;">' +
+        '<div style="font-size:.67rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.07em;margin-bottom:.3rem;">'+c.name+'</div>' +
+        '<div style="font-size:.85rem;color:var(--ink);line-height:1.5;">'+msg+'</div>' +
+        '<div style="font-size:.68rem;color:var(--green);font-weight:600;margin-top:.5rem;">Tap to open Progress \u2192</div>' +
+      '</div>' +
+      '<button onclick="document.getElementById(\'post-session-bubble\').remove()" style="background:none;border:none;color:var(--muted);font-size:1.1rem;cursor:pointer;padding:.1rem .2rem;flex-shrink:0;">\u00d7</button>' +
+    '</div>';
+  document.body.appendChild(wrap);
+  setTimeout(function(){ var el=document.getElementById('post-session-bubble'); if(el) el.remove(); }, 12000);
 }
 
 function closeQuizModal(){
@@ -5581,7 +5690,7 @@ function deleteCard(id){
 }
 
 // Study session (inline flashcard)
-let sessionCards=[], sessionIdx=0, sessionFlipped=false;
+let sessionCards=[], sessionIdx=0, sessionFlipped=false, sessionHistory=[];
 let _sessionSubject=''; // tracks current session subject for deck header
 function startStudySession(){
   // Always load ALL cards — due ones first, then remaining
@@ -5594,7 +5703,7 @@ function startStudySession(){
   _startSession();
 }
 function _startSession(){
-  sessionIdx=0;sessionFlipped=false;
+  sessionIdx=0;sessionFlipped=false;sessionHistory=[];
   // Hide done overlay
   const ov=document.getElementById('fc-done-overlay');
   if(ov){ov.style.display='none';}
@@ -5651,6 +5760,25 @@ function showSessionCard(){
   const displayIdx=realIdx>=0?realIdx:sessionIdx;
   document.getElementById('fc-progress').textContent=(displayIdx+1)+' / '+total;
   sessionFlipped=false;
+  // Show back button only if we have history
+  var backBtn=document.getElementById('fc-back-btn');
+  if(backBtn) backBtn.style.display=sessionHistory.length>0?'inline-block':'none';
+}
+function prevSessionCard(){
+  if(!sessionHistory.length) return;
+  sessionIdx = sessionHistory.pop();
+  sessionFlipped = false;
+  showSessionCard();
+  // Unflip card visually
+  var fc=document.getElementById('flashcard');
+  if(fc) fc.classList.remove('flipped');
+  var hint=document.getElementById('fc-hint');
+  if(hint){hint.style.display='block';hint.textContent='Tap to flip';}
+  var btns=document.getElementById('fc-grade-btns');
+  if(btns) btns.style.display='none';
+  var sh=document.getElementById('fc-swipe-hint');
+  if(sh) sh.style.display='block';
+  document.getElementById('fc-side').textContent='Question';
 }
 function flipCard(){
   if(sessionFlipped)return;
@@ -5663,6 +5791,9 @@ function flipCard(){
   document.getElementById('fc-grade-btns').style.display='grid';
 }
 function gradeCard(grade){
+  // Save current position to history so user can go back
+  sessionHistory.push(sessionIdx);
+  if(sessionHistory.length>10) sessionHistory.shift(); // keep last 10
   const card=sessionCards[sessionIdx];
   const sc=studyCards.find(c=>c.id===card.id);
   if(sc){
@@ -5760,6 +5891,8 @@ function startTopicSession(subject){
 function endSession(){
   const reviewed = sessionCards.filter((c,i)=>i<sessionIdx&&!c._requeued).length;
   save(); renderCards(); checkReviewBadge(); renderGaps();
+  // Coach summary bubble for card session
+  setTimeout(function(){ _showSessionCoachBubble(reviewed, sessionCards.filter(c=>!c._requeued).length); }, 900);
   // Fill progress bar to 100%
   const bar=document.getElementById('fc-progress-bar-fill');
   if(bar) bar.style.width='100%';
