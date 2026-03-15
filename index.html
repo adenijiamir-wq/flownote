@@ -4010,12 +4010,7 @@ function finishOBWithEmail(){
 function _checkEmailNudge(){
   if(localStorage.getItem('mn_email_set')) return;
   if(typeof getEmailAddr==='function' && getEmailAddr()){ localStorage.setItem('mn_email_set','1'); return; }
-  const firstSeen = localStorage.getItem('mn_nudge_first_seen');
-  const now = Date.now();
-  if(!firstSeen){ localStorage.setItem('mn_nudge_first_seen', String(now)); return; }
-  const hoursSince = (now - parseInt(firstSeen)) / 3600000;
-  if(hoursSince < 1) return; // wait 1 hour before first nudge
-  // Show once per app session (track by session key)
+  // Show once per day max — but immediately on first open, no waiting
   const sessionKey = 'mn_nudge_session_' + new Date().toDateString();
   if(localStorage.getItem(sessionKey)) return;
   localStorage.setItem(sessionKey, '1');
