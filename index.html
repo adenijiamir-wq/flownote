@@ -1662,6 +1662,7 @@ body::after{
   background:rgba(250,249,246,.88)!important;
   border-bottom:1px solid rgba(226,223,216,.55)!important;
   position:sticky;top:0;z-index:40;
+  padding-top:calc(.72rem + env(safe-area-inset-top, 0px));
 }
 [data-theme="dark"] .topbar{
   background:rgba(24,24,24,.88)!important;
@@ -1806,12 +1807,19 @@ body::after{
   box-shadow:0 2px 10px rgba(26,107,60,.25)!important;
 }
 
+
+/* iOS install nudge */
+#ios-install-nudge{position:fixed;bottom:0;left:0;right:0;z-index:99990;background:#1a6b3c;color:#fff;padding:calc(12px + env(safe-area-inset-bottom,0px)) 16px 14px;display:flex;align-items:center;gap:.75rem;box-shadow:0 -4px 20px rgba(0,0,0,.25);}
+#ios-install-nudge .in-icon{font-size:1.5rem;flex-shrink:0;}
+#ios-install-nudge .in-text{flex:1;font-size:.8rem;line-height:1.4;}
+#ios-install-nudge .in-title{font-weight:700;font-size:.88rem;}
+#ios-install-nudge .in-close{background:rgba(255,255,255,.2);border:none;color:#fff;border-radius:50%;width:28px;height:28px;font-size:1rem;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
 </style>
 </head>
 <body>
 
 <!-- ════ AUTH SCREEN ════ -->
-<div id="auth-screen" style="display:none;">
+<div id="auth-screen" style="display:none;padding-top:env(safe-area-inset-top,0px);">
   <div class="auth-card">
     <div class="auth-logo">Men<span>mory</span> 📚
       <div class="auth-tagline">Your AI-powered study brain</div>
@@ -1861,7 +1869,7 @@ body::after{
 </div>
 
 <!-- ════ ONBOARDING ════ -->
-<div id="ob" style="display:none;">
+<div id="ob" style="display:none;padding-top:env(safe-area-inset-top,0px);">
 <div class="ob-card">
   <div class="ob-logo">Men<span>mory</span> <span class="ob-logo-icon">📚</span></div>
 
@@ -2765,7 +2773,7 @@ body::after{
 <!-- ── FULL-SCREEN NOTE EDITOR ── -->
 <div id="note-editor-overlay" style="display:none;position:fixed;inset:0;z-index:9000;background:var(--paper);flex-direction:column;">
   <!-- Top bar -->
-  <div style="display:flex;align-items:center;gap:.6rem;padding:.75rem 1rem .65rem;border-bottom:1px solid var(--line);flex-shrink:0;background:var(--paper);">
+  <div style="display:flex;align-items:center;gap:.6rem;padding:calc(.75rem + env(safe-area-inset-top,0px)) 1rem .65rem;border-bottom:1px solid var(--line);flex-shrink:0;background:var(--paper);">
     <button onclick="closeNoteEditor()" style="background:none;border:none;padding:.3rem .5rem .3rem 0;cursor:pointer;color:var(--muted);display:flex;align-items:center;gap:.3rem;font-family:inherit;font-size:.82rem;font-weight:600;flex-shrink:0;">
       <svg viewBox="0 0 24 24" style="width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:2.5;stroke-linecap:round;stroke-linejoin:round;"><polyline points="15 18 9 12 15 6"/></svg>
       Notes
@@ -4042,6 +4050,25 @@ function _nudgeDismiss(){
 // ══════════════════════════════════════════════════════
 // APP START
 // ══════════════════════════════════════════════════════
+function _maybeShowIOSNudge(){
+  // Only show in Safari on iOS, only if not already standalone, only once per 7 days
+  var isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent);
+  var isSafari = /safari/i.test(navigator.userAgent) && !/chrome|crios|fxios/i.test(navigator.userAgent);
+  var isStandalone = window.navigator.standalone || window.matchMedia('(display-mode: standalone)').matches;
+  if(!isIOS || !isSafari || isStandalone) return;
+  var lastShown = localStorage.getItem('mn_ios_nudge');
+  if(lastShown && (Date.now() - parseInt(lastShown)) < 7*864e5) return;
+  localStorage.setItem('mn_ios_nudge', Date.now());
+  var el = document.createElement('div');
+  el.id = 'ios-install-nudge';
+  el.innerHTML = '<div class="in-icon">📲</div>' +
+    '<div class="in-text"><div class="in-title">Add to Home Screen</div>' +
+    'Tap <strong>Share</strong> then <strong>"Add to Home Screen"</strong> for the full app experience — no browser bar!</div>' +
+    '<button class="in-close" onclick="this.parentElement.remove()">×</button>';
+  document.body.appendChild(el);
+  setTimeout(function(){ var n=document.getElementById('ios-install-nudge');if(n)n.remove(); }, 12000);
+}
+
 function startApp(){
   // Migrate any reminders that stored literal 'today'/'tomorrow'/'nextweek' strings
   const _t=todayStr(), _tm=tomorrowStr();
@@ -4076,6 +4103,7 @@ function startApp(){
   scheduleAllReminders();
   startNotifPoller();
   maybeShowCheckin(1500);
+  setTimeout(_maybeShowIOSNudge, 3000);
   // Check if user has set email — nudge them if not
   setTimeout(_checkEmailNudge, 4000);
   // Show permission prompts if not yet asked
@@ -8723,6 +8751,7 @@ function checkAndFireReminders(){
   var data; try{ data=JSON.parse(localStorage.getItem('mb7_data')||'{}'); }catch(e){ nlog('data fail'); return; }
   var changed=false;
   var hasEmail = typeof window.sendMenmoryEmail==='function' && typeof window.getEmailAddr==='function' && window.getEmailAddr();
+  nlog('checkFire: email='+hasEmail+' addr='+(typeof window.getEmailAddr==='function'?window.getEmailAddr():'none'));
 
   (data.reminders||[]).forEach(function(r){
     if(r.done) return;
@@ -8732,7 +8761,7 @@ function checkAndFireReminders(){
     var p=t24.split(':'), rMin=parseInt(p[0])*60+parseInt(p[1]);
     var diff=nowMin-rMin;
     // Within the fire window (0-5 min past reminder time)
-    if(diff<0 || diff>5) return;
+    if(diff<0 || diff>10) return;
 
     var key='r'+r.id;
     var emailKey='email_r'+r.id;
