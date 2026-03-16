@@ -5385,7 +5385,14 @@ Rules:
       save();renderCards();populateCardSubjectFilter();checkReviewBadge();
       toast('📇 '+added+' card'+(added>1?'s':'')+' added'+(skipped?' ('+skipped+' duplicate'+(skipped>1?'s':'')+' skipped)':'')+(topic?' ['+topic+']':'')+'!');
     }
-  }catch(e){toast('Generation failed — check connection');console.warn(e);}
+  }catch(e){
+    var msg = e.message||'';
+    if(msg.includes('404')||msg.includes('model')) toast('AI model error — contact support');
+    else if(msg.includes('401')||msg.includes('auth')) toast('API key error — check Netlify config');
+    else if(msg.includes('529')||msg.includes('overload')) toast('AI busy — try again in a moment');
+    else toast('Generation failed: '+msg.slice(0,60));
+    console.error('Card gen error:',e);
+  }
 }
 
 // ══════════════════════════════════════════════════════
@@ -8502,7 +8509,7 @@ function getAIKey(){ return ''; } // key handled server-side
 function getAIHeaders(){
   return{'Content-Type':'application/json'};
 }
-function getAIUrl(){ return '/api/ai'; }
+function getAIUrl(){ return '/.netlify/functions/ai'; }
 
 async function callAI(sys, msg, maxT = 500) {
   if(localStorage.getItem('mn_is_minor')==='1'){
