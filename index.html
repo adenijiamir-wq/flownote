@@ -3834,57 +3834,13 @@ function afterAuth(isReturning){
 // TOUR SYSTEM — interactive, tap-to-advance
 // ══════════════════════════════════════════════════════
 var _tourSteps = [
-  // ── HOME ──
-  {
-    page:'home', sel:'#qc-fab',
-    title:'Quick Capture 💭',
-    text:'The floating bubble — tap it anytime to jot down a thought, term or idea instantly without opening the app properly.',
-    waitForTap: false
-  },
-  {
-    page:'home', sel:'#home-chips-row',
-    title:'Events & Goals 📅🎯',
-    text:'Set a countdown to an exam or a weekly card review goal. Both live here on your home screen.',
-    waitForTap: false
-  },
-  {
-    page:'home', sel:'#rem-add-toggle-btn',
-    title:'Add a task ✅',
-    text:'Tap here to add tasks and reminders. You\'ll get a push notification when they\'re due — even when the app is closed.',
-    waitForTap: false
-  },
-  // ── NOTES (navigate prompt) ──
-  {
-    page:'notes', sel:'.add-note-btn',
-    navPrompt: true,
-    title:'Notes 📝',
-    text:'Now we\'re on the Notes page. Tap "+ New note" to write your study notes. Once written, the AI can generate flashcards from them automatically.',
-    waitForTap: false
-  },
-  // ── CARDS ──
-  {
-    page:'cards', sel:'#fc-browse-topics',
-    navPrompt: true,
-    title:'Study Cards 🃏',
-    text:'Your flashcard decks live here. Review them daily — the app schedules cards automatically using spaced repetition.',
-    waitForTap: false
-  },
-  // ── CHAT ──
-  {
-    page:'chat', sel:'.chat-input',
-    navPrompt: true,
-    title:'Your coach 🤝',
-    text:'Ask your coach anything — they know your notes, tasks, gaps and schedule. You can also ask them to take you somewhere, like "show me how to add a note".',
-    waitForTap: false
-  },
-  // ── PROGRESS ──
-  {
-    page:'gaps', sel:'#gaps-content',
-    navPrompt: true,
-    title:'Progress 📊',
-    text:'After quizzes and study sessions your coach sends you here. It shows your memory gaps, quiz history and exactly what needs more work.',
-    waitForTap: false
-  }
+  { page:'home', sel:'#qc-fab',          title:'Quick Capture 💭', text:'Jot anything instantly — tap the bubble anytime.', waitForTap:false },
+  { page:'home', sel:'#home-chips-row',  title:'Events & Goals 📅', text:'Countdown to an exam or set a weekly card goal.', waitForTap:false },
+  { page:'home', sel:'#rem-add-toggle-btn', title:'Add a task ✅', text:'Add tasks here — you\'ll get push notifications when due.', waitForTap:false },
+  { page:'notes', sel:'.add-note-btn',   title:'Notes 📝', text:'Write notes here. AI turns them into flashcards.', navPrompt:true, waitForTap:false },
+  { page:'cards', sel:'#fc-browse-topics', title:'Study Cards 🃏', text:'Your flashcard decks. Review daily — spaced repetition handles the schedule.', navPrompt:true, waitForTap:false },
+  { page:'chat',  sel:'.chat-input',     title:'Your coach 🤝', text:'Ask anything. They know your notes, tasks and gaps.', navPrompt:true, waitForTap:false },
+  { page:'gaps',  sel:'#gaps-content',   title:'Progress 📊', text:'Gaps, quiz history, what needs work — all here.', navPrompt:true, waitForTap:false }
 ];
 var _tourIdx = 0;
 var _tourActive = false;
@@ -3898,7 +3854,7 @@ function startTour(){
 
 function _showTourStep(){
   _clearTourTapListener();
-  if(_tourIdx >= _tourSteps.length){ _endTour(); return; }
+  if(_tourIdx >= _tourSteps.length){ endTour(); return; }
   var step = _tourSteps[_tourIdx];
   var prevPage = _tourIdx>0 ? _tourSteps[_tourIdx-1].page : step.page;
 
@@ -4213,9 +4169,13 @@ function endTour(){
   _tourActive = false;
   _clearTourTapListener();
   var old = document.getElementById('tour-container'); if(old) old.remove();
-  // Remove any lingering pulse
+  // Restore sidebar z-index if it was raised
+  var sidebarEl = document.getElementById('sidebar');
+  if(sidebarEl) sidebarEl.style.zIndex = '';
+  if(typeof closeSidebar==='function') closeSidebar();
+  // Remove pulse from any highlighted elements
   _tourSteps.forEach(function(s){
-    var t=document.querySelector(s.sel); if(t) t.style.boxShadow='';
+    try{ var t=document.querySelector(s.sel); if(t) t.style.boxShadow=''; }catch(e){}
   });
   localStorage.setItem('mn_toured','1');
   toast('Tour complete! Explore at your own pace 🚀');
@@ -7303,6 +7263,34 @@ function switchChar(id,btn){
   save();
   toast('Switched to '+c.name+' — '+( restored ? 'chat history restored 💬' : 'starting fresh 👋'));
 }
+function _parseChatOptions(text){
+  // Detect A) ... B) ... C) pattern and split into tappable options
+  // Match: A) text B) text C) optional text — all on same line or at end
+  var optMatch = text.match(/^(.*?)\s*A\)\s*(.+?)\s+B\)\s*(.+?)(?:\s+C\)\s*(.+?))?\s*$/s);
+  if(!optMatch) return null;
+  return {
+    before: optMatch[1].trim(),
+    options: [optMatch[2].trim(), optMatch[3].trim(), optMatch[4]?optMatch[4].trim():null].filter(Boolean)
+  };
+}
+function _renderOptionChips(options){
+  var labels = ['A','B','C'];
+  return '<div style="display:flex;flex-wrap:wrap;gap:.4rem;margin-top:.55rem;">' +
+    options.map(function(opt, i){
+      var safeOpt = opt.replace(/'/g,"\'").replace(/"/g,'&quot;');
+      return '<button onclick="sendOptionReply(\''+labels[i]+') '+safeOpt+'\')" '+
+        'style="background:var(--green-light);border:1.5px solid var(--green);color:var(--green);'+
+        'border-radius:20px;padding:.3rem .75rem;font-size:.78rem;font-weight:600;cursor:pointer;'+
+        'font-family:inherit;-webkit-tap-highlight-color:transparent;">'+
+        '<strong>'+labels[i]+')</strong> '+opt+'</button>';
+    }).join('') +
+  '</div>';
+}
+function sendOptionReply(text){
+  var inp = document.getElementById('chat-input');
+  if(inp){ inp.value = text; }
+  sendMsg();
+}
 function appendMsg(type,text){
   const msgs=document.getElementById('chat-msgs');
   const d=document.createElement('div');
@@ -7310,9 +7298,14 @@ function appendMsg(type,text){
   const c=CHARS[currentChar];
   if(type==='ai'){
     const msgId='msg-'+Date.now();
+    // Check for A)/B) options
+    var parsed = _parseChatOptions(text);
+    var bubbleContent = parsed
+      ? (parsed.before ? parsed.before + '<br>' : '') + _renderOptionChips(parsed.options)
+      : text;
     d.innerHTML='<img src="'+c.img+'" class="msg-avi" alt=""/>'+
       '<div>'+
-        '<div class="bubble">'+text+'</div>'+
+        '<div class="bubble">'+bubbleContent+'</div>'+
         '<div style="display:flex;align-items:center;gap:.5rem;margin-top:.2rem;">'+
           '<div class="msg-time">'+nowTime12()+'</div>'+
           '<button onclick="giveFeedback(\'like\',\''+msgId+'\')" id="'+msgId+'-like" style="background:none;border:none;cursor:pointer;font-size:.72rem;padding:.1rem .2rem;opacity:.45;transition:opacity .15s;" title="Good response">👍</button>'+
@@ -7432,6 +7425,8 @@ RULES:
 - Stay FULLY in character — never break the persona even slightly
 - Reference their actual tasks, notes, subjects, and gaps by name
 - If they ask you to set a reminder or add a task, DO IT using an ACTION block
+- If they ask WHERE something is or HOW to do something in the app, answer AND use ACTION:NAVIGATE to take them there and highlight the element
+- When you have 2-3 options for the user to choose between, format them as: A) option one B) option two (on the same line, tappable)
 - Never use bullet points or markdown — talk like a real person texting
 - Keep replies SHORT (2-3 sentences) unless asked for explanation
 - After an ACTION block, give a natural conversational reply confirming what you did
