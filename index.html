@@ -2590,6 +2590,11 @@ body::after{
               <button class="accent-swatch" data-accent="teal"    onclick="applyAccent('teal')"    title="Teal"   style="--sw:#0d9488;"></button>
             </div>
 
+            <div class="prof-section-label" style="margin-top:1.1rem;">Quick Capture Bubble</div>
+            <div style="display:flex;align-items:center;justify-content:space-between;background:var(--paper2);border-radius:10px;padding:.55rem .75rem;margin-bottom:.5rem;">
+              <div style="font-size:.8rem;color:var(--ink);">💭 Reset bubble position</div>
+              <button onclick="localStorage.removeItem('fn_fab_pos');initFAB();toast('Bubble reset ✓');" style="background:var(--green);color:#fff;border:none;border-radius:7px;padding:.28rem .65rem;font-size:.72rem;font-weight:700;cursor:pointer;font-family:inherit;">Reset</button>
+            </div>
             <div class="prof-section-label" style="margin-top:1.1rem;">Theme</div>
             <div class="theme-row" id="theme-row">
               <button class="theme-pill" data-theme-val="light"  onclick="applyTheme('light')">☀️ Light</button>
@@ -8303,11 +8308,12 @@ function initFAB(){
 
   const vw=window.innerWidth, vh=window.innerHeight;
   const saved=JSON.parse(localStorage.getItem('fn_fab_pos')||'null');
-  // Default: bottom-right above the nav bar
+  // Default: bottom-right above the nav bar (160px from bottom to clear install banners + nav)
   let x=saved?saved.x:vw-66;
-  let y=saved?saved.y:vh-130;
+  let y=saved?saved.y:vh-160;
+  // Clamp so FAB is always fully on screen, with extra bottom margin for banners
   x=Math.max(10,Math.min(vw-62,x));
-  y=Math.max(10,Math.min(vh-62,y));
+  y=Math.max(10,Math.min(vh-160,y));
   fab.style.left=x+'px';
   fab.style.top=y+'px';
 
