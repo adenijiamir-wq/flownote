@@ -3787,8 +3787,11 @@ async function subscribeToPush(){
         applicationServerKey: urlBase64ToUint8Array(PUSH_VAPID_PUBLIC)
       });
     }
-    localStorage.setItem('fn_push_sub', JSON.stringify(sub));
-    syncPushData();
+    if(sub){
+      localStorage.setItem('fn_push_sub', JSON.stringify(sub));
+      await syncPushData(); // await so we know it completed
+      nlog('Push sub active, data synced');
+    }
     return sub;
   }catch(e){ console.warn('Push subscribe failed', e); }
 }
@@ -3806,8 +3809,16 @@ async function syncPushData(){
   const uid = localStorage.getItem('fn_current_user');
   if(!uid || uid==='guest' || !window._fbDb) return;
   if(typeof isMinor==='function' && isMinor()) return;
-  const subStr = localStorage.getItem('fn_push_sub');
-  if(!subStr) return;
+  // If no push sub stored, try to get/create one first
+  let subStr = localStorage.getItem('fn_push_sub');
+  if(!subStr && typeof Notification!=='undefined' && Notification.permission==='granted'){
+    try{
+      const reg = await navigator.serviceWorker.ready;
+      const sub = await reg.pushManager.getSubscription();
+      if(sub){ subStr = JSON.stringify(sub); localStorage.setItem('fn_push_sub', subStr); }
+    }catch(e2){ nlog('sub refresh fail:'+e2.message); }
+  }
+  if(!subStr){ nlog('syncPushData: no sub'); return; }
   try{
     const data = JSON.parse(localStorage.getItem('mb7_data')||'{}');
     const reminders = JSON.stringify(data.reminders||[]);
@@ -3815,7 +3826,7 @@ async function syncPushData(){
     var notifEmail = null;
     try{
       var emailCfg = JSON.parse(localStorage.getItem('mn_email_cfg')||'{}');
-      notifEmail = emailCfg.email || null;
+      notifEmail = emailCfg.toEmail || emailCfg.email || null; // toEmail is the correct key
     }catch(e2){}
     await window._fbFns.setDoc(
       window._fbFns.doc(window._fbDb,'pushData',uid),
@@ -4571,6 +4582,10 @@ function startApp(){
   startSWPing();
   // ── Staged startup — only tour fires immediately, everything else waits ──
   setTimeout(_maybeLaunchTour, 1800);
+  // Handle ?qc=1 shortcut — open Quick Capture immediately
+  if(window.location.search.includes('qc=1')){
+    setTimeout(function(){ if(typeof openQC==='function') openQC(); }, 800);
+  }
 
   // After tour (or if already toured), stage remaining prompts with big gaps
   // so user isn't bombarded on first open
@@ -5763,6 +5778,46 @@ function _showSessionCoachBubble(reviewed, total){
   setTimeout(function(){ var el=document.getElementById('post-session-bubble'); if(el) el.remove(); }, 12000);
 }
 
+function redoMissedFromLog(logIdx){
+  // Load quiz log and find the entry
+  var ql = [];
+  try{ ql = JSON.parse(localStorage.getItem('fn_quiz_log')||'[]'); }catch(e){}
+  var entry = ql[parseInt(logIdx)];
+  if(!entry){ toast('Could not find quiz data'); return; }
+  var missed = (entry.wrongItems||[]).concat(
+    (entry.skippedItems||[]).filter(function(s){
+      return !(entry.wrongItems||[]).find(function(w){ return w.q===s.q; });
+    })
+  );
+  if(!missed.length){ toast('No missed questions found'); return; }
+  // Build question objects from saved data
+  var qs = missed.map(function(m){
+    return { type:'open', q:m.q, answer:m.correct||'', explanation:'' };
+  });
+  // Launch quiz with these questions
+  _quizSubject = entry.subject||'Review';
+  _quizTopic = entry.topic||'';
+  _quizQuestions = qs;
+  _quizTotal = qs.length;
+  _quizIdx = 0; _quizScore = 0;
+  _quizWrongItems = []; _quizSkippedItems = []; _quizCorrectItems = [];
+  _quizAnswered = false;
+  // Navigate to cards page and open quiz modal
+  navTo('cards', document.getElementById('nav-cards'));
+  setBN('cards');
+  var modal = document.getElementById('quiz-modal');
+  if(!modal){ toast('Quiz modal not found'); return; }
+  document.getElementById('quiz-results').style.display = 'none';
+  document.getElementById('quiz-question-area').innerHTML = '';
+  document.getElementById('quiz-feedback-area').style.display = 'none';
+  document.getElementById('quiz-action-btns').innerHTML = '';
+  document.getElementById('quiz-progress-bar').style.width = '0%';
+  document.getElementById('quiz-progress-label').textContent = 'Question 1 of '+_quizTotal;
+  modal.style.display = 'flex';
+  showQuizQuestion();
+  toast('🔁 Redoing '+qs.length+' missed question'+(qs.length>1?'s':''));
+}
+
 function redoWrongQuestions(){
   // Re-run quiz with only the missed questions
   var missed = _quizWrongItems.concat(_quizSkippedItems.filter(function(s){
@@ -6720,6 +6775,12 @@ function renderGaps(){
             + (q.skippedItems&&q.skippedItems.length>3 ? '<div style="font-size:.6rem;color:var(--muted);">+' + (q.skippedItems.length-3) + ' more skipped</div>' : '')
             + '</div>'
           : '';
+        const hasMissed = (q.wrongItems&&q.wrongItems.length>0)||(q.skippedItems&&q.skippedItems.length>0);
+        const redoBtnHTML = '';
+        if(hasMissed){
+          var mc = (q.wrongItems||[]).length + (q.skippedItems||[]).length;
+          redoBtnHTML = '<button onclick="redoMissedFromLog('+i+')" style="margin-top:.45rem;width:100%;background:var(--red-light);border:1.5px solid var(--red);color:var(--red);border-radius:8px;padding:.35rem;font-family:inherit;font-size:.75rem;font-weight:700;cursor:pointer;">&#128260; Redo '+mc+' missed question'+(mc===1?'':'s')+'</button>';
+        }
         return`<div style="padding:.55rem 0;border-bottom:1px solid var(--line);">
           <div style="display:flex;align-items:center;gap:.6rem;">
             <div style="width:36px;height:36px;border-radius:10px;background:${q.pct>=80?'var(--green-light)':q.pct>=50?'#fef3c7':'#fee2e2'};display:flex;align-items:center;justify-content:center;flex-shrink:0;">
@@ -6732,6 +6793,7 @@ function renderGaps(){
             ${trend?`<span style="font-size:1rem;color:${trendCol};font-weight:700;">${trend}</span>`:''}
           </div>
           ${missedHTML}${skippedHTML}
+          ${redoBtnHTML}
         </div>`;
       }).join('');
 
@@ -9354,6 +9416,11 @@ function startPomo(){
   const lbl = document.getElementById('pomo-label');
   if(lbl) lbl.textContent = _pomoMode==='focus' ? 'Locked in 🔒' : 'Break time!';
   if(_pomoMode==='focus') startPomoSound();
+  // Show notification immediately when timer starts
+  const _startM = Math.floor(_pomoLeft/60), _startS = _pomoLeft%60;
+  const _startTs = String(_startM).padStart(2,'0')+':'+String(_startS).padStart(2,'0');
+  const _startLabel = _pomoMode==='focus'?'Focus':_pomoMode==='short'?'Short Break':'Long Break';
+  _updateTimerNotification(_startTs, _startLabel);
   _pomoInterval = setInterval(()=>{
     _pomoLeft = Math.max(0, _pomoLeft-1);
     updatePomoDisplay();
@@ -9365,6 +9432,7 @@ function pausePomo(){
   _pomoRunning = false;
   clearInterval(_pomoInterval);
   stopPomoSound();
+  _clearTimerNotification();
   const playBtn = document.getElementById('pomo-play-btn');
   if(playBtn) playBtn.innerHTML = '▶';
   setTimeout(updateFloatTimer,50);
@@ -9395,6 +9463,7 @@ function skipPomo(){
 function onPomoEnd(){
   _pomoRunning = false;
   stopPomoSound();
+  _clearTimerNotification();
   const playBtn = document.getElementById('pomo-play-btn');
   if(playBtn) playBtn.innerHTML = '▶';
   try{ navigator.vibrate&&navigator.vibrate([200,100,200]); }catch(e){}
@@ -9447,12 +9516,13 @@ function dismissFloatTimer(){
 var _timerNotifId = null;
 function _updateTimerNotification(timeStr, mode){
   if(!('Notification' in window) || Notification.permission !== 'granted') return;
-  // Use service worker to show/replace a persistent notification
   if(navigator.serviceWorker && navigator.serviceWorker.controller){
+    var minsLeft = Math.ceil(_pomoLeft / 60);
+    var body = minsLeft > 1 ? minsLeft + ' minutes remaining — tap to open' : 'Almost done! Tap to open';
     navigator.serviceWorker.controller.postMessage({
       type: 'TIMER_TICK',
-      title: mode + ' — ' + timeStr,
-      body: 'Menmory timer running. Tap to open.',
+      title: '⏱ ' + mode + ' · ' + timeStr,
+      body: body,
       tag: 'menmory-timer'
     });
   }
@@ -9477,8 +9547,8 @@ function updatePomoDisplay(){
   const modeLabel=_pomoMode==='focus'?'Focus':_pomoMode==='short'?'Short Break':'Long Break';
   const ftMode=document.getElementById('ft-mode');if(ftMode)ftMode.textContent=modeLabel;
   updateFloatTimer();
-  // Update persistent OS notification every 10 seconds to save battery
-  if(_pomoRunning && _pomoLeft % 10 === 0){ _updateTimerNotification(ts, modeLabel); }
+  // Update notification every 30 seconds
+  if(_pomoRunning && _pomoLeft % 30 === 0){ _updateTimerNotification(ts, modeLabel); }
   const ring = document.getElementById('pomo-ring');
   if(ring){
     ring.style.strokeDashoffset = _pomoTotal>0 ? POMO_RING_C*(_pomoLeft/_pomoTotal) : 0;
@@ -10070,6 +10140,9 @@ function renderCountdownWidget(){
   var chip=document.getElementById('home-countdown-chip');if(!chip)return;
   // Also render upcoming events strip
   _renderEventsStrip();
+  // Update chip onclick — if events exist, tap opens manager; else opens chooser
+  var _cds = getCountdowns().filter(function(c){ return daysUntilDate(c.date)>=0; });
+  chip.onclick = _cds.length > 0 ? openCountdownManager : openEventChooser;
   var items=getCountdowns().filter(function(c){return daysUntilDate(c.date)>=0;});
   items.sort(function(a,b){return daysUntilDate(a.date)-daysUntilDate(b.date);});
   var dEl=document.getElementById('cd-days'),tEl=document.getElementById('cd-title'),iEl=document.getElementById('cd-icon');
