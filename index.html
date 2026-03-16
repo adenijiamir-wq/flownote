@@ -1814,6 +1814,20 @@ body::after{
 #ios-install-nudge .in-text{flex:1;font-size:.8rem;line-height:1.4;}
 #ios-install-nudge .in-title{font-weight:700;font-size:.88rem;}
 #ios-install-nudge .in-close{background:rgba(255,255,255,.2);border:none;color:#fff;border-radius:50%;width:28px;height:28px;font-size:1rem;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+
+/* ── App tour spotlight ── */
+#tour-overlay{position:fixed;inset:0;z-index:99000;pointer-events:none;}
+#tour-overlay.active{pointer-events:all;}
+#tour-backdrop{position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:99001;transition:all .3s;}
+#tour-spotlight{position:fixed;z-index:99002;border-radius:12px;box-shadow:0 0 0 4px var(--green),0 0 0 9999px rgba(0,0,0,.55);transition:all .3s cubic-bezier(.22,1,.36,1);pointer-events:none;}
+#tour-tooltip{position:fixed;z-index:99003;background:var(--paper);border:1.5px solid var(--green);border-radius:14px;padding:.85rem 1rem;max-width:260px;box-shadow:0 8px 32px rgba(0,0,0,.25);transition:all .3s cubic-bezier(.22,1,.36,1);}
+#tour-tooltip .tt-step{font-size:.6rem;font-weight:700;color:var(--green);text-transform:uppercase;letter-spacing:.08em;margin-bottom:.25rem;}
+#tour-tooltip .tt-text{font-size:.82rem;color:var(--ink);line-height:1.5;}
+#tour-tooltip .tt-btns{display:flex;gap:.5rem;margin-top:.75rem;}
+#tour-tooltip .tt-next{background:var(--green);color:#fff;border:none;border-radius:8px;padding:.4rem .9rem;font-size:.78rem;font-weight:700;cursor:pointer;font-family:inherit;flex:1;}
+#tour-tooltip .tt-skip{background:none;border:1px solid var(--line);color:var(--muted);border-radius:8px;padding:.4rem .7rem;font-size:.78rem;cursor:pointer;font-family:inherit;}
+
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.5}}
 </style>
 </head>
 <body>
@@ -2065,15 +2079,17 @@ body::after{
           </div>
 
           <div class="full">
-            <div style="display:grid;grid-template-columns:1fr 1fr;gap:.55rem;">
-              <div id="home-countdown-chip" onclick="openCountdownManager()" style="background:var(--paper);border:1px solid var(--line);border-radius:12px;padding:.75rem .9rem;display:flex;align-items:center;gap:.6rem;cursor:pointer;">
+            <div id="home-chips-row" style="display:grid;grid-template-columns:1fr 1fr;gap:.55rem;">
+              <!-- Add an event chip -->
+              <div id="home-event-chip" onclick="openEventChooser()" style="background:var(--paper);border:1px solid var(--line);border-radius:12px;padding:.75rem .9rem;display:flex;align-items:center;gap:.6rem;cursor:pointer;">
                 <span id="cd-icon" style="font-size:1.4rem;line-height:1;flex-shrink:0;">⏳</span>
                 <div style="min-width:0;flex:1;">
                   <div id="cd-days" style="font-size:1.1rem;font-weight:800;color:var(--green);line-height:1;">+</div>
                   <div id="cd-days-label" style="font-size:.55rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;line-height:1;margin-top:.1rem;"></div>
-                  <div id="cd-title" style="font-size:.62rem;color:var(--muted);margin-top:.1rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">Add a countdown to an event</div>
+                  <div id="cd-title" style="font-size:.62rem;color:var(--muted);margin-top:.1rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">Add an event</div>
                 </div>
               </div>
+              <!-- Weekly goal chip -->
               <div id="home-goal-chip" onclick="openGoalSettings()" style="background:var(--paper);border:1px solid var(--line);border-radius:12px;padding:.75rem .9rem;display:flex;align-items:center;gap:.6rem;cursor:pointer;">
                 <div style="position:relative;flex-shrink:0;">
                   <svg style="transform:rotate(-90deg);display:block;" width="36" height="36" viewBox="0 0 36 36">
@@ -3410,13 +3426,22 @@ function logDailyStudy(grade, cardId){
 function logQuizResult(subject, topic, score, total){
   let ql=[];
   try{ ql=JSON.parse(localStorage.getItem('fn_quiz_log')||'[]'); }catch(e){}
+  // Separate truly wrong (answered incorrectly) from skipped
+  var _skipped = typeof _quizSkippedItems!=='undefined' ? _quizSkippedItems.slice() : [];
+  var _skippedQs = _skipped.map(function(x){return x.q;});
+  var _wrong = typeof _quizWrongItems!=='undefined'
+    ? _quizWrongItems.filter(function(x){ return _skippedQs.indexOf(x.q)===-1; })
+    : [];
   ql.unshift({
     ts: Date.now(),
     date: todayStr(),
     subject: subject||'General',
     topic: topic||'',
     score, total,
-    pct: total>0?Math.round((score/total)*100):0
+    pct: total>0?Math.round((score/total)*100):0,
+    skipped: _skipped.length,
+    skippedItems: _skipped,
+    wrongItems: _wrong
   });
   if(ql.length>100) ql=ql.slice(0,100);
   localStorage.setItem('fn_quiz_log', JSON.stringify(ql));
@@ -3805,7 +3830,415 @@ function afterAuth(isReturning){
 // ══════════════════════════════════════════════════════
 // INIT
 // ══════════════════════════════════════════════════════
+// ══════════════════════════════════════════════════════
+// TOUR SYSTEM — interactive, tap-to-advance
+// ══════════════════════════════════════════════════════
+var _tourSteps = [
+  // ── HOME ──
+  {
+    page:'home', sel:'#qc-fab',
+    title:'Quick Capture 💭',
+    text:'The floating bubble — tap it anytime to jot down a thought, term or idea instantly without opening the app properly.',
+    waitForTap: false
+  },
+  {
+    page:'home', sel:'#home-chips-row',
+    title:'Events & Goals 📅🎯',
+    text:'Set a countdown to an exam or a weekly card review goal. Both live here on your home screen.',
+    waitForTap: false
+  },
+  {
+    page:'home', sel:'#rem-add-toggle-btn',
+    title:'Add a task ✅',
+    text:'Tap here to add tasks and reminders. You\'ll get a push notification when they\'re due — even when the app is closed.',
+    waitForTap: false
+  },
+  // ── NOTES (navigate prompt) ──
+  {
+    page:'notes', sel:'.add-note-btn',
+    navPrompt: true,
+    title:'Notes 📝',
+    text:'Now we\'re on the Notes page. Tap "+ New note" to write your study notes. Once written, the AI can generate flashcards from them automatically.',
+    waitForTap: false
+  },
+  // ── CARDS ──
+  {
+    page:'cards', sel:'#fc-browse-topics',
+    navPrompt: true,
+    title:'Study Cards 🃏',
+    text:'Your flashcard decks live here. Review them daily — the app schedules cards automatically using spaced repetition.',
+    waitForTap: false
+  },
+  // ── CHAT ──
+  {
+    page:'chat', sel:'.chat-input',
+    navPrompt: true,
+    title:'Your coach 🤝',
+    text:'Ask your coach anything — they know your notes, tasks, gaps and schedule. You can also ask them to take you somewhere, like "show me how to add a note".',
+    waitForTap: false
+  },
+  // ── PROGRESS ──
+  {
+    page:'gaps', sel:'#gaps-content',
+    navPrompt: true,
+    title:'Progress 📊',
+    text:'After quizzes and study sessions your coach sends you here. It shows your memory gaps, quiz history and exactly what needs more work.',
+    waitForTap: false
+  }
+];
+var _tourIdx = 0;
+var _tourActive = false;
+var _tourTapListener = null;
+
+function startTour(){
+  _tourActive = true;
+  _tourIdx = 0;
+  _showTourStep();
+}
+
+function _showTourStep(){
+  _clearTourTapListener();
+  if(_tourIdx >= _tourSteps.length){ _endTour(); return; }
+  var step = _tourSteps[_tourIdx];
+  var prevPage = _tourIdx>0 ? _tourSteps[_tourIdx-1].page : step.page;
+
+  if(step.navPrompt && step.page !== prevPage){
+    // Show a "tap to go to X" interstitial before navigating
+    _showNavPrompt(step);
+  } else {
+    var navBtn = document.getElementById('nav-'+step.page)||document.getElementById('bn-'+step.page);
+    navTo(step.page, navBtn);
+    if(typeof setBN==='function') setBN(step.page);
+    setTimeout(function(){ _renderTourSpotlight(step); }, 380);
+  }
+}
+
+function _showNavPrompt(step){
+  // Instead of a modal, spotlight the actual nav button and tell user to tap it
+  var old = document.getElementById('tour-container'); if(old) old.remove();
+  var pageNames = {home:'Home',notes:'Notes',cards:'Study Cards',chat:'Coach',gaps:'Progress',timer:'Timer'};
+  var pageName = pageNames[step.page] || step.page;
+
+  // Find the nav button — try bottom nav first, then sidebar nav
+  var navTarget = document.getElementById('bn-'+step.page);
+  var usingSidebar = false;
+  if(!navTarget){
+    navTarget = document.getElementById('nav-'+step.page);
+    usingSidebar = true;
+    if(!navTarget){ _doTourNav(step.page); return; }
+    // Open sidebar and raise its z-index above the overlay so taps go through
+    if(typeof openSidebar==='function') openSidebar();
+    else { var sb=document.getElementById('sidebar'); if(sb) sb.classList.add('open'); }
+    var sidebarEl = document.getElementById('sidebar');
+    if(sidebarEl) sidebarEl.style.zIndex = '99005'; // above everything
+  }
+
+  // Render spotlight on the nav button itself
+  var navStep = {
+    sel: '#bn-'+step.page+', #nav-'+step.page,
+    title: 'Go to ' + pageName,
+    text: 'Tap ' + pageName + ' in the navigation to continue the tour.',
+    waitForTap: true,
+    _isNavTransition: true,
+    _targetPage: step.page
+  };
+
+  // Render the spotlight manually pointing at navTarget
+  var r = navTarget.getBoundingClientRect();
+  var pad = 8;
+
+  var wrap = document.createElement('div');
+  wrap.id = 'tour-container';
+  wrap.style.cssText = 'position:fixed;inset:0;z-index:99000;';
+
+  var cv = document.createElement('canvas');
+  cv.width = window.innerWidth;
+  cv.height = window.innerHeight;
+  cv.style.cssText = 'position:fixed;inset:0;z-index:99001;cursor:pointer;';
+
+  var ctx = cv.getContext('2d');
+  ctx.fillStyle = 'rgba(0,0,0,0.65)';
+  ctx.fillRect(0, 0, cv.width, cv.height);
+  ctx.clearRect(r.left-pad, r.top-pad, r.width+pad*2, r.height+pad*2);
+  ctx.strokeStyle = '#1a6b3c';
+  ctx.lineWidth = 2.5;
+  ctx.shadowColor = '#1a6b3c';
+  ctx.shadowBlur = 10;
+  ctx.beginPath();
+  if(ctx.roundRect) ctx.roundRect(r.left-pad, r.top-pad, r.width+pad*2, r.height+pad*2, 10);
+  else ctx.rect(r.left-pad, r.top-pad, r.width+pad*2, r.height+pad*2);
+  ctx.stroke();
+
+  cv.addEventListener('click', function(e){
+    var x=e.clientX, y=e.clientY;
+    if(x>=r.left-pad && x<=r.right+pad && y>=r.top-pad && y<=r.bottom+pad){
+      // Tapped the nav button
+      var tc = document.getElementById('tour-container');
+      if(tc) tc.remove();
+      _doTourNav(step.page);
+    } else if(usingSidebar) {
+      // When using sidebar, tapping anywhere else also advances
+      // (sidebar may have already navigated, user just needs to dismiss)
+      var tc = document.getElementById('tour-container');
+      if(tc) tc.remove();
+      _doTourNav(step.page);
+    }
+  });
+  // If already on the target page (sidebar may have auto-navigated), advance after short delay
+  if(usingSidebar){
+    setTimeout(function(){
+      var activeEl = document.querySelector('.page.active');
+      if(activeEl && activeEl.id === 'page-'+step.page){
+        var tc = document.getElementById('tour-container');
+        if(tc) tc.remove();
+        var sidebarEl2 = document.getElementById('sidebar');
+        if(sidebarEl2) sidebarEl2.style.zIndex = '';
+        if(typeof closeSidebar==='function') closeSidebar();
+        setTimeout(function(){ _renderTourSpotlight(_tourSteps[_tourIdx]); }, 300);
+      }
+    }, 800);
+  }
+
+  // Tooltip above the nav button
+  var tip = document.createElement('div');
+  var tipTop = r.top - 110;
+  if(tipTop < 10) tipTop = r.bottom + 12;
+  var tipLeft = Math.min(Math.max(r.left - 60, 12), window.innerWidth - 240);
+  tip.style.cssText = 'position:fixed;z-index:99003;background:var(--paper,#faf9f6);border:2px solid #1a6b3c;border-radius:12px;padding:.75rem .9rem;width:210px;box-shadow:0 6px 24px rgba(0,0,0,.3);';
+  tip.style.top = tipTop + 'px';
+  tip.style.left = tipLeft + 'px';
+
+  var t1 = document.createElement('div');
+  t1.style.cssText = 'font-size:.75rem;font-weight:700;color:#1a6b3c;margin-bottom:.2rem;';
+  t1.textContent = 'Next: ' + pageName;
+
+  var t2 = document.createElement('div');
+  t2.style.cssText = 'font-size:.78rem;color:var(--ink,#0f0f0f);line-height:1.45;margin-bottom:.5rem;';
+  t2.textContent = usingSidebar
+    ? 'Tap ' + pageName + ' in the side menu to continue.'
+    : 'Tap the ' + pageName + ' tab in the nav bar below to continue.';
+
+  var pulse = document.createElement('div');
+  pulse.style.cssText = 'font-size:.7rem;color:#1a6b3c;font-weight:600;animation:pulse 1.2s infinite;';
+  pulse.textContent = '☝ Tap it!';
+
+  var skipBtn = document.createElement('button');
+  skipBtn.style.cssText = 'display:block;margin-top:.5rem;background:none;border:none;color:var(--muted,#9e9b93);font-size:.7rem;cursor:pointer;font-family:inherit;padding:0;';
+  skipBtn.textContent = 'Skip tour';
+  skipBtn.onclick = endTour;
+
+  tip.appendChild(t1);
+  tip.appendChild(t2);
+  tip.appendChild(pulse);
+  tip.appendChild(skipBtn);
+
+  // Arrow pointing down toward nav
+  var arrow = document.createElement('div');
+  var arrowDown = tipTop < r.top;
+  arrow.style.cssText = 'position:absolute;width:10px;height:10px;background:var(--paper,#faf9f6);border-right:2px solid #1a6b3c;border-bottom:2px solid #1a6b3c;';
+  if(arrowDown){
+    arrow.style.bottom = '-6px';
+    arrow.style.left = '24px';
+    arrow.style.transform = 'rotate(45deg)';
+  } else {
+    arrow.style.top = '-6px';
+    arrow.style.left = '24px';
+    arrow.style.transform = 'rotate(-135deg)';
+  }
+  tip.appendChild(arrow);
+
+  // Pulse the nav button
+  navTarget.style.transition = 'box-shadow .3s';
+  navTarget.style.boxShadow = '0 0 0 3px #1a6b3c, 0 0 16px rgba(26,107,60,.5)';
+
+  wrap.appendChild(cv);
+  wrap.appendChild(tip);
+  document.body.appendChild(wrap);
+}
+
+function _doTourNav(page){
+  var navBtn = document.getElementById('nav-'+page)||document.getElementById('bn-'+page);
+  if(navBtn) navBtn.style.boxShadow = '';
+  // Restore sidebar z-index
+  var sidebarEl = document.getElementById('sidebar');
+  if(sidebarEl) sidebarEl.style.zIndex = '';
+  navTo(page, navBtn);
+  if(typeof setBN==='function') setBN(page);
+  setTimeout(function(){ _renderTourSpotlight(_tourSteps[_tourIdx]); }, 400);
+}
+
+function _renderTourSpotlight(step){
+  var old = document.getElementById('tour-container'); if(old) old.remove();
+  var target = document.querySelector(step.sel);
+  if(!target){ _nextTourStep(); return; }
+
+  var r = target.getBoundingClientRect();
+  var pad = 10;
+
+  var wrap = document.createElement('div');
+  wrap.id = 'tour-container';
+  wrap.style.cssText = 'position:fixed;inset:0;z-index:99000;';
+
+  // Canvas backdrop with cutout
+  var cv = document.createElement('canvas');
+  cv.width = window.innerWidth;
+  cv.height = window.innerHeight;
+  cv.style.cssText = 'position:fixed;inset:0;z-index:99001;';
+
+  var ctx = cv.getContext('2d');
+  ctx.fillStyle = 'rgba(0,0,0,0.62)';
+  ctx.fillRect(0,0,cv.width,cv.height);
+  // Cut hole
+  ctx.clearRect(r.left-pad, r.top-pad, r.width+pad*2, r.height+pad*2);
+  // Green glow border
+  ctx.strokeStyle = '#1a6b3c';
+  ctx.lineWidth = 2.5;
+  ctx.shadowColor = '#1a6b3c';
+  ctx.shadowBlur = 8;
+  ctx.beginPath();
+  if(ctx.roundRect) ctx.roundRect(r.left-pad, r.top-pad, r.width+pad*2, r.height+pad*2, 10);
+  else ctx.rect(r.left-pad, r.top-pad, r.width+pad*2, r.height+pad*2);
+  ctx.stroke();
+
+  // Tap-to-advance: clicking the spotlight hole triggers the real element + advances tour
+  if(step.waitForTap){
+    cv.style.cursor = 'pointer';
+    cv.addEventListener('click', function(e){
+      var x=e.clientX, y=e.clientY;
+      // If tap is inside the spotlight, let it through and advance
+      if(x>=r.left-pad && x<=r.right+pad && y>=r.top-pad && y<=r.bottom+pad){
+        _clearTourTapListener();
+        var old2=document.getElementById('tour-container');if(old2)old2.remove();
+        // Simulate click on the real element
+        try{ target.click(); }catch(ee){}
+        // Advance after a short delay so the action has time to trigger
+        setTimeout(_nextTourStep, 600);
+      } else {
+        // Tapping outside = skip step
+        _nextTourStep();
+      }
+    });
+  } else {
+    // Non-interactive step — tap anywhere on backdrop to advance
+    cv.style.cursor = 'pointer';
+    cv.addEventListener('click', function(){ _nextTourStep(); });
+  }
+
+  // Tooltip
+  var tip = document.createElement('div');
+  var tipBelowY = r.bottom + pad + 14;
+  var tipAboveY = r.top - pad - 150;
+  var useBelow = (tipBelowY + 160 < window.innerHeight);
+  var tipTop = useBelow ? tipBelowY : Math.max(10, tipAboveY);
+  var tipLeft = Math.min(Math.max(r.left, 12), window.innerWidth - 272);
+
+  tip.style.cssText = 'position:fixed;z-index:99003;background:var(--paper,#faf9f6);border:2px solid #1a6b3c;border-radius:14px;padding:.9rem 1rem;width:252px;box-shadow:0 8px 32px rgba(0,0,0,.3);';
+  tip.style.top = tipTop + 'px';
+  tip.style.left = tipLeft + 'px';
+
+  var stepN = _tourIdx + 1;
+  var total = _tourSteps.length;
+  var actionHint = step.waitForTap
+    ? '<div style="font-size:.68rem;color:#1a6b3c;font-weight:600;margin-top:.5rem;animation:pulse 1.5s infinite;">👆 Tap the highlighted area</div>'
+    : '<div style="font-size:.68rem;color:var(--muted,#9e9b93);margin-top:.5rem;">Tap anywhere to continue</div>';
+
+  tip.innerHTML =
+    '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.3rem;">' +
+      '<div style="font-size:.65rem;font-weight:700;color:#1a6b3c;text-transform:uppercase;letter-spacing:.08em;">'+step.title+'</div>' +
+      '<div style="font-size:.6rem;color:var(--muted,#9e9b93);">'+stepN+' / '+total+'</div>' +
+    '</div>' +
+    '<div style="font-size:.82rem;color:var(--ink,#0f0f0f);line-height:1.55;">'+step.text+'</div>' +
+    actionHint +
+    '<div style="display:flex;gap:.4rem;margin-top:.7rem;">' +
+      '<button onclick="endTour()" style="background:none;border:1px solid var(--line,#e2dfd8);color:var(--muted,#9e9b93);border-radius:8px;padding:.32rem .65rem;font-size:.72rem;cursor:pointer;font-family:inherit;">Skip tour</button>' +
+      (stepN < total
+        ? '<button onclick="_nextTourStep()" style="flex:1;background:var(--paper2,#f2f0eb);border:1px solid var(--line,#e2dfd8);color:var(--ink,#0f0f0f);border-radius:8px;padding:.32rem .65rem;font-size:.72rem;cursor:pointer;font-family:inherit;">Skip step →</button>'
+        : '<button onclick="endTour()" style="flex:1;background:#1a6b3c;color:#fff;border:none;border-radius:8px;padding:.32rem .65rem;font-size:.72rem;font-weight:700;cursor:pointer;font-family:inherit;">Done ✓</button>') +
+    '</div>';
+
+  // Arrow pointer toward the target
+  var arrow = document.createElement('div');
+  var arrowUp = !useBelow;
+  arrow.style.cssText = 'position:absolute;width:12px;height:12px;background:var(--paper,#faf9f6);border-left:2px solid #1a6b3c;border-top:2px solid #1a6b3c;';
+  if(useBelow){
+    arrow.style.top = '-7px';
+    arrow.style.left = '20px';
+    arrow.style.transform = 'rotate(45deg)';
+  } else {
+    arrow.style.bottom = '-7px';
+    arrow.style.left = '20px';
+    arrow.style.transform = 'rotate(225deg)';
+  }
+  tip.style.position = 'fixed';
+  tip.appendChild(arrow);
+
+  wrap.appendChild(cv);
+  wrap.appendChild(tip);
+  document.body.appendChild(wrap);
+
+  // Pulse animation on target
+  target.style.transition = 'box-shadow .3s';
+  target.style.boxShadow = '0 0 0 3px #1a6b3c, 0 0 16px rgba(26,107,60,.4)';
+  setTimeout(function(){
+    if(target) target.style.boxShadow = '';
+  }, 2000);
+}
+
+function _clearTourTapListener(){
+  if(_tourTapListener && document.body.contains(_tourTapListener)){
+    document.body.removeChild(_tourTapListener);
+  }
+  _tourTapListener = null;
+}
+
+function tourSpotlight(sel, title, text){
+  // Called by AI NAVIGATE action — one-off spotlight, not part of tour flow
+  var step = {sel:sel, title:title||'Here', text:text||'This is what the coach wants to show you.', waitForTap:false};
+  _renderTourSpotlight(step);
+}
+
+function _nextTourStep(){
+  var old = document.getElementById('tour-container'); if(old) old.remove();
+  var prevStep = _tourSteps[_tourIdx];
+  // Remove pulse from previous target
+  if(prevStep){
+    var t=document.querySelector(prevStep.sel);
+    if(t) t.style.boxShadow='';
+  }
+  _tourIdx++;
+  _showTourStep();
+}
+
+function endTour(){
+  _tourActive = false;
+  _clearTourTapListener();
+  var old = document.getElementById('tour-container'); if(old) old.remove();
+  // Remove any lingering pulse
+  _tourSteps.forEach(function(s){
+    var t=document.querySelector(s.sel); if(t) t.style.boxShadow='';
+  });
+  localStorage.setItem('mn_toured','1');
+  toast('Tour complete! Explore at your own pace 🚀');
+}
+
+function _maybeLaunchTour(){
+  if(localStorage.getItem('mn_toured')) return;
+  if(localStorage.getItem('mn_is_minor')==='1') return;
+  setTimeout(startTour, 2000);
+}
+
 window.addEventListener('DOMContentLoaded',()=>{
+  // Preview mode — skip Firebase auth, show app directly (for dev/Claude sidebar preview)
+  if(window.location.search.includes('preview=1')){
+    var as=document.getElementById('auth-screen'); if(as) as.style.display='none';
+    if(!load()){
+      // No saved data — bootstrap minimal demo state
+      userName='Preview'; userSubjects=['General']; currentChar='zack';
+    }
+    (document.getElementById('app')||document.createElement('div')).classList.add('on');
+    startApp();
+    return;
+  }
   loadPersonalisation();
   document.getElementById('topbar-date').textContent=
     new Date().toLocaleDateString('en-GB',{weekday:'long',day:'numeric',month:'long'});
@@ -3985,6 +4418,9 @@ function finishOB(){
   save();
   if(typeof fbSyncData === 'function') fbSyncData();
   startApp();
+  // Launch tour for new users right after onboarding
+  setTimeout(startTour, 1500);
+  localStorage.setItem('mn_toured','1'); // won't fire again from startApp
 }
 
 function finishOBWithEmail(){
@@ -4126,6 +4562,7 @@ function startApp(){
   startNotifPoller();
   maybeShowCheckin(1500);
   setTimeout(_maybeShowIOSNudge, 3000);
+  setTimeout(_maybeLaunchTour, 1500);
   // Check if user has set email — nudge them if not
   setTimeout(_checkEmailNudge, 4000);
   // Show permission prompts if not yet asked
@@ -4924,6 +5361,7 @@ let _quizScore = 0;
 let _quizTotal = 0;
 let _quizAnswered = false;
 let _quizWrongItems = []; // tracks {q, correctAnswer} for wrong answers
+let _quizSkippedItems = []; // tracks skipped questions
 
 async function genQuizFromNote(note, count, type, topic){
   toast('🧠 Generating quiz…');
@@ -4979,6 +5417,7 @@ function startQuiz(questions, title, subject, topic){
   _quizIdx = 0;
   _quizScore = 0;
   _quizWrongItems = [];
+  _quizSkippedItems = [];
   _quizTotal = questions.length;
   _quizAnswered = false;
   _quizSubject = subject || title || 'General';
@@ -5018,13 +5457,13 @@ function showQuizQuestion(){
             ${opt}
           </button>`).join('')}
       </div>`;
-    actions.innerHTML = '';
+    actions.innerHTML = '<button onclick="skipQuizQuestion()" style="background:none;border:1px solid var(--line);color:var(--muted);border-radius:10px;padding:.5rem .9rem;font-family:inherit;font-size:.78rem;cursor:pointer;-webkit-tap-highlight-color:transparent;">Skip →</button>';
   } else {
     area.innerHTML = `
       <div style="font-size:.88rem;font-weight:600;color:var(--ink);line-height:1.55;margin-bottom:.75rem;">${q.q}</div>
       <textarea id="open-answer" placeholder="Type your answer…" rows="3"
         style="width:100%;box-sizing:border-box;background:var(--paper2);border:1.5px solid var(--line);border-radius:10px;padding:.6rem .8rem;font-family:inherit;font-size:.82rem;color:var(--ink);resize:none;"></textarea>`;
-    actions.innerHTML = `<button onclick="checkOpenAnswer('${(q.answer||'').replace(/'/g,"\\'")}','${(q.explanation||'').replace(/'/g,"\\'")}',this)"
+    actions.innerHTML = `<button onclick="skipQuizQuestion()" style="background:none;border:1px solid var(--line);color:var(--muted);border-radius:10px;padding:.5rem .9rem;font-family:inherit;font-size:.78rem;cursor:pointer;">Skip</button><button onclick="checkOpenAnswer('${(q.answer||'').replace(/'/g,"\\'")}','${(q.explanation||'').replace(/'/g,"\\'")}',this)"
       style="flex:1;background:var(--green);color:#fff;border:none;border-radius:10px;padding:.6rem;font-family:inherit;font-size:.85rem;font-weight:700;cursor:pointer;">Check answer →</button>`;
   }
 }
@@ -5105,6 +5544,14 @@ Reply with ONLY valid JSON (no markdown): {"correct":true/false,"feedback":"1 en
   }
 }
 
+function skipQuizQuestion(){
+  if(_quizAnswered) return;
+  const q = _quizQuestions[_quizIdx];
+  _quizSkippedItems.push({q: q.q||'', correct: q.answer||''});
+  _quizWrongItems.push({q: q.q||'', correct: q.answer||''}); // skipped = wrong for score purposes
+  _quizIdx++;
+  showQuizQuestion();
+}
 function nextQuizQuestion(){
   _quizIdx++;
   showQuizQuestion();
@@ -6090,15 +6537,32 @@ function renderGaps(){
         const trendCol=trend==='↑'?'var(--green)':trend==='↓'?'var(--red)':'var(--muted)';
         const pctCol=q.pct>=80?'var(--green)':q.pct>=50?'var(--amber)':'var(--red)';
         const dLabel=q.date===today?'Today':q.date===new Date(Date.now()-86400000).toISOString().split('T')[0]?'Yesterday':q.date;
-        return`<div style="display:flex;align-items:center;gap:.6rem;padding:.5rem 0;border-bottom:1px solid var(--line);">
-          <div style="width:36px;height:36px;border-radius:10px;background:${q.pct>=80?'var(--green-light)':q.pct>=50?'#fef3c7':'#fee2e2'};display:flex;align-items:center;justify-content:center;flex-shrink:0;">
-            <span style="font-size:.8rem;font-weight:800;color:${pctCol};">${q.pct}%</span>
+        const wrongList = (q.wrongItems||[]).slice(0,3);
+        const skippedList = (q.skippedItems||[]).slice(0,3);
+        const missedHTML = wrongList.length
+          ? '<div style="margin-top:.35rem;">'
+            + wrongList.map(function(w){ return '<div style="font-size:.63rem;color:var(--red);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">✗ '+w.q.slice(0,60)+(w.q.length>60?'…':'')+'</div>'; }).join('')
+            + (q.wrongItems&&q.wrongItems.length>3 ? '<div style="font-size:.6rem;color:var(--muted);">+' + (q.wrongItems.length-3) + ' more wrong</div>' : '')
+            + '</div>'
+          : '';
+        const skippedHTML = skippedList.length
+          ? '<div style="margin-top:.2rem;">'
+            + skippedList.map(function(s){ return '<div style="font-size:.63rem;color:var(--amber);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">— '+s.q.slice(0,60)+(s.q.length>60?'…':'')+'</div>'; }).join('')
+            + (q.skippedItems&&q.skippedItems.length>3 ? '<div style="font-size:.6rem;color:var(--muted);">+' + (q.skippedItems.length-3) + ' more skipped</div>' : '')
+            + '</div>'
+          : '';
+        return`<div style="padding:.55rem 0;border-bottom:1px solid var(--line);">
+          <div style="display:flex;align-items:center;gap:.6rem;">
+            <div style="width:36px;height:36px;border-radius:10px;background:${q.pct>=80?'var(--green-light)':q.pct>=50?'#fef3c7':'#fee2e2'};display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+              <span style="font-size:.8rem;font-weight:800;color:${pctCol};">${q.pct}%</span>
+            </div>
+            <div style="flex:1;min-width:0;">
+              <div style="font-size:.8rem;font-weight:600;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${q.subject}${q.topic?' · '+q.topic:''}</div>
+              <div style="font-size:.63rem;color:var(--muted);">${q.score}/${q.total} correct${q.skipped?' · <span style="color:var(--amber)">'+q.skipped+' skipped</span>':''} · ${dLabel}</div>
+            </div>
+            ${trend?`<span style="font-size:1rem;color:${trendCol};font-weight:700;">${trend}</span>`:''}
           </div>
-          <div style="flex:1;min-width:0;">
-            <div style="font-size:.8rem;font-weight:600;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${q.subject}${q.topic?' · '+q.topic:''}</div>
-            <div style="font-size:.63rem;color:var(--muted);">${q.score}/${q.total} correct · ${dLabel}</div>
-          </div>
-          ${trend?`<span style="font-size:1rem;color:${trendCol};font-weight:700;">${trend}</span>`:''}
+          ${missedHTML}${skippedHTML}
         </div>`;
       }).join('');
 
@@ -6958,6 +7422,12 @@ A: answer here
 SUBJECT: subject name
 END_ACTION
 
+To navigate to a section and highlight something for the user:
+ACTION:NAVIGATE
+PAGE: home|notes|cards|timer|chat|gaps|profile
+HIGHLIGHT: #element-id or .css-class (optional — the element to spotlight)
+END_ACTION
+
 RULES:
 - Stay FULLY in character — never break the persona even slightly
 - Reference their actual tasks, notes, subjects, and gaps by name
@@ -6978,7 +7448,7 @@ Q: [question]|A: [answer]
 
     // ── Parse ACTION blocks ──
     let displayReply=reply;
-    const actionMatch=reply.match(/ACTION:(ADD_TASK|ADD_NOTE|ADD_CARD)\n([\s\S]*?)END_ACTION/);
+    const actionMatch=reply.match(/ACTION:(ADD_TASK|ADD_NOTE|ADD_CARD|NAVIGATE)\n([\s\S]*?)END_ACTION/);
     if(actionMatch){
       const actionType=actionMatch[1];
       const actionBody=actionMatch[2];
@@ -7013,6 +7483,15 @@ Q: [question]|A: [answer]
           studyCards.push({id:Date.now(),question:q,answer:a,subject,created:new Date().toISOString(),reps:0,lapses:0,ease:2.5,interval:1,nextReview:tomorrowStr()});
           save(); renderCards(); checkReviewBadge();
           toast('🃏 Card added by coach!');
+        }
+      } else if(actionType==='NAVIGATE'){
+        const page=getField('PAGE')||'home';
+        const highlight=getField('HIGHLIGHT')||'';
+        const navBtn=document.getElementById('nav-'+page)||document.getElementById('bn-'+page);
+        navTo(page, navBtn);
+        if(typeof setBN==='function') setBN(page);
+        if(highlight){
+          setTimeout(function(){ tourSpotlight(highlight); }, 400);
         }
       }
     }
@@ -9304,6 +9783,33 @@ function buildCDList(){
     '</div>';
   }).join('');
 }
+function openEventChooser(){
+  // If there's already a countdown active, open countdown manager directly
+  try{
+    var cds = JSON.parse(localStorage.getItem('fn_countdowns')||'[]');
+    if(cds.length>0){ openCountdownManager(); return; }
+  }catch(e){}
+  // Show chooser modal
+  closeFWModal();
+  var html = '<div class="fw-modal-bg" id="fw-modal-bg" onclick="if(event.target===this)closeFWModal()">';
+  html += '<div class="fw-modal">';
+  html += '<div class="fw-modal-title">📅 Add an event</div>';
+  html += '<p style="font-size:.78rem;color:var(--muted);line-height:1.5;margin-bottom:1.2rem;">What would you like to track?</p>';
+  html += '<div style="display:flex;flex-direction:column;gap:.55rem;">';
+  html += '<button onclick="closeFWModal();openCountdownManager()" style="background:var(--paper2);border:1.5px solid var(--line);border-radius:12px;padding:.9rem 1rem;font-family:inherit;cursor:pointer;text-align:left;display:flex;align-items:center;gap:.75rem;">';
+  html += '<span style="font-size:1.4rem;">⏳</span>';
+  html += '<div><div style="font-size:.88rem;font-weight:700;color:var(--ink);">Countdown</div><div style="font-size:.72rem;color:var(--muted);margin-top:.1rem;">Count down to an exam, deadline or event</div></div>';
+  html += '</button>';
+  html += '<button onclick="closeFWModal();openGoalSettings()" style="background:var(--paper2);border:1.5px solid var(--line);border-radius:12px;padding:.9rem 1rem;font-family:inherit;cursor:pointer;text-align:left;display:flex;align-items:center;gap:.75rem;">';
+  html += '<span style="font-size:1.4rem;">🎯</span>';
+  html += '<div><div style="font-size:.88rem;font-weight:700;color:var(--ink);">Weekly study goal</div><div style="font-size:.72rem;color:var(--muted);margin-top:.1rem;">Set a card review target for the week</div></div>';
+  html += '</button>';
+  html += '</div>';
+  html += '<button class="fw-btn fw-btn-ghost" onclick="closeFWModal()" style="margin-top:.75rem;width:100%;">Cancel</button>';
+  html += '</div></div>';
+  document.body.insertAdjacentHTML('beforeend', html);
+}
+
 function openCountdownManager(){
   closeFWModal();
   var today=new Date().toISOString().slice(0,10);
