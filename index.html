@@ -5229,15 +5229,17 @@ function suggestCount(text){
 }
 
 function openGenModal(mode, noteId){
-  _genWhenDays = null;
+  _genWhenDays = 7; // default 1 week for cards
   _genWhenExactDate = null;
   document.querySelectorAll('#gen-when-btns .card-when-btn').forEach(b=>b.classList.remove('active'));
+  // Pre-select "1 week" button visually
+  var defaultBtn = document.querySelector('#gen-when-btns .card-when-btn:nth-child(3)');
+  if(defaultBtn) defaultBtn.classList.add('active');
   const di = document.getElementById('gen-when-date'); if(di) di.value='';
   // Show/hide when picker based on mode — quizzes don't need a review date
   var whenRow = document.getElementById('gen-when-row');
   var isQuiz = (mode === 'quiz' || mode === 'quiz-cards');
   if(whenRow) whenRow.style.display = isQuiz ? 'none' : 'block';
-  // For quiz modes, auto-set a default so the check passes
   if(isQuiz){ _genWhenDays = 1; }
   _genMode = mode;
   _genNoteId = noteId || null;
@@ -5320,10 +5322,10 @@ async function runGenModal(){
   closeGenModal();
   const topic = (document.getElementById('gen-topic-input').value||'').trim();
   if(_genMode === 'cards'){
-    const note = notes.find(n=>n.id===_genNoteId);
-    if(note) await genCardsFromNote(_genNoteId, note.body||'', note.subject||'General', _genCount, topic||(note.title&&note.title!=='Untitled Note'?note.title:note.subject||'General'));
+    const note = notes.find(n=>Number(n.id)===Number(_genNoteId));
+    if(note){ var _nb = (note.body||'').replace(/<[^>]+>/g,' ').replace(/\s+/g,' ').trim(); await genCardsFromNote(_genNoteId, _nb||note.body||'', note.subject||'General', _genCount, topic||(note.title&&note.title!=='Untitled Note'?note.title:note.subject||'General')); }
   } else if(_genMode === 'quiz'){
-    const note = notes.find(n=>n.id===_genNoteId);
+    const note = notes.find(n=>Number(n.id)===Number(_genNoteId));
     if(note) await genQuizFromNote(note, _genCount, _genType, topic);
   } else {
     let pool = currentCardFilter==='all'?studyCards:currentCardFilter==='due'?getDueCards():studyCards.filter(c=>(c.subject||'General')===currentCardFilter);
@@ -5336,7 +5338,9 @@ async function runGenModal(){
 // CARD GENERATION FROM NOTE (with count + topic)
 // ══════════════════════════════════════════════════════
 async function genCardsFromNote(noteId, body, subject, count, topic){
-  if(!_genWhenDays && !_genWhenExactDate){ toast('Please pick when to start reviewing first!'); return; }
+  if(!_genWhenDays && !_genWhenExactDate){ _genWhenDays = 7; } // fallback to 1 week
+  // Strip HTML tags in case note was saved as HTML from contenteditable
+  body = body.replace(/<[^>]+>/g,' ').replace(/\s+/g,' ').trim();
   if(!body||body.length<30){toast('Note is too short to generate cards from.');return;}
   toast('✨ Generating '+count+' cards…');
   try{
