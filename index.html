@@ -3355,8 +3355,12 @@ function load(){
     try{trashedCards=JSON.parse(localStorage.getItem('fn_trash_cards')||'[]');}catch{trashedCards=[];}
     // Restore per-user appearance settings
     if(d.accent){
-      currentAccent=d.accent;
-      localStorage.setItem('fn_accent',d.accent);
+      // Only restore accent from Firestore if user hasn't changed it locally since last save
+      // This prevents a stale Firestore value overwriting a freshly chosen local accent
+      var _localAccent = localStorage.getItem('fn_accent');
+      var _accentToUse = _localAccent || d.accent;
+      currentAccent = _accentToUse;
+      localStorage.setItem('fn_accent', _accentToUse);
     }
     if(d.themePref){
       currentThemePref=d.themePref;
