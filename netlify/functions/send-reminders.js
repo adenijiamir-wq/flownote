@@ -1,6 +1,4 @@
 // netlify/functions/send-reminders.js
-// Fires every minute — sends Web Push + Email for due reminders
-
 const VAPID_PUBLIC  = process.env.VAPID_PUBLIC_KEY;
 const VAPID_PRIVATE = process.env.VAPID_PRIVATE_KEY;
 const VAPID_EMAIL   = 'mailto:relay.your.problem@gmail.com';
@@ -107,11 +105,20 @@ async function firestoreList(collection) {
     return out;
   });
 }
-async function firestoreGet(collection, docId) {
-  const url = `https://firestore.googleapis.com/v1/projects/${FB_PROJECT}/databases/(default)/documents/${collection}/${docId}?key=${FB_KEY}`;
-  const res = await fetch(url);
-  if (!res.ok) return null;
-  return parseDoc(await res.json());
+
+// ── Save fired state back to Firestore ─────────────────────────
+async function firestorePatch(collection, docId, fields) {
+  const body = { fields: {} };
+  for (const [k, v] of Object.entries(fields)) {
+    body.fields[k] = { stringValue: typeof v === 'string' ? v : JSON.stringify(v) };
+  }
+  const fieldPaths = Object.keys(fields).map(k => `updateMask.fieldPaths=${k}`).join('&');
+  const url = `https://firestore.googleapis.com/v1/projects/${FB_PROJECT}/databases/(default)/documents/${collection}/${docId}?${fieldPaths}&key=${FB_KEY}`;
+  await fetch(url, {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body)
+  });
 }
 
 // ── Email via Brevo ─────────────────────────────────────────────
@@ -152,6 +159,10 @@ function nowHHMM() {
   const d = new Date();
   return String(d.getHours()).padStart(2,'0') + ':' + String(d.getMinutes()).padStart(2,'0');
 }
+function nowMinutes() {
+  const d = new Date();
+  return d.getHours() * 60 + d.getMinutes();
+}
 function todayStr() {
   const d = new Date();
   return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
@@ -166,6 +177,11 @@ function timeTo24(raw) {
   if (ap === 'AM' && h === 12) h = 0;
   return String(h).padStart(2,'0') + ':' + String(mn).padStart(2,'0');
 }
+function t24ToMinutes(t24) {
+  if (!t24) return -1;
+  const [h, m] = t24.split(':').map(Number);
+  return h * 60 + m;
+}
 
 // ── Main ────────────────────────────────────────────────────────
 exports.handler = async () => {
@@ -174,7 +190,7 @@ exports.handler = async () => {
     return { statusCode: 200, body: 'no keys' };
   }
 
-  const now = nowHHMM();
+  const nowMin = nowMinutes();
   const today = todayStr();
 
   let docs;
@@ -189,42 +205,60 @@ exports.handler = async () => {
     try { sub = JSON.parse(doc.subscription); } catch(e) { continue; }
     try { reminders = JSON.parse(doc.reminders || '[]'); } catch(e) { continue; }
 
+    // ── FIX: Load fired state from Firestore, not just in-memory ──
     const fired = {};
     try { Object.assign(fired, JSON.parse(doc.fired || '{}')); } catch(e) {}
     const firedToday = fired[today] || {};
+    let firedChanged = false;
 
-    // Get this user's email settings — same UID as pushData doc
-    let userEmail = null;
-    let emailPrefs = {};
-    try {
-      const userDoc = await firestoreGet('users', doc._id);
-      if (userDoc) {
-        userEmail = userDoc.notifEmail || null;
-        emailPrefs = typeof userDoc.notifPrefs === 'string'
-          ? JSON.parse(userDoc.notifPrefs)
-          : (userDoc.notifPrefs || {});
-      }
-    } catch(e) {}
+    // Get email from pushData doc directly (we save it there now)
+    const userEmail = doc.notifEmail || null;
 
     for (const r of reminders) {
       if (r.done) continue;
       const t24 = timeTo24(r.time || r.startTime || '');
-      if (!t24 || t24 !== now) continue;
+      if (!t24) continue;
+
+      const rMin = t24ToMinutes(t24);
+      // ── FIX: 3-minute window instead of exact match ──
+      // Fires if we're within 0-3 minutes past the reminder time
+      const diff = nowMin - rMin;
+      if (diff < 0 || diff > 3) continue;
+
       if (r.date !== today && r.date !== 'everyday' && r.date !== 'everyweek') continue;
+
       const key = 'r' + r.id;
+      // ── FIX: Check fired state so we don't fire same notif every minute ──
       if (firedToday[key]) continue;
 
       const title = (r.emoji || '🔔') + ' ' + r.text;
       const pushBody = r.date === 'everyday' ? 'Daily reminder' : 'Tap to view';
 
-      // Web Push (existing, untouched)
+      // Web Push
       const status = await sendPush(sub, JSON.stringify({ title, body: pushBody, tag: key }));
       console.log(`Push to ${doc._id}: ${status} — ${title}`);
       if (status >= 200 && status < 300) sent++;
 
-      // Email (new) — fires alongside push if user has email saved
+      // Email alongside push
       if (userEmail) {
         await sendEmail(userEmail, title, r.text, r.emoji || '🔔');
+      }
+
+      // ── FIX: Mark as fired so it doesn't repeat next minute ──
+      firedToday[key] = true;
+      firedChanged = true;
+    }
+
+    // ── FIX: Save fired state back to Firestore ──
+    if (firedChanged) {
+      fired[today] = firedToday;
+      // Clean up old days (keep only last 3 days)
+      const keys = Object.keys(fired).sort();
+      if (keys.length > 3) keys.slice(0, keys.length - 3).forEach(k => delete fired[k]);
+      try {
+        await firestorePatch('pushData', doc._id, { fired: JSON.stringify(fired) });
+      } catch(e) {
+        console.warn('Failed to save fired state:', e.message);
       }
     }
   }
