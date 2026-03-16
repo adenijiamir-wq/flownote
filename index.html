@@ -4582,9 +4582,10 @@ function startApp(){
   startSWPing();
   // ── Staged startup — only tour fires immediately, everything else waits ──
   setTimeout(_maybeLaunchTour, 1800);
-  // Handle ?qc=1 shortcut — open Quick Capture immediately
-  if(window.location.search.includes('qc=1')){
-    setTimeout(function(){ if(typeof openQC==='function') openQC(); }, 800);
+  // Handle ?qc=1 shortcut — open Quick Capture once app is fully rendered
+  if(window._pendingQC || window.location.search.includes('qc=1')){
+    window._pendingQC = false;
+    setTimeout(function(){ if(typeof openQC==='function') openQC(); }, 600);
   }
 
   // After tour (or if already toured), stage remaining prompts with big gaps
@@ -6641,7 +6642,8 @@ function checkReviewBadge(){
   if(due>0){
     if(badge){badge.style.display='';badge.textContent=due;}
     if(bnBadge){bnBadge.style.display='flex';bnBadge.textContent=due;}
-    if(banner){banner.style.display='flex';if(bannerText)bannerText.textContent=`⏰ ${due} card${due>1?'s':''} due for review`;}
+    // Hide banner while timer is running — avoids yellow tint over timer UI
+    if(banner){banner.style.display=_pomoRunning?'none':'flex';if(bannerText)bannerText.textContent=`⏰ ${due} card${due>1?'s':''} due for review`;}
     // Send email reminder once per day if user has email set up
     if(typeof window.notifStudyReminder === 'function' && typeof getEmailAddr === 'function' && getEmailAddr()){
       var todayStr = new Date().toISOString().slice(0,10);
@@ -9410,6 +9412,9 @@ function togglePomo(){
 
 function startPomo(){
   _pomoRunning = true;
+  // Hide the amber review banner — yellow tint looks bad over the timer UI
+  var _rb = document.getElementById('review-banner');
+  if(_rb) _rb.style.display = 'none';
   const playBtn = document.getElementById('pomo-play-btn');
   if(playBtn) playBtn.innerHTML = '⏸';
   setTimeout(updateFloatTimer,50);
@@ -9424,6 +9429,11 @@ function startPomo(){
   _pomoInterval = setInterval(()=>{
     _pomoLeft = Math.max(0, _pomoLeft-1);
     updatePomoDisplay();
+    // Update OS notification every minute
+    const _tM = Math.floor(_pomoLeft/60), _tS = _pomoLeft%60;
+    const _tStr = String(_tM).padStart(2,'0')+':'+String(_tS).padStart(2,'0');
+    const _tLbl = _pomoMode==='focus'?'Focus':_pomoMode==='short'?'Short Break':'Long Break';
+    _updateTimerNotification(_tStr, _tLbl);
     if(_pomoLeft===0){ clearInterval(_pomoInterval); onPomoEnd(); }
   }, 1000);
 }
@@ -9433,6 +9443,7 @@ function pausePomo(){
   clearInterval(_pomoInterval);
   stopPomoSound();
   _clearTimerNotification();
+  checkReviewBadge(); // restore banner if cards are due
   const playBtn = document.getElementById('pomo-play-btn');
   if(playBtn) playBtn.innerHTML = '▶';
   setTimeout(updateFloatTimer,50);
@@ -9512,24 +9523,56 @@ function dismissFloatTimer(){
   sessionStorage.setItem('ft_dismissed','1');
 }
 
-// Show a persistent OS notification while timer runs
+// Timer notification — fires every 60s so the OS notification stays fresh
 var _timerNotifId = null;
+var _timerNotifInterval = null;
+var _timerNotifLastMin = -1;
+
 function _updateTimerNotification(timeStr, mode){
   if(!('Notification' in window) || Notification.permission !== 'granted') return;
+  var minsLeft = Math.ceil(_pomoLeft / 60);
+  // Only update when the minute changes (avoid spamming every second)
+  if(minsLeft === _timerNotifLastMin) return;
+  _timerNotifLastMin = minsLeft;
+  var title = '⏱ ' + mode + ' · ' + timeStr;
+  var body = minsLeft > 1 ? minsLeft + ' min remaining' : 'Almost done! 🔥';
+  // Try SW first (updates existing notification silently)
   if(navigator.serviceWorker && navigator.serviceWorker.controller){
-    var minsLeft = Math.ceil(_pomoLeft / 60);
-    var body = minsLeft > 1 ? minsLeft + ' minutes remaining — tap to open' : 'Almost done! Tap to open';
     navigator.serviceWorker.controller.postMessage({
       type: 'TIMER_TICK',
-      title: '⏱ ' + mode + ' · ' + timeStr,
+      title: title,
       body: body,
       tag: 'menmory-timer'
     });
   }
+  // Fallback: direct Notification API (creates a new notification)
+  // Only do this when the app is in the background so it's not spammy
+  if(document.visibilityState !== 'visible'){
+    try{
+      var n = new Notification(title, {
+        body: body,
+        tag: 'menmory-timer', // same tag = replaces the previous one
+        icon: '/icon-192.png',
+        silent: true
+      });
+      // Auto-close after 4s so it doesn't pile up
+      setTimeout(function(){ try{ n.close(); }catch(e){} }, 4000);
+    } catch(e){}
+  }
 }
+
 function _clearTimerNotification(){
+  _timerNotifLastMin = -1;
   if(navigator.serviceWorker && navigator.serviceWorker.controller){
     navigator.serviceWorker.controller.postMessage({ type:'CLEAR_TIMER' });
+  }
+  // Close any direct Notification with the timer tag
+  // (browsers don't expose this directly, but sending a blank replace works)
+  if('Notification' in window && Notification.permission === 'granted'){
+    try{
+      var n = new Notification('', { tag:'menmory-timer', silent:true });
+      setTimeout(function(){ try{ n.close(); }catch(e){} }, 100);
+    } catch(e){}
   }
 }
 
