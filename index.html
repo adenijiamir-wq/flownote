@@ -5974,6 +5974,8 @@ function renderCards(){
     const col       = SUBJECT_COLORS[subj]||'#6b7280';
     const isOpen    = !!_deckCollapsed[key];
     const safeKey   = key.replace(/\\/g,'\\\\').replace(/'/g,"\\'");
+    const safeSubj  = (subj||'').replace(/'/g,"\\'");
+    const safeTopic = (topic||'').replace(/'/g,"\\'");
 
     // Progress: how many cards in this deck have been reviewed today
     const reviewedToday = cards.filter(c=>c.reviewedDate===today).length;
