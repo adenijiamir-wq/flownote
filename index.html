@@ -947,7 +947,7 @@ html,body{height:100%;overflow:hidden;font-family:'DM Sans',-apple-system,BlinkM
 /* ═══════════════════════════════════════
    MOBILE
 ═══════════════════════════════════════ */
-#sb-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:49;}
+#sb-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:49;cursor:pointer;-webkit-tap-highlight-color:transparent;}
 #sb-overlay.show{display:block;}
 #qc-sidebar{position:fixed;top:0;right:0;bottom:0;width:0;background:var(--paper);border-left:0 solid var(--line);display:flex;flex-direction:column;overflow:hidden;transition:width .25s ease,border-width .25s ease,height .25s ease;z-index:200;}
 #qc-sidebar.open{width:300px;border-left-width:1px;}
@@ -2017,6 +2017,8 @@ body::after{
 <!-- ════ APP ════ -->
 <div id="app">
   <div class="app-row">
+    <!-- Sidebar backdrop overlay — tap to close -->
+    <div id="sb-overlay" onclick="closeSidebar()" ontouchend="closeSidebar()"></div>
 
     <!-- SIDEBAR -->
     <aside class="sidebar" id="sidebar">
@@ -3647,6 +3649,8 @@ async function doSignUp(){
     await _fbSaveUser(cred.user);
     localStorage.setItem('fn_current_user', cred.user.uid);
     userEmail = email;
+    // Save email so nudge never fires — user already gave us their email
+    if(email && typeof saveEmailAddr==='function'){ saveEmailAddr(email); localStorage.setItem('mn_email_set','1'); }
     document.getElementById('auth-screen').style.display='none';
     _adminLogSignup(cred.user,'email');
     afterAuth(false);
@@ -3675,6 +3679,7 @@ async function doLogIn(){
     }
     localStorage.setItem('fn_current_user', cred.user.uid);
     userEmail = cred.user.email||'';
+    if(userEmail && typeof saveEmailAddr==='function'){ saveEmailAddr(userEmail); localStorage.setItem('mn_email_set','1'); }
     await _fbLoadUserData(cred.user.uid);
     document.getElementById('auth-screen').style.display='none';
     afterAuth(true);
@@ -3698,6 +3703,7 @@ async function doGoogleSignIn(){
     }
     localStorage.setItem('fn_current_user', user.uid);
     userEmail = user.email||'';
+    if(userEmail && typeof saveEmailAddr==='function'){ saveEmailAddr(userEmail); localStorage.setItem('mn_email_set','1'); }
     // Check if returning user
     const snap = await window._fbFns.getDoc(window._fbFns.doc(window._fbDb,'users',user.uid));
     if(snap.exists()){
@@ -4444,6 +4450,11 @@ function finishOBWithEmail(){
 // Shows a modal if user has no email set after 1 hour, returns every day
 function _checkEmailNudge(){
   if(localStorage.getItem('mn_email_set')) return;
+  // Also check the in-memory userEmail from auth — covers login/signup case
+  if(typeof userEmail!=='undefined' && userEmail){
+    if(typeof saveEmailAddr==='function') saveEmailAddr(userEmail);
+    localStorage.setItem('mn_email_set','1'); return;
+  }
   if(typeof getEmailAddr==='function' && getEmailAddr()){ localStorage.setItem('mn_email_set','1'); return; }
   // Show once per day max — but immediately on first open, no waiting
   const sessionKey = 'mn_nudge_session_' + new Date().toDateString();
@@ -4558,13 +4569,25 @@ function startApp(){
   scheduleAllReminders();
   startNotifPoller();
   startSWPing();
-  maybeShowCheckin(1500);
-  setTimeout(_maybeShowIOSNudge, 3000);
-  setTimeout(_maybeLaunchTour, 1500);
-  // Check if user has set email — nudge them if not
-  setTimeout(_checkEmailNudge, 4000);
-  // Show permission prompts if not yet asked
-  setTimeout(showStartupPermissions, 1500);
+  // ── Staged startup — only tour fires immediately, everything else waits ──
+  setTimeout(_maybeLaunchTour, 1800);
+
+  // After tour (or if already toured), stage remaining prompts with big gaps
+  // so user isn't bombarded on first open
+  var _toured = localStorage.getItem('mn_toured');
+  var _baseDelay = _toured ? 0 : 35000; // if new user, wait 35s after tour before anything else
+
+  // Permissions: 10s after tour (or 10s for returning users)
+  setTimeout(showStartupPermissions, _baseDelay + 10000);
+
+  // Email nudge: 2 min after tour (or 2 min for returning users)
+  setTimeout(_checkEmailNudge, _baseDelay + 120000);
+
+  // Mood check-in: 5 min after tour  
+  setTimeout(function(){ maybeShowCheckin(0); }, _baseDelay + 300000);
+
+  // iOS nudge: 3 min after tour
+  setTimeout(_maybeShowIOSNudge, _baseDelay + 180000);
   // Subscribe to push if already permitted
   if(typeof Notification!=='undefined' && Notification.permission==='granted'){
     setTimeout(subscribeToPush, 2000);
@@ -4614,12 +4637,29 @@ function filterBySubject(subj){
   setBN('notes');
 }
 function openSidebar(){
-  (document.getElementById('sidebar')||document.createElement('div')).classList.add('open');
-  (document.getElementById('sb-overlay')||document.createElement('div')).classList.add('show');
+  var sb = document.getElementById('sidebar');
+  var ov = document.getElementById('sb-overlay');
+  if(sb) sb.classList.add('open');
+  if(ov) ov.classList.add('show');
+  // Swipe left on sidebar to close
+  if(sb && !sb._swipeClose){
+    sb._swipeClose = true;
+    var _sx=0;
+    sb.addEventListener('touchstart',function(e){_sx=e.touches[0].clientX;},{passive:true});
+    sb.addEventListener('touchend',function(e){
+      if(_sx - e.changedTouches[0].clientX > 60) closeSidebar();
+    },{passive:true});
+  }
+  // Close on Escape key
+  document.addEventListener('keydown', function _sbEsc(e){
+    if(e.key==='Escape'){ closeSidebar(); document.removeEventListener('keydown',_sbEsc); }
+  });
 }
 function closeSidebar(){
-  (document.getElementById('sidebar')||document.createElement('div')).classList.remove('open');
-  (document.getElementById('sb-overlay')||document.createElement('div')).classList.remove('show');
+  var sb = document.getElementById('sidebar');
+  var ov = document.getElementById('sb-overlay');
+  if(sb) sb.classList.remove('open');
+  if(ov) ov.classList.remove('show');
 }
 function setBN(id){
   document.querySelectorAll('.bn-btn').forEach(b=>b.classList.remove('active'));
