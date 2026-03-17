@@ -3560,6 +3560,8 @@ function togglePwVis(id){
 
 function signOut(){
   showConfirm('Sign out?','You can log back in anytime.',async function(){
+    // Sync to Firestore FIRST so no data is lost on logout
+    try{ await fbSyncData(); }catch(e){}
     if(window._fbAuth){
       try{ await window._fbFns.fbSignOut(window._fbAuth); }catch(e){}
     }
@@ -3751,8 +3753,14 @@ async function _fbSaveUser(user){
 async function _fbLoadUserData(uid){
   try{
     const snap = await window._fbFns.getDoc(window._fbFns.doc(window._fbDb,'users',uid));
-    if(snap.exists()&&snap.data().appData){
-      _fbApplyData(snap.data().appData);
+    if(snap.exists()){
+      const d = snap.data();
+      // Restore main app data
+      if(d.appData) _fbApplyData(d.appData);
+      // Restore progress logs — these were never synced before, now they are
+      if(d.studyLog)   localStorage.setItem('fn_study_log',   d.studyLog);
+      if(d.quizLog)    localStorage.setItem('fn_quiz_log',    d.quizLog);
+      if(d.countdowns) localStorage.setItem('fn_countdowns',  d.countdowns);
     }
   }catch(e){ console.warn('Firestore load failed',e); }
 }
@@ -3766,18 +3774,20 @@ function _fbApplyData(appData){
 async function fbSyncData(){
   const uid = localStorage.getItem('fn_current_user');
   if(!uid||uid==='guest'||!window._fbDb) return;
-  // (isMinor() check below handles this)
   if(isMinor()) return; // COPPA: no cloud sync for under-14
   try{
     const raw = localStorage.getItem('mb7_data');
     if(raw){
       await window._fbFns.setDoc(window._fbFns.doc(window._fbDb,'users',uid),{
         appData: raw,
+        // Persist these separate keys so they survive logout/login
+        studyLog:   localStorage.getItem('fn_study_log')||'{}',
+        quizLog:    localStorage.getItem('fn_quiz_log')||'[]',
+        countdowns: localStorage.getItem('fn_countdowns')||'[]',
         lastSync: new Date().toISOString()
       },{merge:true});
     }
   }catch(e){ console.warn('Sync failed',e); }
-  // Also sync push data for background notifications
   syncPushData();
 }
 
@@ -4574,9 +4584,14 @@ function startApp(){
   document.getElementById('chat-nav-lbl').textContent='Chat with '+c.name;
   document.getElementById('home-avi').src=c.img;
   document.getElementById('home-badge').textContent=c.badge;
-  document.getElementById('greet-name').textContent=userName||'there';
+  // Fallback: if userName blank, use first part of email (e.g. "amir" from "amir@gmail.com")
+  var _displayName = userName;
+  if(!_displayName && userEmail) _displayName = userEmail.split('@')[0];
+  document.getElementById('greet-name').textContent=_displayName||'there';
   document.getElementById('home-speech').textContent=c.speech[Math.floor(Math.random()*c.speech.length)];
-  document.getElementById('prof-name').textContent=userName||'You';
+  var _profName = userName;
+  if(!_profName && userEmail) _profName = userEmail.split('@')[0];
+  document.getElementById('prof-name').textContent=_profName||'You';
   document.getElementById('prof-struggles').textContent=userStruggles.slice(0,3).join(' · ')||'No struggles set';
   buildProfList(); buildChatSwitcher(); buildSidebarSubjects();
   buildSubjectFilters(); buildSubjectSelects(); populateCardSubjectFilter();
