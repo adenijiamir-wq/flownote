@@ -2542,7 +2542,7 @@ body::after{
           <div style="display:flex;align-items:center;gap:.9rem;margin-bottom:1.2rem;">
             <div id="prof-avatar">🙂</div>
             <div style="flex:1;">
-              <div style="font-family:'DM Serif Display',Georgia,'Times New Roman',serif;font-size:1.15rem;" id="prof-name">—</div>
+              <div style="display:flex;align-items:center;gap:.45rem;"><div style="font-family:'DM Serif Display',Georgia,'Times New Roman',serif;font-size:1.15rem;" id="prof-name">—</div><button onclick="openEditName()" title="Edit name" style="background:none;border:none;cursor:pointer;padding:.15rem;color:var(--muted);display:flex;align-items:center;-webkit-tap-highlight-color:transparent;"><svg viewBox="0 0 24 24" style="width:13px;height:13px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button></div>
               <div style="font-size:.7rem;color:var(--muted);margin-top:.1rem;" id="prof-struggles">—</div>
             </div>
           </div>
@@ -3558,6 +3558,32 @@ function togglePwVis(id){
     : '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:18px;height:18px;"><path d="M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19m-6.72-1.07a3 3 0 11-4.24-4.24M1 1l22 22"/></svg>';
 }
 
+function openEditName(){
+  var current = userName || '';
+  var html = '<div class="fw-modal-bg" id="fw-modal-bg" onclick="if(event.target===this)closeFWModal()">' +
+    '<div class="fw-modal">' +
+    '<div class="fw-modal-title">Edit your name</div>' +
+    '<input class="fw-inp" id="edit-name-inp" maxlength="40" placeholder="Your name" value="' + current.replace(/"/g,'&quot;') + '" style="margin-bottom:.9rem;"/>' +
+    '<div class="fw-btn-row">' +
+      '<button class="fw-btn fw-btn-ghost" onclick="closeFWModal()">Cancel</button>' +
+      '<button class="fw-btn fw-btn-primary" onclick="saveEditName()">Save</button>' +
+    '</div>' +
+    '</div></div>';
+  document.body.insertAdjacentHTML('beforeend', html);
+  setTimeout(function(){ var inp=document.getElementById('edit-name-inp'); if(inp){inp.focus();inp.select();} }, 100);
+}
+function saveEditName(){
+  var val = (document.getElementById('edit-name-inp').value||'').trim();
+  if(!val){ toast('Name cannot be empty'); return; }
+  userName = val;
+  // Update all name displays immediately
+  var _dn = userName;
+  var greet = document.getElementById('greet-name'); if(greet) greet.textContent = _dn;
+  var prof  = document.getElementById('prof-name');  if(prof)  prof.textContent  = _dn;
+  save();
+  closeFWModal();
+  toast('Name updated ✓');
+}
 function signOut(){
   showConfirm('Sign out?','You can log back in anytime.',async function(){
     // Sync to Firestore FIRST so no data is lost on logout
@@ -4098,6 +4124,8 @@ function _doTourNav(page){
 
 function _renderTourSpotlight(step){
   var old = document.getElementById('tour-container'); if(old) old.remove();
+  // Clear highlight from previous step's target
+  if(window._tourLastTarget){ window._tourLastTarget.style.boxShadow=''; window._tourLastTarget.style.transition=''; window._tourLastTarget=null; }
   var target = document.querySelector(step.sel);
   if(!target){ _nextTourStep(); return; }
 
@@ -4205,12 +4233,11 @@ function _renderTourSpotlight(step){
   wrap.appendChild(tip);
   document.body.appendChild(wrap);
 
-  // Pulse animation on target
+  // Highlight target — cleared when tour advances or ends (not on a timer)
   target.style.transition = 'box-shadow .3s';
   target.style.boxShadow = '0 0 0 3px #1a6b3c, 0 0 16px rgba(26,107,60,.4)';
-  setTimeout(function(){
-    if(target) target.style.boxShadow = '';
-  }, 2000);
+  // Store reference so next step / endTour can clear it immediately
+  window._tourLastTarget = target;
 }
 
 function _clearTourTapListener(){
@@ -4246,9 +4273,21 @@ function endTour(){
   var sidebarEl = document.getElementById('sidebar');
   if(sidebarEl) sidebarEl.style.zIndex = '';
   if(typeof closeSidebar==='function') closeSidebar();
-  // Remove pulse from any highlighted elements
+  // Remove box-shadow from every tour step target
   _tourSteps.forEach(function(s){
-    try{ var t=document.querySelector(s.sel); if(t) t.style.boxShadow=''; }catch(e){}
+    try{ var t=document.querySelector(s.sel); if(t){ t.style.boxShadow=''; t.style.transition=''; } }catch(e){}
+  });
+  // Also clear nav buttons (highlighted separately during nav transitions)
+  document.querySelectorAll('.nav-btn, .bn-btn, #bottom-nav button').forEach(function(el){
+    el.style.boxShadow='';
+    el.style.transition='';
+  });
+  // Clear any element that may still have the green glow inline
+  document.querySelectorAll('[style*="1a6b3c"]').forEach(function(el){
+    if(el.style.boxShadow && el.style.boxShadow.indexOf('1a6b3c')!==-1){
+      el.style.boxShadow='';
+      el.style.transition='';
+    }
   });
   localStorage.setItem('mn_toured','1');
   toast('Tour complete! Explore at your own pace 🚀');
@@ -4319,11 +4358,15 @@ window.addEventListener('DOMContentLoaded',()=>{
     }
   };
   // Fallback if Firebase doesn't respond in 3s
-  setTimeout(()=>{
+  setTimeout(async ()=>{
     if(window._fbUserReady){
       window._fbUserReady = null;
       const local = localStorage.getItem('fn_current_user');
-      if(local){ afterAuth(true); }
+      if(local){
+        // Try to load Firestore data even in fallback so name/data isn't blank
+        try{ await _fbLoadUserData(local); }catch(e){}
+        afterAuth(true);
+      }
       else { document.getElementById('auth-screen').style.display='flex'; }
     }
   },3000);
@@ -4635,6 +4678,24 @@ function startApp(){
   // Re-render when app comes back to foreground
   document.addEventListener('visibilitychange', function(){
     if(document.visibilityState === 'visible'){
+      // If memory looks empty but localStorage has data, re-load before rendering
+      // This handles the case where mobile Chrome evicted the JS context after
+      // the app was in the background for a long time
+      try{
+        var _raw = localStorage.getItem('mb7_data');
+        if(_raw){
+          var _stored = JSON.parse(_raw);
+          var _memEmpty = (!reminders||reminders.length===0) &&
+                          (!notes||notes.length===0) &&
+                          (!studyCards||studyCards.length===0);
+          var _storeHasData = (_stored.reminders&&_stored.reminders.length>0) ||
+                              (_stored.notes&&_stored.notes.length>0) ||
+                              (_stored.studyCards&&_stored.studyCards.length>0);
+          if(_memEmpty && _storeHasData){
+            load(); // re-populate runtime vars from localStorage
+          }
+        }
+      }catch(_e){}
       renderAll(); renderNotes(); renderCards(); renderNextAction();
       checkAndFireReminders();
     }
@@ -6394,6 +6455,7 @@ function startStudySession(){
 }
 function _startSession(){
   sessionIdx=0;sessionFlipped=false;sessionHistory=[];
+  window._sessionOriginalCount=sessionCards.length; // count before any requeueing
   // Hide done overlay
   const ov=document.getElementById('fc-done-overlay');
   if(ov){ov.style.display='none';}
@@ -6501,7 +6563,9 @@ function gradeCard(grade){
     }
   }
   sessionIdx++;
-  if(sessionIdx>=sessionCards.length){endSession();return;}
+  // End when all ORIGINAL cards are graded (ignore requeued extras)
+  const _gradedOrig=sessionCards.slice(0,sessionIdx).filter(function(x){return !x._requeued;}).length;
+  if(_gradedOrig>=(window._sessionOriginalCount||sessionCards.length)){endSession();return;}
   showSessionCard();
   checkReviewBadge();
   // Update due count in real time
@@ -6586,24 +6650,14 @@ function startTopicSession(subject){
 
 function endSession(){
   const reviewed = sessionCards.filter((c,i)=>i<sessionIdx&&!c._requeued).length;
+  const total = sessionCards.filter(c=>!c._requeued).length;
   save(); renderCards(); checkReviewBadge(); renderGaps();
-  // Coach summary bubble for card session
-  setTimeout(function(){ _showSessionCoachBubble(reviewed, sessionCards.filter(c=>!c._requeued).length); }, 900);
-  // Fill progress bar to 100%
-  const bar=document.getElementById('fc-progress-bar-fill');
-  if(bar) bar.style.width='100%';
-  const prog=document.getElementById('fc-progress');
-  if(prog) prog.textContent='Done!';
-  // Hide grade buttons and swipe hint
-  const btns=document.getElementById('fc-grade-btns');
-  if(btns) btns.style.display='none';
-  const sh=document.getElementById('fc-swipe-hint');
-  if(sh) sh.style.display='none';
-  // Show done overlay (card DOM is preserved underneath — no null crash on next session)
-  const ov=document.getElementById('fc-done-overlay');
-  const countEl=document.getElementById('fc-done-count');
-  if(countEl) countEl.textContent=reviewed===1?'1 card reviewed':reviewed+' cards reviewed';
-  if(ov) ov.style.display='flex';
+  // Go straight back to cards screen — no overlay tap needed
+  closeSession();
+  // Coach bubble fires after closeSession so it appears over the cards list
+  setTimeout(function(){ _showSessionCoachBubble(reviewed, total); }, 600);
+  // Toast so user knows session is done
+  toast('🎉 Session done — '+reviewed+' card'+(reviewed===1?'':'s')+' reviewed!');
 }
 function closeSession(){
   // Hide done overlay before closing so next session starts clean
@@ -9561,43 +9615,33 @@ function _updateTimerNotification(timeStr, mode){
   _timerNotifLastMin = minsLeft;
   var title = '⏱ ' + mode + ' · ' + timeStr;
   var body = minsLeft > 1 ? minsLeft + ' min remaining' : 'Almost done! 🔥';
-  // Try SW first (updates existing notification silently)
-  if(navigator.serviceWorker && navigator.serviceWorker.controller){
-    navigator.serviceWorker.controller.postMessage({
-      type: 'TIMER_TICK',
-      title: title,
-      body: body,
-      tag: 'menmory-timer'
-    });
-  }
-  // Fallback: direct Notification API (creates a new notification)
-  // Only do this when the app is in the background so it's not spammy
-  if(document.visibilityState !== 'visible'){
-    try{
-      var n = new Notification(title, {
-        body: body,
-        tag: 'menmory-timer', // same tag = replaces the previous one
-        icon: '/icon-192.png',
-        silent: true
-      });
-      // Auto-close after 4s so it doesn't pile up
-      setTimeout(function(){ try{ n.close(); }catch(e){} }, 4000);
-    } catch(e){}
+  // Use serviceWorker.ready instead of .controller —
+  // .controller is null on first load before the SW claims the page
+  if('serviceWorker' in navigator){
+    navigator.serviceWorker.ready.then(function(reg){
+      if(reg && reg.active){
+        reg.active.postMessage({
+          type: 'TIMER_TICK',
+          title: title,
+          body: body,
+          tag: 'menmory-timer',
+          secsLeft: _pomoLeft,
+          secsTotal: _pomoTotal,
+          running: _pomoRunning
+        });
+      }
+    }).catch(function(){});
   }
 }
 
 function _clearTimerNotification(){
   _timerNotifLastMin = -1;
-  if(navigator.serviceWorker && navigator.serviceWorker.controller){
-    navigator.serviceWorker.controller.postMessage({ type:'CLEAR_TIMER' });
-  }
-  // Close any direct Notification with the timer tag
-  // (browsers don't expose this directly, but sending a blank replace works)
-  if('Notification' in window && Notification.permission === 'granted'){
-    try{
-      var n = new Notification('', { tag:'menmory-timer', silent:true });
-      setTimeout(function(){ try{ n.close(); }catch(e){} }, 100);
-    } catch(e){}
+  if('serviceWorker' in navigator){
+    navigator.serviceWorker.ready.then(function(reg){
+      if(reg && reg.active){
+        reg.active.postMessage({ type:'CLEAR_TIMER' });
+      }
+    }).catch(function(){});
   }
 }
 
