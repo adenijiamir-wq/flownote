@@ -575,7 +575,7 @@ html,body{height:100%;overflow:hidden;font-family:'DM Sans',-apple-system,BlinkM
 
 /* Pages */
 .page{display:none;flex:1;overflow-y:auto;padding:1.4rem;}
-.page.active{display:block;}
+.page.active{display:flex;flex-direction:column;}
 .chat-wrap{display:none;flex:1;flex-direction:column;overflow:hidden;}
 .chat-wrap.active{display:flex;}
 
@@ -1417,6 +1417,17 @@ body::after{
   border-top:none!important;
   padding:8px 14px calc(10px + env(safe-area-inset-bottom,0px))!important;
   position:sticky;bottom:0;
+  /* Extend background into system gesture area to avoid double line */
+  margin-bottom:0!important;
+}
+/* Pseudo-element fills the system gesture bar area with matching bg colour */
+#bottom-nav::after{
+  content:'';
+  position:fixed;
+  bottom:0;left:0;right:0;
+  height:env(safe-area-inset-bottom,0px);
+  background:var(--paper);
+  z-index:-1;
 }
 .bn-inner{
   background:rgba(250,249,246,.92);
@@ -1665,8 +1676,7 @@ body::after{
 .smode-btn:hover{border-color:var(--ink);color:var(--ink);}
 .smode-btn.active{background:var(--green);border-color:var(--green);color:#fff;box-shadow:0 2px 8px rgba(26,107,60,.25);}
 
-/* ── Bottom nav pill (override for gap between items) */
-#bottom-nav{padding:8px 14px calc(12px + env(safe-area-inset-bottom,0px))!important;}
+/* ── Bottom nav pill (override for gap between items) — consolidated above */
 
 
 /* ── Topbar — glass blur ── */
