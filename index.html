@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8"/>
-<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, viewport-fit=cover">
 <title>Menmory</title>
 <!-- Firebase config -->
 <script src="firebase-config.js"></script>
@@ -67,7 +67,8 @@ onAuthStateChanged(auth, (user) => {
 /* ── Energy Check-in Modal ── */
 #energy-checkin-bg{position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:9998;display:flex;align-items:flex-end;justify-content:center;animation:fadeIn .2s ease;}
 @keyframes fadeIn{from{opacity:0}to{opacity:1}}
-#energy-checkin{background:var(--paper);border-radius:22px 22px 0 0;padding:1.6rem 1.4rem 2.2rem;width:100%;max-width:480px;animation:slideUp .3s cubic-bezier(.34,1.2,.64,1);}
+@keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+#energy-checkin{background:var(--paper);border-radius:22px 22px 0 0;padding:1.6rem 1.4rem 2.2rem;width:100%;max-width:480px;animation:slideUp .3s cubic-bezier(.34,1.2,.64,1);will-change:opacity,transform;}
 @keyframes slideUp{from{transform:translateY(60px);opacity:0}to{transform:none;opacity:1}}
 .ec-title{font-family:'DM Serif Display',Georgia,serif;font-size:1.3rem;line-height:1.2;margin-bottom:.25rem;}
 .ec-sub{font-size:.82rem;color:var(--muted);margin-bottom:1.5rem;}
@@ -278,7 +279,7 @@ button{-webkit-tap-highlight-color:transparent;}
 
 /* Auth screen */
 #auth-screen{position:fixed;inset:0;background:var(--paper);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:1.5rem;z-index:9999;overflow-y:auto;}
-.auth-card{width:100%;max-width:420px;animation:fadeUp .35s ease;border-radius:24px;}
+.auth-card{width:100%;max-width:420px;animation:fadeUp .35s ease;border-radius:24px;will-change:opacity,transform;}
 .auth-logo{font-family:'DM Serif Display',Georgia,'Times New Roman',serif;font-size:1.55rem;color:var(--green);margin-bottom:2.2rem;display:flex;align-items:center;gap:.45rem;}
 .auth-logo span{color:var(--ink);}
 .auth-tagline{font-size:.82rem;color:var(--muted);margin-top:.25rem;font-weight:400;}
