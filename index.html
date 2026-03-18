@@ -575,7 +575,7 @@ html,body{height:100%;overflow:hidden;font-family:'DM Sans',-apple-system,BlinkM
 
 /* Pages */
 .page{display:none;flex:1;overflow-y:auto;padding:1.4rem;}
-.page.active{display:flex;flex-direction:column;}
+.page.active{display:block;}
 .chat-wrap{display:none;flex:1;flex-direction:column;overflow:hidden;}
 .chat-wrap.active{display:flex;}
 
@@ -1413,21 +1413,11 @@ body::after{
 
 /* ── Floating bottom nav pill ── */
 #bottom-nav{
-  background:transparent!important;
+  /* Solid background so system gesture bar below blends seamlessly with body */
+  background:var(--paper)!important;
   border-top:none!important;
   padding:8px 14px calc(10px + env(safe-area-inset-bottom,0px))!important;
   position:sticky;bottom:0;
-  /* Extend background into system gesture area to avoid double line */
-  margin-bottom:0!important;
-}
-/* Pseudo-element fills the system gesture bar area with matching bg colour */
-#bottom-nav::after{
-  content:'';
-  position:fixed;
-  bottom:0;left:0;right:0;
-  height:env(safe-area-inset-bottom,0px);
-  background:var(--paper);
-  z-index:-1;
 }
 .bn-inner{
   background:rgba(250,249,246,.92);
