@@ -158,6 +158,12 @@ self.addEventListener('periodicsync', async e => {
   }
 });
 
+// Fallback: check every 60s while SW is alive (works even without periodicsync)
+setInterval(async () => {
+  await ensureScheduleLoaded();
+  checkSchedule();
+}, 60000);
+
 // ── Push (server-side triggered) ───────────────────────
 self.addEventListener('push', e => {
   let data = {};
