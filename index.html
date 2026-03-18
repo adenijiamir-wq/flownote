@@ -27,6 +27,7 @@ window._fbFns = {
   signInWithPopup,
   fbSignOut,
   onAuthStateChanged,
+  sendPasswordResetEmail,
   doc, setDoc, getDoc, collection, getCountFromServer
 };
 
@@ -3530,7 +3531,7 @@ function _clearAllUserData(){
     'fn_goal','fn_goal_week',
     'fn_trash','fn_trash_notes','fn_trash_cards',
     'fn_streak_date','fn_push_sub',
-    'mn_age_verified','mn_email_cfg','mn_email_prefs',
+    'mn_age_verified',
     'mn_study_email_sent','mn_cd_check_date','mn_checkin_state',
     'fn_feedback','fn_countdowns',
     // Avatar & appearance — clears old profile pic/emoji so new account is fresh
@@ -3596,6 +3597,8 @@ function saveEditName(){
   var greet = document.getElementById('greet-name'); if(greet) greet.textContent = _dn;
   var prof  = document.getElementById('prof-name');  if(prof)  prof.textContent  = _dn;
   save();
+  // Sync to Firestore immediately (not debounced) so name persists across sessions
+  if(typeof fbSyncData==='function') fbSyncData();
   closeFWModal();
   toast('Name updated ✓');
 }
@@ -3735,7 +3738,7 @@ async function doForgotPassword(){
   const btn = document.getElementById('forgot-btn');
   if(btn){ btn.textContent='Sending…'; btn.disabled=true; }
   try{
-    await sendPasswordResetEmail(window._fbAuth, email);
+    await window._fbFns.sendPasswordResetEmail(window._fbAuth, email);
     document.getElementById('forgot-error').textContent='';
     const s = document.getElementById('forgot-success');
     if(s){ s.textContent='✓ Reset link sent — check your inbox'; s.style.display='block'; }
@@ -3833,10 +3836,20 @@ async function _fbLoadUserData(uid){
       const d = snap.data();
       // Restore main app data
       if(d.appData) _fbApplyData(d.appData);
-      // Restore progress logs — these were never synced before, now they are
+      // Restore progress logs
       if(d.studyLog)   localStorage.setItem('fn_study_log',   d.studyLog);
       if(d.quizLog)    localStorage.setItem('fn_quiz_log',    d.quizLog);
       if(d.countdowns) localStorage.setItem('fn_countdowns',  d.countdowns);
+      // Restore email notification config — so user never has to re-enter it after login
+      if(d.notifEmail){
+        var _existing = '';
+        try{ _existing = JSON.parse(localStorage.getItem('mn_email_cfg')||'{}').toEmail||''; }catch(e){}
+        if(!_existing){
+          localStorage.setItem('mn_email_cfg', JSON.stringify({toEmail: d.notifEmail}));
+        }
+        if(d.notifPrefs) localStorage.setItem('mn_email_prefs', JSON.stringify(d.notifPrefs));
+        localStorage.setItem('mn_email_set','1'); // don't show nudge if email already saved
+      }
     }
   }catch(e){ console.warn('Firestore load failed',e); }
 }
@@ -4715,8 +4728,8 @@ function startApp(){
   // Permissions: 10s after tour (or 10s for returning users)
   setTimeout(showStartupPermissions, _baseDelay + 10000);
 
-  // Email nudge: 2 min after tour (or 2 min for returning users)
-  setTimeout(_checkEmailNudge, _baseDelay + 120000);
+  // Email nudge: 20s for returning users (2 min for new users after tour)
+  setTimeout(_checkEmailNudge, _baseDelay + 20000);
 
   // Mood check-in: 5 min after tour  
   setTimeout(function(){ maybeShowCheckin(0); }, _baseDelay + 300000);
