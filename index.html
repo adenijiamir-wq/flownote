@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8"/>
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, viewport-fit=cover, user-scalable=no">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>Menmory</title>
 <!-- Firebase config -->
 <script src="firebase-config.js"></script>
@@ -54,6 +54,11 @@ onAuthStateChanged(auth, (user) => {
 <link rel="manifest" href="/manifest.json">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='22' fill='%231a6b3c'/><text y='.9em' font-size='72' x='12'>📚</text></svg>">
 <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='22' fill='%231a6b3c'/><text y='.9em' font-size='72' x='12'>📚</text></svg>">
+<!-- Preconnect to speed up critical origins -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="preconnect" href="https://www.gstatic.com">
+<link rel="dns-prefetch" href="https://firestore.googleapis.com">
 <!-- Fonts: try Google Fonts, fall back to system fonts gracefully -->
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500;600;700&display=swap" media="print" onload="this.media='all'" onerror="this.remove()">
 
@@ -2040,7 +2045,7 @@ body::after{
     <aside class="sidebar" id="sidebar">
       <div class="sb-logo">
         <span class="sb-logo-text" id="sb-logo-tap" onclick="secretTap()">Men<span>mory</span></span>
-        <button class="sb-close" onclick="closeSidebar()"><svg viewBox="0 0 24 24" style="width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:2.5;stroke-linecap:round;"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+        <button class="sb-close" onclick="closeSidebar()" aria-label="Close menu"><svg viewBox="0 0 24 24" style="width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:2.5;stroke-linecap:round;"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
       </div>
       <div class="sb-nav">
         <div class="sb-section">Main</div>
@@ -2427,7 +2432,7 @@ body::after{
         <!-- Controls -->
         <div style="display:flex;justify-content:center;align-items:center;gap:.9rem;margin-bottom:1.6rem;">
           <button onclick="resetPomo()" title="Reset" style="width:48px;height:48px;border-radius:50%;background:var(--paper2);border:1.5px solid var(--line);font-size:1.1rem;cursor:pointer;display:flex;align-items:center;justify-content:center;">↺</button>
-          <button onclick="togglePomo()" id="pomo-play-btn" style="width:72px;height:72px;border-radius:50%;background:var(--green);color:#fff;border:none;font-size:1.6rem;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 6px 24px rgba(26,107,60,.35);transition:transform .1s,box-shadow .1s;-webkit-tap-highlight-color:transparent;-webkit-appearance:none;appearance:none;outline:none;" onmousedown="this.style.transform='scale(.95)'" onmouseup="this.style.transform='scale(1)'" ontouchstart="this.style.transform='scale(.95)'" ontouchend="this.style.transform='scale(1)'">▶</button>
+          <button onclick="togglePomo()" id="pomo-play-btn" aria-label="Start or pause timer" style="width:72px;height:72px;border-radius:50%;background:var(--green);color:#fff;border:none;font-size:1.6rem;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 6px 24px rgba(26,107,60,.35);transition:transform .1s,box-shadow .1s;-webkit-tap-highlight-color:transparent;-webkit-appearance:none;appearance:none;outline:none;" onmousedown="this.style.transform='scale(.95)'" onmouseup="this.style.transform='scale(1)'" ontouchstart="this.style.transform='scale(.95)'" ontouchend="this.style.transform='scale(1)'">▶</button>
           <button onclick="skipPomo()" title="Skip to next" style="width:48px;height:48px;border-radius:50%;background:var(--paper2);border:1.5px solid var(--line);font-size:1.1rem;cursor:pointer;display:flex;align-items:center;justify-content:center;-webkit-tap-highlight-color:transparent;-webkit-appearance:none;appearance:none;outline:none;">⏭</button>
         </div>
 
@@ -2884,7 +2889,7 @@ body::after{
 
 <!-- Quick Capture -->
 <div id="qc-sidebar">
-  <div class="qc-head"><div class="qc-title" style="display:flex;align-items:center;gap:.4rem;"><svg viewBox="0 0 24 24" style="width:15px;height:15px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>Quick Capture</div><button class="qc-x" onclick="closeQC()"><svg viewBox="0 0 24 24" style="width:14px;height:14px;fill:none;stroke:currentColor;stroke-width:2.5;stroke-linecap:round;"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button></div>
+  <div class="qc-head"><div class="qc-title" style="display:flex;align-items:center;gap:.4rem;"><svg viewBox="0 0 24 24" style="width:15px;height:15px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>Quick Capture</div><button class="qc-x" onclick="closeQC()" aria-label="Close Quick Capture"><svg viewBox="0 0 24 24" style="width:14px;height:14px;fill:none;stroke:currentColor;stroke-width:2.5;stroke-linecap:round;"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button></div>
   <textarea id="qc-textarea" placeholder="Write a thought, concept, or note before it disappears…"></textarea>
   <div class="qc-foot" style="display:flex;gap:.5rem;align-items:center;">
     <button class="mic-btn" id="qc-mic-btn" onclick="toggleVoice('qc')" title="Speak your capture">
@@ -2894,7 +2899,7 @@ body::after{
   </div>
 </div>
 <!-- Draggable FAB for mobile -->
-<button id="qc-fab" onclick="if(!_fabDragged)toggleQC()" title="Quick Capture">💭</button>
+<button id="qc-fab" onclick="if(!_fabDragged)toggleQC()" title="Quick Capture" aria-label="Quick Capture">💭</button>
 <button id="qc-toggle" onclick="toggleQC()">Quick<br/>Capture</button>
 
 <!-- Add Reminder Modal -->
@@ -3083,7 +3088,7 @@ body::after{
   <div class="modal" style="max-width:400px;width:100%;max-height:85vh;overflow-y:auto;">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.3rem;">
       <div style="font-size:.72rem;color:var(--muted);" id="quiz-progress-label">Question 1 of 5</div>
-      <button onclick="closeQuizModal()" style="background:none;border:none;color:var(--muted);font-size:1.1rem;cursor:pointer;">✕</button>
+      <button onclick="closeQuizModal()" style="background:none;border:none;color:var(--muted);font-size:1.1rem;cursor:pointer;" aria-label="Close quiz">✕</button>
     </div>
     <!-- Progress bar -->
     <div style="background:var(--line);border-radius:4px;height:4px;margin-bottom:1rem;">
@@ -6682,7 +6687,7 @@ function _initFCSwipe(){
       setTimeout(()=>gradeCard(2), sessionFlipped?0:300);
     }
     _fcSwiping=false;
-  });
+  },{passive:true});
 }
 
 // ── Topic chips for session start ──
