@@ -8,7 +8,7 @@
 <script src="firebase-config.js"></script>
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signInWithPopup, GoogleAuthProvider, signOut as fbSignOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signInWithPopup, GoogleAuthProvider, signOut as fbSignOut, onAuthStateChanged, sendPasswordResetEmail } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 import { getFirestore, doc, setDoc, getDoc, collection, getCountFromServer } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
 const firebaseConfig = window._firebaseConfig;
@@ -1878,6 +1878,9 @@ body::after{
       <label class="auth-label">Password</label>
       <div style="position:relative;"><input class="auth-input" id="login-password" type="password" placeholder="Your password" autocomplete="current-password" onkeydown="if(event.key==='Enter')doLogIn()"/><button type="button" onclick="togglePwVis('login-password')" id="login-password-eye" style="position:absolute;right:.6rem;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:var(--muted);padding:.2rem;display:flex;align-items:center;-webkit-tap-highlight-color:transparent;" aria-label="Show password"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:18px;height:18px;"><path d="M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19m-6.72-1.07a3 3 0 11-4.24-4.24M1 1l22 22"/></svg></button></div>
       <button class="auth-btn" id="login-btn" onclick="doLogIn()">Log in →</button>
+      <div style="text-align:right;margin-top:.3rem;margin-bottom:.1rem;">
+        <button onclick="showForgot()" style="background:none;border:none;color:var(--green);font-size:.78rem;cursor:pointer;font-family:inherit;padding:.2rem 0;-webkit-tap-highlight-color:transparent;">Forgot password?</button>
+      </div>
       <div class="auth-divider"><span>or</span></div>
       <button class="auth-google-btn" onclick="doGoogleSignIn()">
         <svg viewBox="0 0 24 24" style="width:18px;height:18px;flex-shrink:0;"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
@@ -1885,6 +1888,18 @@ body::after{
       </button>
       <div class="auth-switch">Don't have an account? <button onclick="showSignup()">Sign up</button></div>
       <div style="text-align:center;font-size:.68rem;color:var(--muted);margin-top:.75rem;"><button onclick="openPrivacyPolicy()" style="background:none;border:none;color:var(--muted);font-size:.68rem;cursor:pointer;padding:0;text-decoration:underline;font-family:inherit;">Privacy Policy</button></div>
+    </div>
+
+    <!-- Forgot Password view -->
+    <div id="auth-forgot" style="display:none;">
+      <div class="auth-h">Reset your<br/><em>password</em></div>
+      <div class="auth-sub">We'll send a reset link to your email.</div>
+      <div class="auth-error" id="forgot-error"></div>
+      <div class="auth-success" id="forgot-success"></div>
+      <label class="auth-label">Email</label>
+      <input class="auth-input" id="forgot-email" type="email" placeholder="you@example.com" autocomplete="email" onkeydown="if(event.key==='Enter')doForgotPassword()"/>
+      <button class="auth-btn" id="forgot-btn" onclick="doForgotPassword()">Send reset link →</button>
+      <div class="auth-switch"><button onclick="showLogin()">← Back to log in</button></div>
     </div>
   </div>
 </div>
@@ -3648,12 +3663,26 @@ function openPrivacyPolicy(){
 function showLogin(){
   document.getElementById('auth-signup').style.display='none';
   document.getElementById('auth-login').style.display='block';
+  document.getElementById('auth-forgot').style.display='none';
   setTimeout(()=>document.getElementById('login-email').focus(),50);
 }
 function showSignup(){
   document.getElementById('auth-login').style.display='none';
+  document.getElementById('auth-forgot').style.display='none';
   document.getElementById('auth-signup').style.display='block';
   setTimeout(()=>document.getElementById('signup-email').focus(),50);
+}
+function showForgot(){
+  document.getElementById('auth-login').style.display='none';
+  document.getElementById('auth-signup').style.display='none';
+  document.getElementById('auth-forgot').style.display='block';
+  document.getElementById('forgot-error').textContent='';
+  document.getElementById('forgot-error').style.color='';
+  document.getElementById('forgot-success').textContent='';
+  // Pre-fill email from login field if user already typed it
+  var loginEmail = document.getElementById('login-email').value.trim();
+  if(loginEmail) document.getElementById('forgot-email').value = loginEmail;
+  setTimeout(()=>document.getElementById('forgot-email').focus(),50);
 }
 function authError(id,msg){
   const el=document.getElementById(id);
@@ -3697,6 +3726,27 @@ async function doSignUp(){
   }
 }
 
+async function doForgotPassword(){
+  const email = (document.getElementById('forgot-email').value||'').trim();
+  if(!email || !validateEmail(email)){
+    authError('forgot-error','Please enter your email address.');
+    return;
+  }
+  const btn = document.getElementById('forgot-btn');
+  if(btn){ btn.textContent='Sending…'; btn.disabled=true; }
+  try{
+    await sendPasswordResetEmail(window._fbAuth, email);
+    document.getElementById('forgot-error').textContent='';
+    const s = document.getElementById('forgot-success');
+    if(s){ s.textContent='✓ Reset link sent — check your inbox'; s.style.display='block'; }
+    // Auto-go back to login after 3s
+    setTimeout(showLogin, 3000);
+  } catch(e){
+    authError('forgot-error', _fbErrMsg(e));
+  } finally {
+    if(btn){ btn.textContent='Send reset link →'; btn.disabled=false; }
+  }
+}
 async function doLogIn(){
   authClearErrors();
   if(!window._fbFns||!window._fbAuth){authError('login-error','Still connecting to server — please wait a moment and try again.');return;}
@@ -4613,12 +4663,14 @@ function startApp(){
   const _t=todayStr(), _tm=tomorrowStr();
   const _nw=new Date(); _nw.setDate(_nw.getDate()+7);
   const _nwStr=_nw.toISOString().split('T')[0];
+  var _migrated=false;
   reminders.forEach(r=>{
-    if(r.date==='today') r.date=_t;
-    else if(r.date==='tomorrow') r.date=_tm;
-    else if(r.date==='nextweek') r.date=_nwStr;
+    // Always convert literal strings to real date strings so they don't drift
+    if(r.date==='today'){ r.date=_t; _migrated=true; }
+    else if(r.date==='tomorrow'){ r.date=_tm; _migrated=true; }
+    else if(r.date==='nextweek'){ r.date=_nwStr; _migrated=true; }
   });
-  save();
+  save(); // always save so Firestore gets the real dates immediately
   // Re-apply appearance in case load() just restored accent/avatar from this user's Firestore data
   if(typeof applyTheme==='function') applyTheme(currentThemePref||'system');
   const c=CHARS[currentChar];
@@ -8375,20 +8427,35 @@ function loadPersonalisation(){
 // DRAGGABLE QC FAB (mobile)
 // ══════════════════════════════════════════════════════
 let _fabDragged=false;
+function _clampFAB(){
+  const fab=document.getElementById('qc-fab');
+  if(!fab||fab.style.display==='none') return;
+  const vw=window.innerWidth, vh=window.innerHeight;
+  let x=parseInt(fab.style.left)||vw-66;
+  let y=parseInt(fab.style.top)||vh-160;
+  // Bottom nav is ~56px, add 20px breathing room = 76px min from bottom
+  // Top safe area ~60px
+  x=Math.max(10, Math.min(vw-62, x));
+  y=Math.max(60, Math.min(vh-76, y));
+  fab.style.left=x+'px';
+  fab.style.top=y+'px';
+}
 function initFAB(){
   const fab=document.getElementById('qc-fab');
   if(!fab)return;
 
   const vw=window.innerWidth, vh=window.innerHeight;
   const saved=JSON.parse(localStorage.getItem('fn_fab_pos')||'null');
-  // Default: bottom-right above the nav bar (160px from bottom to clear install banners + nav)
+  // Default: bottom-right just above the nav bar
   let x=saved?saved.x:vw-66;
-  let y=saved?saved.y:vh-160;
-  // Clamp so FAB is always fully on screen, with extra bottom margin for banners
-  x=Math.max(10,Math.min(vw-62,x));
-  y=Math.max(10,Math.min(vh-160,y));
+  let y=saved?saved.y:vh-120;
+  // Clamp into safe visible area
+  x=Math.max(10, Math.min(vw-62, x));
+  y=Math.max(60, Math.min(vh-76, y));
   fab.style.left=x+'px';
   fab.style.top=y+'px';
+  // Re-clamp on resize/orientation change so FAB never goes off-screen
+  window.addEventListener('resize', _clampFAB, {passive:true});
 
   let startX,startY,origX,origY,moved=false;
 
@@ -9813,31 +9880,28 @@ function buildNotifSchedule(){
 function syncScheduleToSW(){
   var schedule = buildNotifSchedule();
   nlog('syncSW: '+schedule.length+' items');
-  // Try active controller first (fastest)
-  if(navigator.serviceWorker && navigator.serviceWorker.controller){
-    navigator.serviceWorker.controller.postMessage({ type:'SCHEDULE', schedule:schedule });
-    return;
-  }
-  // Fall back to registration
-  if(_swReg && _swReg.active){
-    _swReg.active.postMessage({ type:'SCHEDULE', schedule:schedule });
+  // Use serviceWorker.ready — works on first load, no reload needed
+  if('serviceWorker' in navigator){
+    navigator.serviceWorker.ready.then(function(reg){
+      if(reg && reg.active){
+        reg.active.postMessage({ type:'SCHEDULE', schedule:schedule });
+      }
+    }).catch(function(){});
   }
 }
 
+function _swPostMessage(msg){
+  if(!('serviceWorker' in navigator)) return;
+  navigator.serviceWorker.ready.then(function(reg){
+    if(reg && reg.active) reg.active.postMessage(msg);
+  }).catch(function(){});
+}
 function startSWPing(){
   // Ping SW every 20s to keep it alive and recheck schedule
-  setInterval(function(){
-    if(navigator.serviceWorker && navigator.serviceWorker.controller){
-      navigator.serviceWorker.controller.postMessage({ type:'PING' });
-    }
-  }, 20000);
+  setInterval(function(){ _swPostMessage({ type:'PING' }); }, 20000);
   // Also ping immediately when app becomes visible
   document.addEventListener('visibilitychange', function(){
-    if(document.visibilityState==='visible'){
-      if(navigator.serviceWorker && navigator.serviceWorker.controller){
-        navigator.serviceWorker.controller.postMessage({ type:'PING' });
-      }
-    }
+    if(document.visibilityState==='visible') _swPostMessage({ type:'PING' });
   });
 }
 
