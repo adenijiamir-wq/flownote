@@ -3870,8 +3870,6 @@ async function _fbLoadUserData(uid){
       if(d.streakDate) localStorage.setItem('fn_streak_date', d.streakDate);
       if(d.goalData)   localStorage.setItem('fn_goal',        d.goalData);
       if(d.goalWeek)   localStorage.setItem('fn_goal_week',   d.goalWeek);
-      if(d.avatarImg)  localStorage.setItem('fn_avatar_img',  d.avatarImg);
-      if(d.firedLog)   localStorage.setItem('fn_fired',       d.firedLog);
       // Restore email notification config — so user never has to re-enter it after login
       if(d.notifEmail){
         var _existing = '';
@@ -3908,8 +3906,6 @@ async function fbSyncData(){
         streakDate:  localStorage.getItem('fn_streak_date')||'',
         goalData:    localStorage.getItem('fn_goal')||'',
         goalWeek:    localStorage.getItem('fn_goal_week')||'',
-        avatarImg:   localStorage.getItem('fn_avatar_img')||'',
-        firedLog:    localStorage.getItem('fn_fired')||'{}',
         lastSync: new Date().toISOString()
       },{merge:true});
     }
