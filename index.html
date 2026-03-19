@@ -3499,10 +3499,17 @@ function logQuizResult(subject, topic, score, total){
   let ql=[];
   try{ ql=JSON.parse(localStorage.getItem('fn_quiz_log')||'[]'); }catch(e){}
   // Separate truly wrong (answered incorrectly) from skipped
-  var _skipped = typeof _quizSkippedItems!=='undefined' ? _quizSkippedItems.slice() : [];
+  var _skipped = typeof _quizSkippedItems!=='undefined' ? _quizSkippedItems.slice().map(function(x){
+      var orig = (typeof _quizQuestions!=='undefined' ? _quizQuestions : []).find(function(q){ return q.q===x.q; });
+      return Object.assign({}, x, orig ? {type: orig.type, options: orig.options} : {});
+    }) : [];
   var _skippedQs = _skipped.map(function(x){return x.q;});
   var _wrong = typeof _quizWrongItems!=='undefined'
-    ? _quizWrongItems.filter(function(x){ return _skippedQs.indexOf(x.q)===-1; })
+    ? _quizWrongItems.filter(function(x){ return _skippedQs.indexOf(x.q)===-1; }).map(function(x){
+        // Find original question to preserve type and options for redo
+        var orig = (typeof _quizQuestions!=='undefined' ? _quizQuestions : []).find(function(q){ return q.q===x.q; });
+        return Object.assign({}, x, orig ? {type: orig.type, options: orig.options} : {});
+      })
     : [];
   ql.unshift({
     ts: Date.now(),
@@ -5604,6 +5611,7 @@ let _quizScore = 0;
 let _quizTotal = 0;
 let _quizAnswered = false;
 let _quizWrongItems = []; // tracks {q, correct} for wrong answers
+let _quizRedoSourceIdx = null; // set when redoing from log so we can clear original on finish
 let _quizSkippedItems = []; // tracks skipped questions
 let _quizCorrectItems = []; // tracks {q, correct} for right answers
 
@@ -5811,6 +5819,11 @@ function showQuizResults(){
   for(let i=0;i<_quizTotal;i++) logDailyStudy(i < _quizScore ? 2 : 0);
   // Log full quiz result
   logQuizResult(_quizSubject, _quizTopic, _quizScore, _quizTotal);
+  // If this was a redo session, clear the missed items from the original entry
+  if(typeof _quizRedoSourceIdx !== 'undefined' && _quizRedoSourceIdx !== null){
+    dismissMissedFromLog(_quizRedoSourceIdx);
+    _quizRedoSourceIdx = null;
+  }
   // Sync to Firestore immediately so quiz progress survives logout
   if(typeof fbSyncData==='function') fbSyncData();
 
@@ -5846,9 +5859,9 @@ function showQuizResults(){
     needsWorkEl.style.display = 'block';
     needsWorkList.innerHTML = allMissed.slice(0,5).map(function(item, i){
       var isSkipped = _quizSkippedItems.some(function(s){ return s.q===item.q; });
-      return '<div style="background:var(--red-light);border-radius:8px;padding:.45rem .65rem;font-size:.75rem;color:var(--ink);">' +
-        '<div style="font-weight:600;margin-bottom:.15rem;">'+(isSkipped?'— skipped: ':'✗ ')+(item.q.slice(0,70)+(item.q.length>70?'…':''))+'</div>' +
-        '<div style="color:var(--muted);font-size:.68rem;">Correct: '+(item.correct||'').slice(0,60)+'</div>' +
+      return '<div style="border-left:2px solid var(--red);padding:.35rem .65rem;font-size:.75rem;">' +
+        '<div style="font-weight:600;color:var(--ink);margin-bottom:.1rem;">'+(isSkipped?'Skipped: ':'Missed: ')+(item.q.slice(0,70)+(item.q.length>70?'…':''))+'</div>' +
+        '<div style="color:var(--muted);font-size:.68rem;">Answer: '+(item.correct||'').slice(0,60)+'</div>' +
       '</div>';
     }).join('');
     if(allMissed.length > 5){
@@ -5995,6 +6008,28 @@ function _showSessionCoachBubble(reviewed, total){
   setTimeout(function(){ var el=document.getElementById('post-session-bubble'); if(el){ el.style.transition='opacity .5s'; el.style.opacity='0'; setTimeout(function(){el.remove();},500); } }, 15000);
 }
 
+function deleteQuizFromLog(logIdx){
+  var ql=[];
+  try{ ql=JSON.parse(localStorage.getItem('fn_quiz_log')||'[]'); }catch(e){}
+  ql.splice(parseInt(logIdx),1);
+  localStorage.setItem('fn_quiz_log',JSON.stringify(ql));
+  if(typeof fbSyncData==='function') fbSyncData();
+  renderGaps();
+  toast('Quiz removed');
+}
+
+function dismissMissedFromLog(logIdx){
+  var ql=[];
+  try{ ql=JSON.parse(localStorage.getItem('fn_quiz_log')||'[]'); }catch(e){}
+  var idx=parseInt(logIdx);
+  if(!ql[idx]) return;
+  ql[idx]=Object.assign({},ql[idx],{wrongItems:[],skippedItems:[],skipped:0});
+  localStorage.setItem('fn_quiz_log',JSON.stringify(ql));
+  if(typeof fbSyncData==='function') fbSyncData();
+  renderGaps();
+  toast('Missed questions cleared');
+}
+
 function redoMissedFromLog(logIdx){
   // Load quiz log and find the entry
   var ql = [];
@@ -6007,8 +6042,11 @@ function redoMissedFromLog(logIdx){
     })
   );
   if(!missed.length){ toast('No missed questions found'); return; }
-  // Build question objects from saved data
+  // Build question objects from saved data — preserve MCQ type and options if available
   var qs = missed.map(function(m){
+    if(m.type==='mcq' && m.options && m.options.length){
+      return { type:'mcq', q:m.q, answer:m.correct||'', options:m.options, explanation:'' };
+    }
     return { type:'open', q:m.q, answer:m.correct||'', explanation:'' };
   });
   // Launch quiz with these questions
@@ -6019,6 +6057,7 @@ function redoMissedFromLog(logIdx){
   _quizIdx = 0; _quizScore = 0;
   _quizWrongItems = []; _quizSkippedItems = []; _quizCorrectItems = [];
   _quizAnswered = false;
+  _quizRedoSourceIdx = parseInt(logIdx); // track source so we clear it on finish
   // Navigate to cards page and open quiz modal
   navTo('cards', document.getElementById('nav-cards'));
   setBN('cards');
@@ -6055,10 +6094,14 @@ function redoWrongQuestions(){
   _quizSkippedItems = [];
   _quizCorrectItems = [];
   _quizAnswered = false;
+  var _qm = document.getElementById('quiz-modal');
+  if(_qm) _qm.style.display = 'flex';
   document.getElementById('quiz-results').style.display = 'none';
   document.getElementById('quiz-needs-work').style.display = 'none';
   document.getElementById('quiz-got-right').style.display = 'none';
   document.getElementById('quiz-feedback-area').style.display = 'none';
+  document.getElementById('quiz-question-area').innerHTML = '';
+  document.getElementById('quiz-action-btns').innerHTML = '';
   document.getElementById('quiz-progress-bar').style.width = '0%';
   document.getElementById('quiz-progress-label').textContent = 'Question 1 of '+_quizTotal;
   showQuizQuestion();
@@ -7045,13 +7088,13 @@ function renderGaps(){
         const skippedList = (q.skippedItems||[]).slice(0,3);
         const missedHTML = wrongList.length
           ? '<div style="margin-top:.35rem;">'
-            + wrongList.map(function(w){ return '<div style="font-size:.63rem;color:var(--red);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">✗ '+w.q.slice(0,60)+(w.q.length>60?'…':'')+'</div>'; }).join('')
+            + wrongList.map(function(w){ return '<div style="font-size:.63rem;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;border-left:2px solid var(--red);padding-left:.35rem;margin-bottom:.1rem;">'+w.q.slice(0,60)+(w.q.length>60?'…':'')+'</div>'; }).join('')
             + (q.wrongItems&&q.wrongItems.length>3 ? '<div style="font-size:.6rem;color:var(--muted);">+' + (q.wrongItems.length-3) + ' more wrong</div>' : '')
             + '</div>'
           : '';
         const skippedHTML = skippedList.length
           ? '<div style="margin-top:.2rem;">'
-            + skippedList.map(function(s){ return '<div style="font-size:.63rem;color:var(--amber);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">— '+s.q.slice(0,60)+(s.q.length>60?'…':'')+'</div>'; }).join('')
+            + skippedList.map(function(s){ return '<div style="font-size:.63rem;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding-left:.35rem;margin-bottom:.1rem;">'+s.q.slice(0,60)+(s.q.length>60?'…':'')+'</div>'; }).join('')
             + (q.skippedItems&&q.skippedItems.length>3 ? '<div style="font-size:.6rem;color:var(--muted);">+' + (q.skippedItems.length-3) + ' more skipped</div>' : '')
             + '</div>'
           : '';
@@ -7059,7 +7102,10 @@ function renderGaps(){
         let redoBtnHTML = '';
         if(hasMissed){
           var mc = (q.wrongItems||[]).length + (q.skippedItems||[]).length;
-          redoBtnHTML = '<button onclick="redoMissedFromLog('+i+')" style="margin-top:.45rem;width:100%;background:var(--red-light);border:1.5px solid var(--red);color:var(--red);border-radius:8px;padding:.35rem;font-family:inherit;font-size:.75rem;font-weight:700;cursor:pointer;">Redo '+mc+' missed question'+(mc===1?'':'s')+'</button>';
+          redoBtnHTML = '<div style="display:flex;gap:.4rem;margin-top:.45rem;">'
+            + '<button onclick="dismissMissedFromLog('+i+')" style="background:none;border:1px solid var(--line);color:var(--muted);border-radius:8px;padding:.35rem .6rem;font-family:inherit;font-size:.72rem;cursor:pointer;white-space:nowrap;">Dismiss</button>'
+            + '<button onclick="redoMissedFromLog('+i+')" style="flex:1;background:none;border:1.5px solid var(--red);color:var(--red);border-radius:8px;padding:.35rem;font-family:inherit;font-size:.75rem;font-weight:700;cursor:pointer;">Redo '+mc+' missed question'+(mc===1?'':'s')+'</button>'
+            + '</div>';
         }
         return`<div style="padding:.55rem 0;border-bottom:1px solid var(--line);">
           <div style="display:flex;align-items:center;gap:.6rem;">
@@ -7071,6 +7117,7 @@ function renderGaps(){
               <div style="font-size:.63rem;color:var(--muted);">${q.score}/${q.total} correct${q.skipped?' · <span style="color:var(--amber)">'+q.skipped+' skipped</span>':''} · ${dLabel}</div>
             </div>
             ${trend?`<span style="font-size:1rem;color:${trendCol};font-weight:700;">${trend}</span>`:''}
+            <button onclick="deleteQuizFromLog(${i})" style="background:none;border:none;color:var(--muted);cursor:pointer;padding:.2rem .3rem;font-size:.8rem;line-height:1;flex-shrink:0;-webkit-tap-highlight-color:transparent;" title="Remove this quiz">✕</button>
           </div>
           ${missedHTML}${skippedHTML}
           ${redoBtnHTML}
