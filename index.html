@@ -5792,8 +5792,22 @@ Reply with ONLY valid JSON (no markdown): {"correct":true/false,"feedback":"1 en
     const actions = document.getElementById('quiz-action-btns');
     actions.innerHTML = `<button onclick="nextQuizQuestion()" style="flex:1;background:var(--ink);color:var(--paper);border:none;border-radius:10px;padding:.6rem;font-family:inherit;font-size:.85rem;font-weight:700;cursor:pointer;">${_quizIdx+1 < _quizTotal ? 'Next →' : 'Finish'}</button>`;
   }catch(e){
-    btn.textContent = 'Check answer →'; btn.disabled = false; _quizAnswered = false;
-    toast('Grading failed — try again');
+    // AI grading failed — use local keyword matching as fallback
+    const userAns = (document.getElementById('open-answer')?.value||'').trim().toLowerCase();
+    const modelAns = (modelAnswer||'').toLowerCase();
+    // Check if user answer contains key words from the model answer
+    const modelWords = modelAns.split(/\s+/).filter(function(w){ return w.length>4; });
+    const matchCount = modelWords.filter(function(w){ return userAns.includes(w); }).length;
+    const localCorrect = modelWords.length > 0 && (matchCount / modelWords.length) >= 0.35;
+    if(localCorrect){ _quizScore++; _quizCorrectItems.push({q: _quizQuestions[_quizIdx]?.q||'', correct: modelAnswer, idx: _quizIdx}); }
+    else { _quizWrongItems.push({q: _quizQuestions[_quizIdx]?.q||'', correct: modelAnswer, idx: _quizIdx}); }
+    const feedback = document.getElementById('quiz-feedback-area');
+    feedback.style.display = 'block';
+    feedback.style.background = localCorrect ? '#dcfce7' : '#fef9c3';
+    feedback.style.color = localCorrect ? 'var(--green)' : '#92400e';
+    feedback.textContent = localCorrect ? 'Looks good! (graded locally)' : 'Not quite — the answer should cover: ' + modelAnswer.slice(0,80);
+    const actions = document.getElementById('quiz-action-btns');
+    actions.innerHTML = '<button onclick="nextQuizQuestion()" style="flex:1;background:var(--ink);color:var(--paper);border:none;border-radius:10px;padding:.6rem;font-family:inherit;font-size:.85rem;font-weight:700;cursor:pointer;">'+(_quizIdx+1 < _quizTotal ? 'Next →' : 'Finish')+'</button>';
   }
 }
 
@@ -6080,11 +6094,19 @@ function redoWrongQuestions(){
     return !_quizWrongItems.find(function(w){ return w.q===s.q; });
   }));
   if(!missed.length){ toast('No missed questions to redo!'); return; }
-  // Find the original question objects
+  // Build questions directly from wrongItems/skippedItems — don't re-search
+  // which can fail if text doesn't match exactly
   var redoQs = missed.map(function(m){
-    return _quizQuestions.find(function(q){ return q.q === m.q; });
-  }).filter(Boolean);
-  if(!redoQs.length){ toast('Could not find original questions.'); return; }
+    // Try to find original first (preserves MCQ options if available)
+    var orig = _quizQuestions.find(function(q){ return q.q === m.q; });
+    if(orig) return orig;
+    // Fallback: build from saved data
+    if(m.type==='mcq' && m.options && m.options.length){
+      return { type:'mcq', q:m.q, answer:m.correct||'', options:m.options, explanation:'' };
+    }
+    return { type:'open', q:m.q, answer:m.correct||'', explanation:'' };
+  }).filter(function(q){ return q && q.q; });
+  if(!redoQs.length){ toast('No questions to redo'); return; }
   // Restart quiz with just these questions
   _quizQuestions = redoQs;
   _quizTotal = redoQs.length;
@@ -7169,7 +7191,7 @@ function renderGaps(){
     .slice(0,5);
   const weakHTML=weakCards.length===0
     ? '<div style="font-size:.78rem;color:var(--green);text-align:center;padding:.5rem 0;">No weak spots! Keep reviewing to stay sharp.</div>'
-    : weakCards.map(c=>`<div style="display:flex;align-items:flex-start;gap:.5rem;padding:.45rem 0;border-bottom:1px solid var(--line);">
+    : weakCards.map(c=>`<div onclick="navTo('cards',document.getElementById('nav-cards'));setBN('cards');setTimeout(function(){var inp=document.getElementById('cards-search');if(inp){inp.value='${(c.question||c.q||'').replace(/`/g,'').slice(0,30)}';renderCards();}},200);" style="display:flex;align-items:flex-start;gap:.5rem;padding:.45rem 0;border-bottom:1px solid var(--line);cursor:pointer;" title="Go to this card">
         <span style="font-size:.75rem;padding:.15rem .4rem;border-radius:5px;background:#fee2e2;color:var(--red);font-weight:700;flex-shrink:0;">${c.reps===0?'New':c.lapses+'✗'}</span>
         <div style="min-width:0;">
           <div style="font-size:.78rem;font-weight:600;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${c.question||c.q||''}</div>
