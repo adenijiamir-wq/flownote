@@ -2,13 +2,41 @@
 const VAPID_PUBLIC  = process.env.VAPID_PUBLIC_KEY;
 const VAPID_PRIVATE = process.env.VAPID_PRIVATE_KEY;
 const VAPID_EMAIL   = 'mailto:relay.your.problem@gmail.com';
-const FB_PROJECT    = process.env.FIREBASE_PROJECT_ID || 'flow-note-dc460';
-const FB_KEY        = process.env.FIREBASE_API_KEY;
 const BREVO_KEY     = process.env.BREVO_API_KEY;
 const SENDER_EMAIL  = 'relay.your.problem@gmail.com';
 
-const { createSign } = require('crypto');
+// ── Firebase Admin SDK ──────────────────────────────────────────
+let _adminDb = null;
+function getAdminDb() {
+  if (_adminDb) return _adminDb;
+  try {
+    const admin = require('firebase-admin');
+    if (!admin.apps.length) {
+      const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT);
+      admin.initializeApp({ credential: admin.credential.cert(serviceAccount) });
+    }
+    _adminDb = admin.firestore();
+    return _adminDb;
+  } catch(e) {
+    console.error('Admin SDK init failed:', e.message);
+    return null;
+  }
+}
 
+async function firestoreList(collection) {
+  const db = getAdminDb();
+  if (!db) return [];
+  const snap = await db.collection(collection).get();
+  return snap.docs.map(doc => ({ ...doc.data(), _id: doc.id }));
+}
+
+async function firestorePatch(collection, docId, fields) {
+  const db = getAdminDb();
+  if (!db) return;
+  await db.collection(collection).doc(docId).set(fields, { merge: true });
+}
+
+// ── Web Push ────────────────────────────────────────────────────
 function b64url(buf) {
   return Buffer.from(buf).toString('base64')
     .replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '');
@@ -28,6 +56,13 @@ async function makeVapidJwt(audience) {
   const key = await subtle.importKey('raw', keyBuf, { name: 'ECDSA', namedCurve: 'P-256' }, false, ['sign']);
   const sig = await subtle.sign({ name: 'ECDSA', hash: 'SHA-256' }, key, Buffer.from(unsigned));
   return `${unsigned}.${b64url(sig)}`;
+}
+function concat(...arrays) {
+  const total = arrays.reduce((n, a) => n + a.length, 0);
+  const out = new Uint8Array(total);
+  let off = 0;
+  for (const a of arrays) { out.set(a, off); off += a.length; }
+  return out;
 }
 async function sendPush(subscription, payload) {
   try {
@@ -73,53 +108,6 @@ async function sendPush(subscription, payload) {
     return 0;
   }
 }
-function concat(...arrays) {
-  const total = arrays.reduce((n, a) => n + a.length, 0);
-  const out = new Uint8Array(total);
-  let off = 0;
-  for (const a of arrays) { out.set(a, off); off += a.length; }
-  return out;
-}
-
-// ── Firestore REST ──────────────────────────────────────────────
-function parseDoc(doc) {
-  const fields = doc.fields || {};
-  const out = {};
-  for (const [k, v] of Object.entries(fields)) {
-    if (v.stringValue  !== undefined) out[k] = v.stringValue;
-    else if (v.integerValue !== undefined) out[k] = parseInt(v.integerValue);
-    else if (v.booleanValue !== undefined) out[k] = v.booleanValue;
-    else if (v.arrayValue)  out[k] = (v.arrayValue.values || []).map(i => i.stringValue || i.mapValue || i);
-    else if (v.mapValue)    out[k] = v.mapValue;
-  }
-  return out;
-}
-async function firestoreList(collection) {
-  const url = `https://firestore.googleapis.com/v1/projects/${FB_PROJECT}/databases/(default)/documents/${collection}?key=${FB_KEY}`;
-  const res = await fetch(url);
-  if (!res.ok) return [];
-  const json = await res.json();
-  return (json.documents || []).map(doc => {
-    const out = parseDoc(doc);
-    out._id = doc.name.split('/').pop();
-    return out;
-  });
-}
-
-// ── Save fired state back to Firestore ─────────────────────────
-async function firestorePatch(collection, docId, fields) {
-  const body = { fields: {} };
-  for (const [k, v] of Object.entries(fields)) {
-    body.fields[k] = { stringValue: typeof v === 'string' ? v : JSON.stringify(v) };
-  }
-  const fieldPaths = Object.keys(fields).map(k => `updateMask.fieldPaths=${k}`).join('&');
-  const url = `https://firestore.googleapis.com/v1/projects/${FB_PROJECT}/databases/(default)/documents/${collection}/${docId}?${fieldPaths}&key=${FB_KEY}`;
-  await fetch(url, {
-    method: 'PATCH',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(body)
-  });
-}
 
 // ── Email via Brevo ─────────────────────────────────────────────
 async function sendEmail(to, subject, reminderText, emoji) {
@@ -137,7 +125,7 @@ async function sendEmail(to, subject, reminderText, emoji) {
     "<div style='padding:12px 24px;background:#f2f0eb;text-align:center;font-size:.75rem;color:#9e9b93'>Menmory — Your personal study OS</div>" +
     "</div>";
   try {
-    const res = await fetch('https://api.brevo.com/v3/smtp/email', {
+    await fetch('https://api.brevo.com/v3/smtp/email', {
       method: 'POST',
       headers: { 'api-key': BREVO_KEY, 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -147,18 +135,12 @@ async function sendEmail(to, subject, reminderText, emoji) {
         htmlContent: html
       })
     });
-    const data = await res.json();
-    console.log('Email sent to', to, '→', res.status, data.messageId || data.message || '');
   } catch(e) {
     console.warn('Email error:', e.message);
   }
 }
 
 // ── Time helpers ────────────────────────────────────────────────
-function nowHHMM() {
-  const d = new Date();
-  return String(d.getHours()).padStart(2,'0') + ':' + String(d.getMinutes()).padStart(2,'0');
-}
 function nowMinutes() {
   const d = new Date();
   return d.getHours() * 60 + d.getMinutes();
@@ -205,54 +187,39 @@ exports.handler = async () => {
     try { sub = JSON.parse(doc.subscription); } catch(e) { continue; }
     try { reminders = JSON.parse(doc.reminders || '[]'); } catch(e) { continue; }
 
-    // ── FIX: Load fired state from Firestore, not just in-memory ──
     const fired = {};
     try { Object.assign(fired, JSON.parse(doc.fired || '{}')); } catch(e) {}
     const firedToday = fired[today] || {};
     let firedChanged = false;
 
-    // Get email from pushData doc directly (we save it there now)
     const userEmail = doc.notifEmail || null;
 
     for (const r of reminders) {
       if (r.done) continue;
       const t24 = timeTo24(r.time || r.startTime || '');
       if (!t24) continue;
-
       const rMin = t24ToMinutes(t24);
-      // ── FIX: 3-minute window instead of exact match ──
-      // Fires if we're within 0-3 minutes past the reminder time
       const diff = nowMin - rMin;
       if (diff < 0 || diff > 3) continue;
-
       if (r.date !== today && r.date !== 'everyday' && r.date !== 'everyweek') continue;
-
       const key = 'r' + r.id;
-      // ── FIX: Check fired state so we don't fire same notif every minute ──
       if (firedToday[key]) continue;
 
       const title = (r.emoji || '🔔') + ' ' + r.text;
-      const pushBody = r.date === 'everyday' ? 'Daily reminder' : 'Tap to view';
-
-      // Web Push
-      const status = await sendPush(sub, JSON.stringify({ title, body: pushBody, tag: key }));
+      const status = await sendPush(sub, JSON.stringify({ title, body: 'Tap to view', tag: key }));
       console.log(`Push to ${doc._id}: ${status} — ${title}`);
       if (status >= 200 && status < 300) sent++;
 
-      // Email alongside push
       if (userEmail) {
         await sendEmail(userEmail, title, r.text, r.emoji || '🔔');
       }
 
-      // ── FIX: Mark as fired so it doesn't repeat next minute ──
       firedToday[key] = true;
       firedChanged = true;
     }
 
-    // ── FIX: Save fired state back to Firestore ──
     if (firedChanged) {
       fired[today] = firedToday;
-      // Clean up old days (keep only last 3 days)
       const keys = Object.keys(fired).sort();
       if (keys.length > 3) keys.slice(0, keys.length - 3).forEach(k => delete fired[k]);
       try {
