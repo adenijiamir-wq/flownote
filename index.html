@@ -2127,7 +2127,7 @@ body::after{
           <div class="full">
             <div id="home-chips-row" style="display:grid;grid-template-columns:1fr 1fr;gap:.55rem;">
               <!-- Add an event chip -->
-              <div id="home-event-chip" onclick="openEventChooser()" style="background:var(--paper);border:1px solid var(--line);border-radius:12px;padding:.75rem .9rem;display:flex;align-items:center;gap:.6rem;cursor:pointer;">
+              <div id="home-countdown-chip" onclick="openEventChooser()" style="background:var(--paper);border:1px solid var(--line);border-radius:12px;padding:.75rem .9rem;display:flex;align-items:center;gap:.6rem;cursor:pointer;">
                 <span id="cd-icon" style="display:flex;align-items:center;justify-content:center;width:28px;height:28px;flex-shrink:0;"><svg viewBox="0 0 24 24" style="width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;"><path d="M6 2h12M6 22h12M6 2v6l6 4-6 4v6M18 2v6l-6 4 6 4v6"/></svg></span>
                 <div style="min-width:0;flex:1;">
                   <div id="cd-days" style="font-size:1.1rem;font-weight:800;color:var(--green);line-height:1;">+</div>
@@ -3120,7 +3120,7 @@ body::after{
       <div style="font-size:.82rem;color:var(--muted);margin-bottom:.75rem;" id="quiz-result-score"></div>
       <!-- Needs work section -->
       <div id="quiz-needs-work" style="display:none;text-align:left;margin-bottom:1rem;">
-        <div style="font-size:.65rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--red);margin-bottom:.4rem;">⚠️ Needs work</div>
+        <div style="font-size:.65rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--red);margin-bottom:.4rem;">Needs work</div>
         <div id="quiz-needs-work-list" style="display:flex;flex-direction:column;gap:.3rem;"></div>
         <button onclick="redoWrongQuestions()" style="width:100%;margin-top:.65rem;background:var(--red-light);border:1.5px solid var(--red);color:var(--red);border-radius:10px;padding:.55rem;font-family:inherit;font-size:.82rem;font-weight:700;cursor:pointer;">Redo missed questions</button>
       </div>
@@ -7056,10 +7056,10 @@ function renderGaps(){
             + '</div>'
           : '';
         const hasMissed = (q.wrongItems&&q.wrongItems.length>0)||(q.skippedItems&&q.skippedItems.length>0);
-        const redoBtnHTML = '';
+        let redoBtnHTML = '';
         if(hasMissed){
           var mc = (q.wrongItems||[]).length + (q.skippedItems||[]).length;
-          redoBtnHTML = '<button onclick="redoMissedFromLog('+i+')" style="margin-top:.45rem;width:100%;background:var(--red-light);border:1.5px solid var(--red);color:var(--red);border-radius:8px;padding:.35rem;font-family:inherit;font-size:.75rem;font-weight:700;cursor:pointer;">&#128260; Redo '+mc+' missed question'+(mc===1?'':'s')+'</button>';
+          redoBtnHTML = '<button onclick="redoMissedFromLog('+i+')" style="margin-top:.45rem;width:100%;background:var(--red-light);border:1.5px solid var(--red);color:var(--red);border-radius:8px;padding:.35rem;font-family:inherit;font-size:.75rem;font-weight:700;cursor:pointer;">Redo '+mc+' missed question'+(mc===1?'':'s')+'</button>';
         }
         return`<div style="padding:.55rem 0;border-bottom:1px solid var(--line);">
           <div style="display:flex;align-items:center;gap:.6rem;">
