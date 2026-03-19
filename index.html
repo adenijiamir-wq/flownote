@@ -3341,7 +3341,7 @@ function save(){
     if(typeof syncScheduleToSW==='function') syncScheduleToSW();
     // Sync to Firestore (debounced)
     clearTimeout(window._fbSyncTimer);
-    window._fbSyncTimer = setTimeout(fbSyncData, 2000);
+    window._fbSyncTimer = setTimeout(fbSyncData, 500);
     // Sync push subscription + reminders to server so out-of-app notifications work
     clearTimeout(window._pushSyncTimer);
     window._pushSyncTimer = setTimeout(function(){
@@ -3862,13 +3862,7 @@ async function _fbLoadUserData(uid){
     if(snap.exists()){
       const d = snap.data();
       // Restore main app data — inject Firestore's saved timestamp for comparison
-      if(d.appData){
-        try{
-          var _ad = typeof d.appData==='string' ? JSON.parse(d.appData) : d.appData;
-          if(!_ad._savedAt && d.appDataSavedAt) _ad._savedAt = d.appDataSavedAt;
-          _fbApplyData(JSON.stringify(_ad));
-        }catch(e){ _fbApplyData(d.appData); }
-      }
+      if(d.appData) _fbApplyData(d.appData);
       // Restore progress logs
       if(d.studyLog)   localStorage.setItem('fn_study_log',   d.studyLog);
       if(d.quizLog)    localStorage.setItem('fn_quiz_log',    d.quizLog);
@@ -3893,21 +3887,21 @@ async function _fbLoadUserData(uid){
 function _fbApplyData(appData){
   try{
     if(!appData) return;
-    // Only overwrite localStorage if Firestore data is newer
-    // This prevents Firestore from stamping over unsaved local changes after cold restart
-    var incoming = typeof appData==='string' ? JSON.parse(appData) : appData;
     var localRaw = localStorage.getItem('mb7_data');
+    // If localStorage already has data, NEVER overwrite it with Firestore.
+    // localStorage is always the most recent — Firestore is just a backup for new devices.
+    // The only exception: if localStorage has no notes, cards, or reminders at all
+    // (truly empty app state), then Firestore data is more useful.
     if(localRaw){
       try{
         var local = JSON.parse(localRaw);
-        var localTs = local._savedAt || 0;
-        var remoteTs = incoming._savedAt || 0;
-        // Only apply Firestore data if it's genuinely newer (or local has no timestamp)
-        if(localTs > remoteTs + 5000){ // 5s grace — local wins if it's newer
-          return; // keep local data, it's more recent
-        }
+        var hasContent = (local.notes&&local.notes.length>0)
+          || (local.studyCards&&local.studyCards.length>0)
+          || (local.reminders&&local.reminders.length>0);
+        if(hasContent) return; // local has real data — keep it, ignore Firestore
       }catch(e){}
     }
+    // localStorage is empty or has no content — apply Firestore data (new device/install)
     localStorage.setItem('mb7_data', typeof appData==='string'?appData:JSON.stringify(appData));
   }catch(e){}
 }
@@ -4809,6 +4803,21 @@ function startApp(){
   if(typeof Notification!=='undefined' && Notification.permission==='granted'){
     setTimeout(subscribeToPush, 2000);
   }
+  // Sync immediately when app goes to background or is about to be killed
+  // pagehide fires before Android process termination (swipe away from recents)
+  window.addEventListener('pagehide', function(){
+    // Cancel any pending debounced sync and fire immediately
+    clearTimeout(window._fbSyncTimer);
+    clearTimeout(window._pushSyncTimer);
+    fbSyncData();
+  });
+  // Also sync when visibility changes to hidden (app backgrounded)
+  document.addEventListener('visibilitychange', function(){
+    if(document.visibilityState === 'hidden'){
+      clearTimeout(window._fbSyncTimer);
+      fbSyncData();
+    }
+  });
   // Re-render when app comes back to foreground
   document.addEventListener('visibilitychange', function(){
     if(document.visibilityState === 'visible'){
