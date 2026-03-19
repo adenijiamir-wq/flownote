@@ -4464,7 +4464,23 @@ window.addEventListener('DOMContentLoaded',()=>{
       afterAuth(true);
     } else {
       const local = localStorage.getItem('fn_current_user');
-      if(local==='guest'){
+      if(local && local !== 'guest'){
+        // We have a stored UID — Firebase might just be slow (bfcache resume, network lag)
+        // Load from localStorage immediately and show app; don't flash auth screen
+        const hasLocalData = (function(){
+          try{ var d=JSON.parse(localStorage.getItem('mb7_data')||'{}');
+            return (d.notes&&d.notes.length>0)||(d.studyCards&&d.studyCards.length>0)||(d.reminders&&d.reminders.length>0)||(d.onboarded);
+          }catch(e){ return false; }
+        })();
+        if(hasLocalData){
+          load();
+          document.getElementById('auth-screen').style.display='none';
+          (document.getElementById('app')||document.createElement('div')).classList.add('on');
+          startApp();
+        } else {
+          document.getElementById('auth-screen').style.display='flex';
+        }
+      } else if(local==='guest'){
         localStorage.removeItem('fn_current_user');
         document.getElementById('auth-screen').style.display='flex';
       } else {
@@ -4735,7 +4751,9 @@ function _initNetworkWatcher(){
   window.addEventListener('offline', update);
   update();
 }
+var _appStarted = false;
 function startApp(){
+  _appStarted = true;
   // Migrate any reminders that stored literal 'today'/'tomorrow'/'nextweek' strings
   const _t=todayStr(), _tm=tomorrowStr();
   const _nw=new Date(); _nw.setDate(_nw.getDate()+7);
@@ -4808,10 +4826,20 @@ function startApp(){
   // Sync immediately when app goes to background or is about to be killed
   // pagehide fires before Android process termination (swipe away from recents)
   window.addEventListener('pagehide', function(){
-    // Cancel any pending debounced sync and fire immediately
     clearTimeout(window._fbSyncTimer);
     clearTimeout(window._pushSyncTimer);
     fbSyncData();
+  });
+  // bfcache restore — page shown from cache after tab switch
+  window.addEventListener('pageshow', function(e){
+    if(e.persisted){
+      // Page was restored from bfcache — re-render with current data
+      var hasApp = (document.getElementById('app')||{}).classList&&document.getElementById('app').classList.contains('on');
+      if(hasApp){
+        try{ load(); }catch(_){}
+        renderAll(); renderNotes(); renderCards(); renderNextAction();
+      }
+    }
   });
   // Also sync when visibility changes to hidden (app backgrounded)
   document.addEventListener('visibilitychange', function(){
