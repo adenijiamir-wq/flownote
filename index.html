@@ -3538,12 +3538,14 @@ function getMemoryGaps(){
     if(!subjects[s])subjects[s]={total:0,mastered:0,reviewed:0,struggling:[],cards:[]};
     subjects[s].total++;
     subjects[s].cards.push(c);
-    // Mastered = reviewed at least once with Good/Easy (reps >= 1, not just lapsed)
-    if((c.reps||0)>=1&&(c.lapses||0)===0) subjects[s].mastered++;
+    // Mastered = has been reviewed successfully (reps >= 1) AND more reps than lapses
+    // This means even if they got it wrong before, getting it right recovers it
+    var _reps = c.reps||0, _lapses = c.lapses||0;
+    if(_reps>=1 && _reps>=_lapses) subjects[s].mastered++;
     // Reviewed = has been studied at least once
-    if((c.reps||0)>=1||(c.lapses||0)>=1) subjects[s].reviewed++;
-    // Struggling = got wrong 1+ times
-    if((c.lapses||0)>=1) subjects[s].struggling.push(c.question);
+    if(_reps>=1||_lapses>=1) subjects[s].reviewed++;
+    // Struggling = lapses > reps (currently failing more than passing)
+    if(_lapses > _reps) subjects[s].struggling.push(c.question);
   });
   return subjects;
 }
@@ -5840,23 +5842,35 @@ Reply with ONLY valid JSON (no markdown): {"correct":true/false,"feedback":"1 en
     feedback.innerHTML = '<div style="font-size:.72rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:.35rem;">Model answer</div>'
       + '<div style="font-size:.85rem;color:var(--ink);line-height:1.5;margin-bottom:.75rem;">' + (modelAnswer||'(no answer saved)') + '</div>'
       + '<div style="font-size:.72rem;color:var(--muted);margin-bottom:.5rem;">Did you get it right?</div>';
+    // Store pending self-grade data so Yes/No buttons can access it cleanly
+    _pendingSelfGrade = { q: _quizQuestions[_quizIdx]?.q||'', correct: modelAnswer||'', idx: _quizIdx };
     const actions = document.getElementById('quiz-action-btns');
-    var qText = _quizQuestions[_quizIdx]?.q||'';
-    actions.innerHTML = '<button onclick="(function(){'
-      + '_quizWrongItems.push({q:'+JSON.stringify(qText)+',correct:'+JSON.stringify(modelAnswer||'')+',idx:'+_quizIdx+'});'
-      + '_quizAnswered=true;'
-      + 'document.getElementById(\'quiz-feedback-area\').style.background=\'#fef9c3\';'
-      + 'nextQuizQuestion();'
-      + '})()" style="flex:1;background:none;border:1.5px solid var(--red);color:var(--red);border-radius:10px;padding:.55rem;font-family:inherit;font-size:.82rem;font-weight:700;cursor:pointer;">No</button>'
-      + '<button onclick="(function(){'
-      + '_quizScore++;_quizCorrectItems.push({q:'+JSON.stringify(qText)+',correct:'+JSON.stringify(modelAnswer||'')+',idx:'+_quizIdx+'});'
-      + '_quizAnswered=true;'
-      + 'document.getElementById(\'quiz-feedback-area\').style.background=\'#dcfce7\';'
-      + 'nextQuizQuestion();'
-      + '})()" style="flex:1;background:none;border:1.5px solid var(--green);color:var(--green);border-radius:10px;padding:.55rem;font-family:inherit;font-size:.82rem;font-weight:700;cursor:pointer;">Yes</button>';
+    actions.innerHTML =
+      '<button onclick="selfGradeNo()" style="flex:1;background:none;border:1.5px solid var(--red);color:var(--red);border-radius:10px;padding:.55rem;font-family:inherit;font-size:.82rem;font-weight:700;cursor:pointer;">No</button>'
+      + '<button onclick="selfGradeYes()" style="flex:1;background:none;border:1.5px solid var(--green);color:var(--green);border-radius:10px;padding:.55rem;font-family:inherit;font-size:.82rem;font-weight:700;cursor:pointer;">Yes</button>';
   }
 }
 
+var _pendingSelfGrade = null;
+function selfGradeNo(){
+  if(!_pendingSelfGrade) return;
+  _quizWrongItems.push({q:_pendingSelfGrade.q, correct:_pendingSelfGrade.correct, idx:_pendingSelfGrade.idx});
+  _quizAnswered = true;
+  var fb = document.getElementById('quiz-feedback-area');
+  if(fb) fb.style.background = '#fef9c3';
+  _pendingSelfGrade = null;
+  nextQuizQuestion();
+}
+function selfGradeYes(){
+  if(!_pendingSelfGrade) return;
+  _quizScore++;
+  _quizCorrectItems.push({q:_pendingSelfGrade.q, correct:_pendingSelfGrade.correct, idx:_pendingSelfGrade.idx});
+  _quizAnswered = true;
+  var fb = document.getElementById('quiz-feedback-area');
+  if(fb) fb.style.background = '#dcfce7';
+  _pendingSelfGrade = null;
+  nextQuizQuestion();
+}
 function skipQuizQuestion(){
   if(_quizAnswered) return;
   const q = _quizQuestions[_quizIdx];
