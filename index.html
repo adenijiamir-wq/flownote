@@ -1422,17 +1422,16 @@ body::after{
   padding:8px 14px calc(10px + env(safe-area-inset-bottom,0px))!important;
   position:sticky;bottom:0;
 }
-/* PWA standalone mode: add extra bottom padding to cover gesture bar */
+/* PWA standalone mode: fill the gesture bar with the same bg as the nav */
 @media all and (display-mode: standalone){
   #bottom-nav{
-    padding-bottom:calc(18px + env(safe-area-inset-bottom,0px))!important;
+    padding-bottom:calc(16px + env(safe-area-inset-bottom,0px))!important;
+    background:var(--paper)!important;
   }
-  #bottom-nav::after{
-    content:'';
-    display:block;
-    height:env(safe-area-inset-bottom,0px);
-    background:var(--paper);
-  }
+}
+/* Fill gesture bar area — body bg extends behind system nav */
+body{
+  background:var(--paper);
 }
 .bn-inner{
   background:rgba(250,249,246,.92);
@@ -3332,7 +3331,8 @@ function save(){
     reminders,notes,studyCards,streakDays,onboarded:true,
     accent:(typeof currentAccent!=='undefined'?currentAccent:'emerald'),
     themePref:(typeof currentThemePref!=='undefined'?currentThemePref:'system'),
-    avatarEmoji:(typeof currentAvatar!=='undefined'?currentAvatar:'🙂')
+    avatarEmoji:(typeof currentAvatar!=='undefined'?currentAvatar:'🙂'),
+    _savedAt: Date.now()
   }));
   localStorage.setItem('fn_trash_notes',JSON.stringify(trashedNotes||[]));
   localStorage.setItem('fn_trash_cards',JSON.stringify(trashedCards||[]));
@@ -3861,8 +3861,14 @@ async function _fbLoadUserData(uid){
     const snap = await window._fbFns.getDoc(window._fbFns.doc(window._fbDb,'users',uid));
     if(snap.exists()){
       const d = snap.data();
-      // Restore main app data
-      if(d.appData) _fbApplyData(d.appData);
+      // Restore main app data — inject Firestore's saved timestamp for comparison
+      if(d.appData){
+        try{
+          var _ad = typeof d.appData==='string' ? JSON.parse(d.appData) : d.appData;
+          if(!_ad._savedAt && d.appDataSavedAt) _ad._savedAt = d.appDataSavedAt;
+          _fbApplyData(JSON.stringify(_ad));
+        }catch(e){ _fbApplyData(d.appData); }
+      }
       // Restore progress logs
       if(d.studyLog)   localStorage.setItem('fn_study_log',   d.studyLog);
       if(d.quizLog)    localStorage.setItem('fn_quiz_log',    d.quizLog);
@@ -3886,7 +3892,23 @@ async function _fbLoadUserData(uid){
 
 function _fbApplyData(appData){
   try{
-    if(appData) localStorage.setItem('mb7_data', typeof appData==='string'?appData:JSON.stringify(appData));
+    if(!appData) return;
+    // Only overwrite localStorage if Firestore data is newer
+    // This prevents Firestore from stamping over unsaved local changes after cold restart
+    var incoming = typeof appData==='string' ? JSON.parse(appData) : appData;
+    var localRaw = localStorage.getItem('mb7_data');
+    if(localRaw){
+      try{
+        var local = JSON.parse(localRaw);
+        var localTs = local._savedAt || 0;
+        var remoteTs = incoming._savedAt || 0;
+        // Only apply Firestore data if it's genuinely newer (or local has no timestamp)
+        if(localTs > remoteTs + 5000){ // 5s grace — local wins if it's newer
+          return; // keep local data, it's more recent
+        }
+      }catch(e){}
+    }
+    localStorage.setItem('mb7_data', typeof appData==='string'?appData:JSON.stringify(appData));
   }catch(e){}
 }
 
@@ -3899,6 +3921,7 @@ async function fbSyncData(){
     if(raw){
       await window._fbFns.setDoc(window._fbFns.doc(window._fbDb,'users',uid),{
         appData: raw,
+        appDataSavedAt: (function(){ try{ return JSON.parse(raw)._savedAt||0; }catch(e){ return 0; } })(),
         // Persist these separate keys so they survive logout/login
         studyLog:    localStorage.getItem('fn_study_log')||'{}',
         quizLog:     localStorage.getItem('fn_quiz_log')||'[]',
@@ -5797,32 +5820,31 @@ Reply with ONLY valid JSON (no markdown): {"correct":true/false,"feedback":"1 en
     const actions = document.getElementById('quiz-action-btns');
     actions.innerHTML = `<button onclick="nextQuizQuestion()" style="flex:1;background:var(--ink);color:var(--paper);border:none;border-radius:10px;padding:.6rem;font-family:inherit;font-size:.85rem;font-weight:700;cursor:pointer;">${_quizIdx+1 < _quizTotal ? 'Next →' : 'Finish'}</button>`;
   }catch(e){
-    // AI grading failed — smarter local fallback
-    const userAns = (document.getElementById('open-answer')?.value||'').trim().toLowerCase()
-      .replace(/[^a-z0-9\s]/g,''); // strip punctuation
-    const modelAns = (modelAnswer||'').toLowerCase().replace(/[^a-z0-9\s]/g,'');
-    // Extract meaningful keywords (5+ chars, skip stop words)
-    const stopWords = new Set(['about','after','also','been','before','being','between','could','every','from','have','into','just','like','more','most','other','over','same','some','such','than','that','their','them','then','there','these','they','this','through','under','very','were','what','when','where','which','while','with','would','your','and','the','for','are','but','not','you','all','can','her','was','one','our','out','get','has','had','him','his','how','its','may','now','she','too','use','was','who','did','each','few','him','how','its','may','off','see','she','the','too','use','via','who']);
-    const modelWords = modelAns.split(/\s+/).filter(function(w){ return w.length>=5 && !stopWords.has(w); });
-    const userWords = userAns.split(/\s+/);
-    // Match: exact word OR user word starts with model word stem (first 5 chars)
-    const matchCount = modelWords.filter(function(mw){
-      return userWords.some(function(uw){ return uw===mw || uw.startsWith(mw.slice(0,5)); });
-    }).length;
-    // Also check if user answer is very short and the key term appears
-    const threshold = modelWords.length <= 2 ? 0.5 : 0.3;
-    const localCorrect = modelWords.length === 0 ? true : (matchCount / modelWords.length) >= threshold;
-    if(localCorrect){ _quizScore++; _quizCorrectItems.push({q: _quizQuestions[_quizIdx]?.q||'', correct: modelAnswer, idx: _quizIdx}); }
-    else { _quizWrongItems.push({q: _quizQuestions[_quizIdx]?.q||'', correct: modelAnswer, idx: _quizIdx}); }
+    // AI unavailable — show answer and let user self-mark
+    btn.textContent = 'Check answer →'; btn.disabled = false; _quizAnswered = false;
     const feedback = document.getElementById('quiz-feedback-area');
     feedback.style.display = 'block';
-    feedback.style.background = localCorrect ? '#dcfce7' : '#fef9c3';
-    feedback.style.color = localCorrect ? 'var(--green)' : '#92400e';
-    feedback.textContent = localCorrect
-      ? 'Good answer!'
-      : 'Not quite. Key idea: ' + modelAnswer.slice(0,100) + (modelAnswer.length>100?'…':'');
+    feedback.style.background = 'var(--paper2)';
+    feedback.style.color = 'var(--ink)';
+    feedback.style.border = '1px solid var(--line)';
+    feedback.style.borderRadius = '10px';
+    feedback.innerHTML = '<div style="font-size:.72rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:.35rem;">Model answer</div>'
+      + '<div style="font-size:.85rem;color:var(--ink);line-height:1.5;margin-bottom:.75rem;">' + (modelAnswer||'(no answer saved)') + '</div>'
+      + '<div style="font-size:.72rem;color:var(--muted);margin-bottom:.5rem;">Did you get it right?</div>';
     const actions = document.getElementById('quiz-action-btns');
-    actions.innerHTML = '<button onclick="nextQuizQuestion()" style="flex:1;background:var(--ink);color:var(--paper);border:none;border-radius:10px;padding:.6rem;font-family:inherit;font-size:.85rem;font-weight:700;cursor:pointer;">'+(_quizIdx+1 < _quizTotal ? 'Next →' : 'Finish')+'</button>';
+    var qText = _quizQuestions[_quizIdx]?.q||'';
+    actions.innerHTML = '<button onclick="(function(){'
+      + '_quizWrongItems.push({q:'+JSON.stringify(qText)+',correct:'+JSON.stringify(modelAnswer||'')+',idx:'+_quizIdx+'});'
+      + '_quizAnswered=true;'
+      + 'document.getElementById(\'quiz-feedback-area\').style.background=\'#fef9c3\';'
+      + 'nextQuizQuestion();'
+      + '})()" style="flex:1;background:none;border:1.5px solid var(--red);color:var(--red);border-radius:10px;padding:.55rem;font-family:inherit;font-size:.82rem;font-weight:700;cursor:pointer;">No</button>'
+      + '<button onclick="(function(){'
+      + '_quizScore++;_quizCorrectItems.push({q:'+JSON.stringify(qText)+',correct:'+JSON.stringify(modelAnswer||'')+',idx:'+_quizIdx+'});'
+      + '_quizAnswered=true;'
+      + 'document.getElementById(\'quiz-feedback-area\').style.background=\'#dcfce7\';'
+      + 'nextQuizQuestion();'
+      + '})()" style="flex:1;background:none;border:1.5px solid var(--green);color:var(--green);border-radius:10px;padding:.55rem;font-family:inherit;font-size:.82rem;font-weight:700;cursor:pointer;">Yes</button>';
   }
 }
 
@@ -5848,6 +5870,7 @@ function showQuizResults(){
   for(let i=0;i<_quizTotal;i++) logDailyStudy(i < _quizScore ? 2 : 0);
   // Log full quiz result
   logQuizResult(_quizSubject, _quizTopic, _quizScore, _quizTotal);
+  _updateStreakForStudy(); // completing a quiz counts toward streak
   // If this was a redo session, clear the missed items from the original entry
   if(typeof _quizRedoSourceIdx !== 'undefined' && _quizRedoSourceIdx !== null){
     dismissMissedFromLog(_quizRedoSourceIdx);
@@ -6915,6 +6938,7 @@ function _launchConfetti(){
 function endSession(){
   const reviewed = sessionCards.filter((c,i)=>i<sessionIdx&&!c._requeued).length;
   const total = sessionCards.filter(c=>!c._requeued).length;
+  if(reviewed > 0) _updateStreakForStudy(); // studying cards counts toward streak
   // closeSession already calls renderCards — don't call it twice
   save();
   checkReviewBadge();
@@ -7023,9 +7047,11 @@ function renderGaps(){
   try{ studyLogCheck=JSON.parse(localStorage.getItem('fn_study_log')||'{}'); }catch(e){}
   let quizLogCheck=[];
   try{ quizLogCheck=JSON.parse(localStorage.getItem('fn_quiz_log')||'[]'); }catch(e){}
-  const hasAnyData=studyCards.length>0||Object.keys(studyLogCheck).length>0||quizLogCheck.length>0;
+  // Count study log entries that have actual reviews
+  const studyLogHasData = Object.values(studyLogCheck).some(function(d){ return (d.reviewed||0)>0; });
+  const hasAnyData = studyCards.length>0 || studyLogHasData || quizLogCheck.length>0;
   if(!hasAnyData){
-    el.innerHTML='<div style="text-align:center;padding:3rem 1rem 1rem;"><div style="margin-bottom:.75rem;"><svg viewBox="0 0 24 24" style="width:36px;height:36px;fill:none;stroke:var(--muted);stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round;display:block;margin:0 auto;"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg></div><div style="font-size:.95rem;font-weight:700;color:var(--ink);margin-bottom:.4rem;">No data yet</div><div style="font-size:.78rem;color:var(--muted);line-height:1.6;max-width:240px;margin:0 auto;">Create some flashcards and start reviewing — your progress will show up here.</div></div>';
+    el.innerHTML='<div style="text-align:center;padding:3rem 1rem 1rem;"><div style="margin-bottom:.75rem;"><svg viewBox="0 0 24 24" style="width:36px;height:36px;fill:none;stroke:var(--muted);stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round;display:block;margin:0 auto;"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg></div><div style="font-size:.95rem;font-weight:700;color:var(--ink);margin-bottom:.4rem;">Nothing here yet</div><div style="font-size:.78rem;color:var(--muted);line-height:1.6;max-width:260px;margin:0 auto;">Write a note and generate flashcards, then review them — your progress will appear here.</div></div>';
     return;
   }
 
@@ -7467,6 +7493,23 @@ function closeOverlapModal(proceed){
     toast('Okay, adjust and try again!');
   }
   pendingReminder=null;
+}
+
+function _updateStreakForStudy(){
+  // Update streak when user actually studies (cards or quiz) — not just tasks
+  var today=todayStr();
+  var lastDay=localStorage.getItem('fn_streak_date')||'';
+  var yesterday=new Date(Date.now()-864e5).toISOString().slice(0,10);
+  if(lastDay===today) return; // already counted today
+  if(lastDay===yesterday){
+    streakDays++;
+  } else {
+    streakDays=1;
+  }
+  localStorage.setItem('fn_streak_date',today);
+  save();
+  var milestones={3:'3-day streak! You\'re building a habit.',7:'7 days straight! That\'s genuinely impressive.',14:'14-day streak — you\'re in the zone now!',30:'30 DAYS. You\'ve changed your life. Seriously.'};
+  if(milestones[streakDays]) toast(milestones[streakDays]);
 }
 
 function toggleR(id){
