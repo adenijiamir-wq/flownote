@@ -3556,9 +3556,8 @@ function _clearAllUserData(){
   [
     'fn_current_user','mb7_data',
     'fn_study_log','fn_quiz_log',
-    'fn_goal','fn_goal_week',
     'fn_trash','fn_trash_notes','fn_trash_cards',
-    'fn_streak_date','fn_push_sub',
+    'fn_push_sub',
     'mn_age_verified',
     'mn_study_email_sent','mn_cd_check_date','mn_checkin_state',
     'fn_feedback','fn_countdowns',
@@ -3868,6 +3867,11 @@ async function _fbLoadUserData(uid){
       if(d.studyLog)   localStorage.setItem('fn_study_log',   d.studyLog);
       if(d.quizLog)    localStorage.setItem('fn_quiz_log',    d.quizLog);
       if(d.countdowns) localStorage.setItem('fn_countdowns',  d.countdowns);
+      if(d.streakDate) localStorage.setItem('fn_streak_date', d.streakDate);
+      if(d.goalData)   localStorage.setItem('fn_goal',        d.goalData);
+      if(d.goalWeek)   localStorage.setItem('fn_goal_week',   d.goalWeek);
+      if(d.avatarImg)  localStorage.setItem('fn_avatar_img',  d.avatarImg);
+      if(d.firedLog)   localStorage.setItem('fn_fired',       d.firedLog);
       // Restore email notification config — so user never has to re-enter it after login
       if(d.notifEmail){
         var _existing = '';
@@ -3898,9 +3902,14 @@ async function fbSyncData(){
       await window._fbFns.setDoc(window._fbFns.doc(window._fbDb,'users',uid),{
         appData: raw,
         // Persist these separate keys so they survive logout/login
-        studyLog:   localStorage.getItem('fn_study_log')||'{}',
-        quizLog:    localStorage.getItem('fn_quiz_log')||'[]',
-        countdowns: localStorage.getItem('fn_countdowns')||'[]',
+        studyLog:    localStorage.getItem('fn_study_log')||'{}',
+        quizLog:     localStorage.getItem('fn_quiz_log')||'[]',
+        countdowns:  localStorage.getItem('fn_countdowns')||'[]',
+        streakDate:  localStorage.getItem('fn_streak_date')||'',
+        goalData:    localStorage.getItem('fn_goal')||'',
+        goalWeek:    localStorage.getItem('fn_goal_week')||'',
+        avatarImg:   localStorage.getItem('fn_avatar_img')||'',
+        firedLog:    localStorage.getItem('fn_fired')||'{}',
         lastSync: new Date().toISOString()
       },{merge:true});
     }
@@ -5792,20 +5801,30 @@ Reply with ONLY valid JSON (no markdown): {"correct":true/false,"feedback":"1 en
     const actions = document.getElementById('quiz-action-btns');
     actions.innerHTML = `<button onclick="nextQuizQuestion()" style="flex:1;background:var(--ink);color:var(--paper);border:none;border-radius:10px;padding:.6rem;font-family:inherit;font-size:.85rem;font-weight:700;cursor:pointer;">${_quizIdx+1 < _quizTotal ? 'Next →' : 'Finish'}</button>`;
   }catch(e){
-    // AI grading failed — use local keyword matching as fallback
-    const userAns = (document.getElementById('open-answer')?.value||'').trim().toLowerCase();
-    const modelAns = (modelAnswer||'').toLowerCase();
-    // Check if user answer contains key words from the model answer
-    const modelWords = modelAns.split(/\s+/).filter(function(w){ return w.length>4; });
-    const matchCount = modelWords.filter(function(w){ return userAns.includes(w); }).length;
-    const localCorrect = modelWords.length > 0 && (matchCount / modelWords.length) >= 0.35;
+    // AI grading failed — smarter local fallback
+    const userAns = (document.getElementById('open-answer')?.value||'').trim().toLowerCase()
+      .replace(/[^a-z0-9\s]/g,''); // strip punctuation
+    const modelAns = (modelAnswer||'').toLowerCase().replace(/[^a-z0-9\s]/g,'');
+    // Extract meaningful keywords (5+ chars, skip stop words)
+    const stopWords = new Set(['about','after','also','been','before','being','between','could','every','from','have','into','just','like','more','most','other','over','same','some','such','than','that','their','them','then','there','these','they','this','through','under','very','were','what','when','where','which','while','with','would','your','and','the','for','are','but','not','you','all','can','her','was','one','our','out','get','has','had','him','his','how','its','may','now','she','too','use','was','who','did','each','few','him','how','its','may','off','see','she','the','too','use','via','who']);
+    const modelWords = modelAns.split(/\s+/).filter(function(w){ return w.length>=5 && !stopWords.has(w); });
+    const userWords = userAns.split(/\s+/);
+    // Match: exact word OR user word starts with model word stem (first 5 chars)
+    const matchCount = modelWords.filter(function(mw){
+      return userWords.some(function(uw){ return uw===mw || uw.startsWith(mw.slice(0,5)); });
+    }).length;
+    // Also check if user answer is very short and the key term appears
+    const threshold = modelWords.length <= 2 ? 0.5 : 0.3;
+    const localCorrect = modelWords.length === 0 ? true : (matchCount / modelWords.length) >= threshold;
     if(localCorrect){ _quizScore++; _quizCorrectItems.push({q: _quizQuestions[_quizIdx]?.q||'', correct: modelAnswer, idx: _quizIdx}); }
     else { _quizWrongItems.push({q: _quizQuestions[_quizIdx]?.q||'', correct: modelAnswer, idx: _quizIdx}); }
     const feedback = document.getElementById('quiz-feedback-area');
     feedback.style.display = 'block';
     feedback.style.background = localCorrect ? '#dcfce7' : '#fef9c3';
     feedback.style.color = localCorrect ? 'var(--green)' : '#92400e';
-    feedback.textContent = localCorrect ? 'Looks good! (graded locally)' : 'Not quite — the answer should cover: ' + modelAnswer.slice(0,80);
+    feedback.textContent = localCorrect
+      ? 'Good answer!'
+      : 'Not quite. Key idea: ' + modelAnswer.slice(0,100) + (modelAnswer.length>100?'…':'');
     const actions = document.getElementById('quiz-action-btns');
     actions.innerHTML = '<button onclick="nextQuizQuestion()" style="flex:1;background:var(--ink);color:var(--paper);border:none;border-radius:10px;padding:.6rem;font-family:inherit;font-size:.85rem;font-weight:700;cursor:pointer;">'+(_quizIdx+1 < _quizTotal ? 'Next →' : 'Finish')+'</button>';
   }
@@ -6078,6 +6097,7 @@ function redoMissedFromLog(logIdx){
   var modal = document.getElementById('quiz-modal');
   if(!modal){ toast('Quiz modal not found'); return; }
   document.getElementById('quiz-results').style.display = 'none';
+  document.getElementById('quiz-question-area').style.display = 'block';
   document.getElementById('quiz-question-area').innerHTML = '';
   document.getElementById('quiz-feedback-area').style.display = 'none';
   document.getElementById('quiz-action-btns').innerHTML = '';
@@ -6122,6 +6142,7 @@ function redoWrongQuestions(){
   document.getElementById('quiz-needs-work').style.display = 'none';
   document.getElementById('quiz-got-right').style.display = 'none';
   document.getElementById('quiz-feedback-area').style.display = 'none';
+  document.getElementById('quiz-question-area').style.display = 'block';
   document.getElementById('quiz-question-area').innerHTML = '';
   document.getElementById('quiz-action-btns').innerHTML = '';
   document.getElementById('quiz-progress-bar').style.width = '0%';
