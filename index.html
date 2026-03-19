@@ -1422,6 +1422,18 @@ body::after{
   padding:8px 14px calc(10px + env(safe-area-inset-bottom,0px))!important;
   position:sticky;bottom:0;
 }
+/* PWA standalone mode: add extra bottom padding to cover gesture bar */
+@media all and (display-mode: standalone){
+  #bottom-nav{
+    padding-bottom:calc(18px + env(safe-area-inset-bottom,0px))!important;
+  }
+  #bottom-nav::after{
+    content:'';
+    display:block;
+    height:env(safe-area-inset-bottom,0px);
+    background:var(--paper);
+  }
+}
 .bn-inner{
   background:rgba(250,249,246,.92);
   backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);
@@ -2078,6 +2090,7 @@ body::after{
 
     <!-- CONTENT -->
     <div class="content">
+      <div id="offline-bar" style="display:none;background:#ef4444;color:#fff;font-size:.68rem;font-weight:700;text-align:center;padding:.25rem;letter-spacing:.03em;z-index:100;flex-shrink:0;">⚠️ No internet — data may not sync</div>
       <div class="topbar">
         <div class="tb-left">
           <button class="hamburger" onclick="openSidebar()"><span></span><span></span><span></span></button>
@@ -4681,6 +4694,16 @@ function _maybeShowIOSNudge(){
   setTimeout(function(){ var n=document.getElementById('ios-install-nudge');if(n)n.remove(); }, 12000);
 }
 
+function _initNetworkWatcher(){
+  function update(){
+    var bar=document.getElementById('offline-bar');
+    if(!bar) return;
+    bar.style.display=navigator.onLine?'none':'block';
+  }
+  window.addEventListener('online', update);
+  window.addEventListener('offline', update);
+  update();
+}
 function startApp(){
   // Migrate any reminders that stored literal 'today'/'tomorrow'/'nextweek' strings
   const _t=todayStr(), _tm=tomorrowStr();
@@ -4719,6 +4742,7 @@ function startApp(){
   updatePermUI();
   _initSwipe();
   initFAB();
+  _initNetworkWatcher();
   scheduleAllReminders();
   startNotifPoller();
   startSWPing();
@@ -6902,6 +6926,13 @@ function checkReviewBadge(){
 function renderGaps(){
   const el=document.getElementById('gaps-content');
   if(!el) return;
+  // Re-sync studyCards from localStorage in case memory is stale
+  if(!studyCards.length){
+    try{
+      var _d=JSON.parse(localStorage.getItem('mb7_data')||'{}');
+      if(_d.studyCards&&_d.studyCards.length) studyCards=_d.studyCards;
+    }catch(e){}
+  }
   if(!studyCards.length){
     el.innerHTML='<div style="text-align:center;padding:3rem 1rem 1rem;"><div style="font-size:2.5rem;margin-bottom:.75rem;">📊</div><div style="font-size:.95rem;font-weight:700;color:var(--ink);margin-bottom:.4rem;">No data yet</div><div style="font-size:.78rem;color:var(--muted);line-height:1.6;max-width:240px;margin:0 auto;">Create some flashcards and start reviewing — your progress will show up here.</div></div>';
     return;
