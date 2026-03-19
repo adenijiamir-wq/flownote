@@ -59,11 +59,14 @@ function openDB() {
 }
 
 // ── Reminder scheduler ─────────────────────────────────
+// Track which reminders fired today to avoid duplicates
+const _firedToday = {};
+
 function checkSchedule() {
   if (!schedule || !schedule.length) return;
   const now   = new Date();
   const today = now.toISOString().slice(0, 10);
-  const hhmm  = String(now.getHours()).padStart(2,'0') + ':' + String(now.getMinutes()).padStart(2,'0');
+  const nowMins = now.getHours() * 60 + now.getMinutes();
 
   schedule.forEach(item => {
     if (!item || !item.time) return;
@@ -72,11 +75,23 @@ function checkSchedule() {
       item.date === 'everyday' ||
       (item.date === 'everyweek' && now.getDay() === new Date(item.createdDate || today).getDay());
     if (!matchDate) return;
-    if (item.time.slice(0, 5) !== hhmm) return;
+
+    // Parse reminder time in minutes
+    const [rh, rm] = item.time.slice(0,5).split(':').map(Number);
+    const remMins = rh * 60 + rm;
+
+    // Fire if within a 3-minute window (handles SW waking up late)
+    const diff = nowMins - remMins;
+    if (diff < 0 || diff > 3) return;
+
+    // Don't fire the same reminder twice in one day
+    const fireKey = today + '-' + (item.id || item.time + item.text);
+    if (_firedToday[fireKey]) return;
+    _firedToday[fireKey] = true;
 
     const tag = 'reminder-' + (item.id || item.text);
-    self.registration.showNotification('⏰ ' + (item.text || 'Reminder'), {
-      body: item.date === 'everyday' ? 'Daily reminder' : 'Tap to open Menmory',
+    self.registration.showNotification(item.text || 'Reminder', {
+      body: item.date === 'everyday' ? 'Daily reminder · Menmory' : 'Tap to open Menmory',
       icon: self.location.origin + '/icon-192.png',
       badge: self.location.origin + '/icon-192.png',
       tag,
@@ -84,7 +99,6 @@ function checkSchedule() {
       data: { url: self.location.origin + '/' }
     });
 
-    // Tell the page it fired so it can mark it
     self.clients.matchAll({ type: 'window' }).then(clients => {
       clients.forEach(c => c.postMessage({ type: 'FIRED', tag, title: item.text, body: '' }));
     });
