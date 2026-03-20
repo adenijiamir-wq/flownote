@@ -3886,7 +3886,35 @@ async function _fbLoadUserData(uid){
 
 function _fbApplyData(appData){
   try{
-    if(appData) localStorage.setItem('mb7_data', typeof appData==='string'?appData:JSON.stringify(appData));
+    if(!appData) return;
+    // Parse incoming Firestore data
+    var incoming = typeof appData==='string' ? JSON.parse(appData) : appData;
+    // Only write if Firestore actually has real content
+    // If Firestore has empty notes/cards/reminders, don't overwrite local data
+    var remoteHasContent = (incoming.notes&&incoming.notes.length>0)
+      || (incoming.studyCards&&incoming.studyCards.length>0)
+      || (incoming.reminders&&incoming.reminders.length>0);
+    var localRaw = localStorage.getItem('mb7_data');
+    if(!localRaw){
+      // Nothing local — always apply Firestore
+      localStorage.setItem('mb7_data', typeof appData==='string'?appData:JSON.stringify(appData));
+      return;
+    }
+    if(!remoteHasContent){
+      // Firestore is empty — keep local data, don't wipe it
+      return;
+    }
+    // Both have content — use the newer one
+    try{
+      var localTs = JSON.parse(localRaw)._savedAt||0;
+      var remoteTs = incoming._savedAt||0;
+      if(remoteTs > localTs){
+        localStorage.setItem('mb7_data', typeof appData==='string'?appData:JSON.stringify(appData));
+      }
+      // else keep local — it's newer
+    }catch(e){
+      // Can't compare — keep local to be safe
+    }
   }catch(e){}
 }
 
