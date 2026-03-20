@@ -3552,7 +3552,13 @@ function getMemoryGaps(){
 // AUTH — localStorage now, swap for Supabase later
 // ══════════════════════════════════════════════════════
 function _clearAllUserData(){
+  // Safety: log what's being cleared so we can debug
+  var _mb7backup = localStorage.getItem('mb7_data');
+  var _backupUid = localStorage.getItem('fn_current_user');
+  console.warn('[Menmory] _clearAllUserData called, uid='+_backupUid);
   // Clear ALL user-specific keys so the next account gets a fresh state
+  // Note: mb7_data and study logs are only cleared via this function
+  // which should only be called on genuine account switches
   [
     'fn_current_user','mb7_data',
     'fn_study_log','fn_quiz_log',
@@ -4466,14 +4472,17 @@ window.addEventListener('DOMContentLoaded',()=>{
       var _storedUid = localStorage.getItem('fn_current_user');
       var _storedUidClean = (_storedUid||'').trim();
       var _newUidClean = (user.uid||'').trim();
+      console.log('[Menmory] Auth: stored='+_storedUidClean.slice(0,8)+' new='+_newUidClean.slice(0,8)+' match='+(_storedUidClean===_newUidClean));
       // ONLY clear if the stored UID is definitely a different user
-      // Never clear if UIDs match (even partially) — this was wiping data on every reload
       var _isDifferentAccount = _storedUidClean
         && _storedUidClean !== 'guest'
         && _storedUidClean !== _newUidClean
-        && !_newUidClean.startsWith(_storedUidClean.slice(0,8)); // extra safety
+        && !_newUidClean.startsWith(_storedUidClean.slice(0,8));
       if(_isDifferentAccount){
+        console.warn('[Menmory] Different account — clearing data');
         _clearAllUserData();
+      } else {
+        console.log('[Menmory] Same account — data preserved');
       }
       localStorage.setItem('fn_current_user', user.uid);
       userEmail = user.email||'';
