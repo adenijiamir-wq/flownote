@@ -4464,8 +4464,15 @@ window.addEventListener('DOMContentLoaded',()=>{
     window._fbUserReady = null; // only fire once
     if(user){
       var _storedUid = localStorage.getItem('fn_current_user');
-      // Only clear data if switching to a genuinely different account
-      if(_storedUid && _storedUid !== user.uid && _storedUid !== 'guest'){
+      var _storedUidClean = (_storedUid||'').trim();
+      var _newUidClean = (user.uid||'').trim();
+      // ONLY clear if the stored UID is definitely a different user
+      // Never clear if UIDs match (even partially) — this was wiping data on every reload
+      var _isDifferentAccount = _storedUidClean
+        && _storedUidClean !== 'guest'
+        && _storedUidClean !== _newUidClean
+        && !_newUidClean.startsWith(_storedUidClean.slice(0,8)); // extra safety
+      if(_isDifferentAccount){
         _clearAllUserData();
       }
       localStorage.setItem('fn_current_user', user.uid);
