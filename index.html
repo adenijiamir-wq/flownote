@@ -3339,13 +3339,14 @@ function save(){
   setTimeout(function(){
     if(typeof scheduleAllReminders==='function') scheduleAllReminders();
     if(typeof syncScheduleToSW==='function') syncScheduleToSW();
-    // Sync to Firestore immediately — no debounce so tab kill can't lose data
-    if(typeof fbSyncData==='function') fbSyncData();
-    // Sync push data after 3s
+    // Sync to Firestore (debounced)
+    clearTimeout(window._fbSyncTimer);
+    window._fbSyncTimer = setTimeout(fbSyncData, 500);
+    // Sync push subscription + reminders to server so out-of-app notifications work
     clearTimeout(window._pushSyncTimer);
     window._pushSyncTimer = setTimeout(function(){
       if(typeof syncPushData==='function') syncPushData();
-    }, 3000);
+    }, 5000);
   }, 0);
 }
 function load(){
@@ -3537,14 +3538,12 @@ function getMemoryGaps(){
     if(!subjects[s])subjects[s]={total:0,mastered:0,reviewed:0,struggling:[],cards:[]};
     subjects[s].total++;
     subjects[s].cards.push(c);
-    // Mastered = has been reviewed successfully (reps >= 1) AND more reps than lapses
-    // This means even if they got it wrong before, getting it right recovers it
-    var _reps = c.reps||0, _lapses = c.lapses||0;
-    if(_reps>=1 && _reps>=_lapses) subjects[s].mastered++;
+    // Mastered = reviewed at least once with Good/Easy (reps >= 1, not just lapsed)
+    if((c.reps||0)>=1&&(c.lapses||0)===0) subjects[s].mastered++;
     // Reviewed = has been studied at least once
-    if(_reps>=1||_lapses>=1) subjects[s].reviewed++;
-    // Struggling = lapses > reps (currently failing more than passing)
-    if(_lapses > _reps) subjects[s].struggling.push(c.question);
+    if((c.reps||0)>=1||(c.lapses||0)>=1) subjects[s].reviewed++;
+    // Struggling = got wrong 1+ times
+    if((c.lapses||0)>=1) subjects[s].struggling.push(c.question);
   });
   return subjects;
 }
@@ -3887,62 +3886,32 @@ async function _fbLoadUserData(uid){
 
 function _fbApplyData(appData){
   try{
-    if(!appData) return;
-    var parsed = typeof appData==='string' ? JSON.parse(appData) : appData;
-    var fsNotes = (parsed.notes||[]).length;
-    var fsCards = (parsed.studyCards||[]).length;
-    var hasContent = fsNotes > 0 || fsCards > 0 || (parsed.reminders||[]).length > 0 || parsed.onboarded;
-    if(!hasContent){ console.log('_fbApplyData: Firestore empty, skipping'); return; }
-    var localRaw = localStorage.getItem('mb7_data');
-    if(localRaw){
-      try{
-        var local = JSON.parse(localRaw);
-        var localNotes = (local.notes||[]).length;
-        var localCards = (local.studyCards||[]).length;
-        var localHas = localNotes>0||localCards>0||(local.reminders||[]).length>0||local.onboarded;
-        var localTs = local._savedAt || 0;
-        var fsTs = parsed._savedAt || 0;
-        console.log('_fbApplyData: local='+localNotes+'notes/'+localCards+'cards ts='+localTs+' | fs='+fsNotes+'notes/'+fsCards+'cards ts='+fsTs);
-        if(localHas && localTs >= fsTs){
-          console.log('_fbApplyData: keeping local (newer or same)');
-          return;
-        }
-      }catch(e){}
-    } else {
-      console.log('_fbApplyData: no local data, writing Firestore data ('+fsNotes+' notes, '+fsCards+' cards)');
-    }
-    localStorage.setItem('mb7_data', typeof appData==='string'?appData:JSON.stringify(appData));
-    console.log('_fbApplyData: wrote Firestore data to localStorage');
-  }catch(e){ console.warn('_fbApplyData error:',e); }
+    if(appData) localStorage.setItem('mb7_data', typeof appData==='string'?appData:JSON.stringify(appData));
+  }catch(e){}
 }
+
 
 async function fbSyncData(){
   const uid = localStorage.getItem('fn_current_user');
   if(!uid||uid==='guest'||!window._fbDb) return;
-  if(isMinor()) return;
+  if(isMinor()) return; // COPPA: no cloud sync for under-14
   try{
     const raw = localStorage.getItem('mb7_data');
-    if(!raw){ console.warn('fbSyncData: no mb7_data to sync'); return; }
-    const parsed = JSON.parse(raw);
-    // Don't sync empty data to Firestore - would overwrite real data with nothing
-    const hasContent = (parsed.notes&&parsed.notes.length>0)||
-      (parsed.studyCards&&parsed.studyCards.length>0)||
-      (parsed.reminders&&parsed.reminders.length>0)||
-      parsed.onboarded;
-    if(!hasContent){ console.warn('fbSyncData: skipping empty data'); return; }
-    await window._fbFns.setDoc(window._fbFns.doc(window._fbDb,'users',uid),{
-      appData: raw,
-      appDataSavedAt: parsed._savedAt||0,
-      studyLog:    localStorage.getItem('fn_study_log')||'{}',
-      quizLog:     localStorage.getItem('fn_quiz_log')||'[]',
-      countdowns:  localStorage.getItem('fn_countdowns')||'[]',
-      streakDate:  localStorage.getItem('fn_streak_date')||'',
-      goalData:    localStorage.getItem('fn_goal')||'',
-      goalWeek:    localStorage.getItem('fn_goal_week')||'',
-      lastSync: new Date().toISOString()
-    },{merge:true});
-    console.log('fbSyncData: synced OK, notes='+parsed.notes.length+' cards='+parsed.studyCards.length);
-  }catch(e){ console.warn('fbSyncData FAILED:',e.message); }
+    if(raw){
+      await window._fbFns.setDoc(window._fbFns.doc(window._fbDb,'users',uid),{
+        appData: raw,
+        appDataSavedAt: (function(){ try{ return JSON.parse(raw)._savedAt||0; }catch(e){ return 0; } })(),
+        // Persist these separate keys so they survive logout/login
+        studyLog:    localStorage.getItem('fn_study_log')||'{}',
+        quizLog:     localStorage.getItem('fn_quiz_log')||'[]',
+        countdowns:  localStorage.getItem('fn_countdowns')||'[]',
+        streakDate:  localStorage.getItem('fn_streak_date')||'',
+        goalData:    localStorage.getItem('fn_goal')||'',
+        goalWeek:    localStorage.getItem('fn_goal_week')||'',
+        lastSync: new Date().toISOString()
+      },{merge:true});
+    }
+  }catch(e){ console.warn('Sync failed',e); }
   syncPushData();
 }
 
@@ -4433,36 +4402,12 @@ window.addEventListener('DOMContentLoaded',()=>{
   if(window.location.search.includes('preview=1')){
     var as=document.getElementById('auth-screen'); if(as) as.style.display='none';
     if(!load()){
+      // No saved data — bootstrap minimal demo state
       userName='Preview'; userSubjects=['General']; currentChar='zack';
     }
     (document.getElementById('app')||document.createElement('div')).classList.add('on');
     startApp();
     return;
-  }
-
-  // ── OFFLINE-FIRST FAST RESTORE ──
-  // If we have a stored UID AND local data, show the app IMMEDIATELY
-  // without waiting for Firebase. Firebase auth will restore in background.
-  var _fastUid = localStorage.getItem('fn_current_user');
-  var _fastRaw = localStorage.getItem('mb7_data');
-  var _fastHasData = false;
-  if(_fastUid && _fastUid !== 'guest' && _fastRaw){
-    try{
-      var _fastParsed = JSON.parse(_fastRaw);
-      _fastHasData = !!(_fastParsed.onboarded ||
-        (_fastParsed.notes && _fastParsed.notes.length > 0) ||
-        (_fastParsed.studyCards && _fastParsed.studyCards.length > 0) ||
-        (_fastParsed.reminders && _fastParsed.reminders.length > 0));
-    }catch(e){}
-  }
-  if(_fastHasData){
-    // Show app immediately from localStorage — don't wait for Firebase
-    load();
-    document.getElementById('auth-screen').style.display = 'none';
-    (document.getElementById('app')||document.createElement('div')).classList.add('on');
-    startApp();
-    // Firebase will still auth in background and sync any newer Firestore data
-    // _fbUserReady will be called but we check _appStarted to avoid double-start
   }
   loadPersonalisation();
   document.getElementById('topbar-date').textContent=
@@ -4491,34 +4436,18 @@ window.addEventListener('DOMContentLoaded',()=>{
   window._fbUserReady = async (user) => {
     window._fbUserReady = null; // only fire once
     if(user){
+      var _storedUid = localStorage.getItem('fn_current_user');
+      if(_storedUid && _storedUid !== user.uid){
+        _clearAllUserData();
+      }
       localStorage.setItem('fn_current_user', user.uid);
       userEmail = user.email||'';
       await _fbLoadUserData(user.uid);
       document.getElementById('auth-screen').style.display='none';
-      if(_appStarted){
-        load(); renderAll(); renderNotes(); renderCards(); renderNextAction();
-        return;
-      }
       afterAuth(true);
     } else {
       const local = localStorage.getItem('fn_current_user');
-      if(local && local !== 'guest'){
-        // We have a stored UID — Firebase might just be slow (bfcache resume, network lag)
-        // Load from localStorage immediately and show app; don't flash auth screen
-        const hasLocalData = (function(){
-          try{ var d=JSON.parse(localStorage.getItem('mb7_data')||'{}');
-            return (d.notes&&d.notes.length>0)||(d.studyCards&&d.studyCards.length>0)||(d.reminders&&d.reminders.length>0)||(d.onboarded);
-          }catch(e){ return false; }
-        })();
-        if(hasLocalData){
-          load();
-          document.getElementById('auth-screen').style.display='none';
-          (document.getElementById('app')||document.createElement('div')).classList.add('on');
-          startApp();
-        } else {
-          document.getElementById('auth-screen').style.display='flex';
-        }
-      } else if(local==='guest'){
+      if(local==='guest'){
         localStorage.removeItem('fn_current_user');
         document.getElementById('auth-screen').style.display='flex';
       } else {
@@ -4527,15 +4456,11 @@ window.addEventListener('DOMContentLoaded',()=>{
     }
   };
   // Fallback if Firebase doesn't respond in 3s
-  setTimeout(async ()=>{
+  setTimeout(()=>{
     if(window._fbUserReady){
       window._fbUserReady = null;
       const local = localStorage.getItem('fn_current_user');
-      if(local){
-        // Try to load Firestore data even in fallback so name/data isn't blank
-        try{ await _fbLoadUserData(local); }catch(e){}
-        afterAuth(true);
-      }
+      if(local){ afterAuth(true); }
       else { document.getElementById('auth-screen').style.display='flex'; }
     }
   },3000);
@@ -4789,9 +4714,7 @@ function _initNetworkWatcher(){
   window.addEventListener('offline', update);
   update();
 }
-var _appStarted = false;
 function startApp(){
-  _appStarted = true;
   // Migrate any reminders that stored literal 'today'/'tomorrow'/'nextweek' strings
   const _t=todayStr(), _tm=tomorrowStr();
   const _nw=new Date(); _nw.setDate(_nw.getDate()+7);
@@ -4864,32 +4787,10 @@ function startApp(){
   // Sync immediately when app goes to background or is about to be killed
   // pagehide fires before Android process termination (swipe away from recents)
   window.addEventListener('pagehide', function(){
+    // Cancel any pending debounced sync and fire immediately
     clearTimeout(window._fbSyncTimer);
     clearTimeout(window._pushSyncTimer);
-    // Use sendBeacon for guaranteed delivery even when tab is killed
-    // Also try regular sync as backup
-    try{
-      var uid = localStorage.getItem('fn_current_user');
-      var raw = localStorage.getItem('mb7_data');
-      if(uid && uid !== 'guest' && raw && window._fbDb && window._fbFns){
-        // Regular sync — may not complete but try
-        fbSyncData();
-        // Beacon backup — save to a simple endpoint that's guaranteed to fire
-        // Store a "dirty" flag so on next load we know to force-restore from Firestore
-        localStorage.setItem('mn_needs_restore', '1');
-      }
-    }catch(e){}
-  });
-  // bfcache restore — page shown from cache after tab switch
-  window.addEventListener('pageshow', function(e){
-    if(e.persisted){
-      // Page was restored from bfcache — re-render with current data
-      var hasApp = (document.getElementById('app')||{}).classList&&document.getElementById('app').classList.contains('on');
-      if(hasApp){
-        try{ load(); }catch(_){}
-        renderAll(); renderNotes(); renderCards(); renderNextAction();
-      }
-    }
+    fbSyncData();
   });
   // Also sync when visibility changes to hidden (app backgrounded)
   document.addEventListener('visibilitychange', function(){
@@ -5920,35 +5821,23 @@ Reply with ONLY valid JSON (no markdown): {"correct":true/false,"feedback":"1 en
     feedback.innerHTML = '<div style="font-size:.72rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:.35rem;">Model answer</div>'
       + '<div style="font-size:.85rem;color:var(--ink);line-height:1.5;margin-bottom:.75rem;">' + (modelAnswer||'(no answer saved)') + '</div>'
       + '<div style="font-size:.72rem;color:var(--muted);margin-bottom:.5rem;">Did you get it right?</div>';
-    // Store pending self-grade data so Yes/No buttons can access it cleanly
-    _pendingSelfGrade = { q: _quizQuestions[_quizIdx]?.q||'', correct: modelAnswer||'', idx: _quizIdx };
     const actions = document.getElementById('quiz-action-btns');
-    actions.innerHTML =
-      '<button onclick="selfGradeNo()" style="flex:1;background:none;border:1.5px solid var(--red);color:var(--red);border-radius:10px;padding:.55rem;font-family:inherit;font-size:.82rem;font-weight:700;cursor:pointer;">No</button>'
-      + '<button onclick="selfGradeYes()" style="flex:1;background:none;border:1.5px solid var(--green);color:var(--green);border-radius:10px;padding:.55rem;font-family:inherit;font-size:.82rem;font-weight:700;cursor:pointer;">Yes</button>';
+    var qText = _quizQuestions[_quizIdx]?.q||'';
+    actions.innerHTML = '<button onclick="(function(){'
+      + '_quizWrongItems.push({q:'+JSON.stringify(qText)+',correct:'+JSON.stringify(modelAnswer||'')+',idx:'+_quizIdx+'});'
+      + '_quizAnswered=true;'
+      + 'document.getElementById(\'quiz-feedback-area\').style.background=\'#fef9c3\';'
+      + 'nextQuizQuestion();'
+      + '})()" style="flex:1;background:none;border:1.5px solid var(--red);color:var(--red);border-radius:10px;padding:.55rem;font-family:inherit;font-size:.82rem;font-weight:700;cursor:pointer;">No</button>'
+      + '<button onclick="(function(){'
+      + '_quizScore++;_quizCorrectItems.push({q:'+JSON.stringify(qText)+',correct:'+JSON.stringify(modelAnswer||'')+',idx:'+_quizIdx+'});'
+      + '_quizAnswered=true;'
+      + 'document.getElementById(\'quiz-feedback-area\').style.background=\'#dcfce7\';'
+      + 'nextQuizQuestion();'
+      + '})()" style="flex:1;background:none;border:1.5px solid var(--green);color:var(--green);border-radius:10px;padding:.55rem;font-family:inherit;font-size:.82rem;font-weight:700;cursor:pointer;">Yes</button>';
   }
 }
 
-var _pendingSelfGrade = null;
-function selfGradeNo(){
-  if(!_pendingSelfGrade) return;
-  _quizWrongItems.push({q:_pendingSelfGrade.q, correct:_pendingSelfGrade.correct, idx:_pendingSelfGrade.idx});
-  _quizAnswered = true;
-  var fb = document.getElementById('quiz-feedback-area');
-  if(fb) fb.style.background = '#fef9c3';
-  _pendingSelfGrade = null;
-  nextQuizQuestion();
-}
-function selfGradeYes(){
-  if(!_pendingSelfGrade) return;
-  _quizScore++;
-  _quizCorrectItems.push({q:_pendingSelfGrade.q, correct:_pendingSelfGrade.correct, idx:_pendingSelfGrade.idx});
-  _quizAnswered = true;
-  var fb = document.getElementById('quiz-feedback-area');
-  if(fb) fb.style.background = '#dcfce7';
-  _pendingSelfGrade = null;
-  nextQuizQuestion();
-}
 function skipQuizQuestion(){
   if(_quizAnswered) return;
   const q = _quizQuestions[_quizIdx];
