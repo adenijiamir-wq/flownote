@@ -1,7 +1,7 @@
 // ── Menmory Service Worker ──────────────────────────────
 // Handles: push notifications, scheduled reminders, timer live notification
 
-const CACHE_NAME = 'menmory-v1';
+const CACHE_NAME = 'menmory-v3';
 
 // ── Lifecycle ──────────────────────────────────────────
 self.addEventListener('install', () => {
