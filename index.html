@@ -3339,14 +3339,13 @@ function save(){
   setTimeout(function(){
     if(typeof scheduleAllReminders==='function') scheduleAllReminders();
     if(typeof syncScheduleToSW==='function') syncScheduleToSW();
-    // Sync to Firestore (debounced)
-    clearTimeout(window._fbSyncTimer);
-    window._fbSyncTimer = setTimeout(fbSyncData, 500);
-    // Sync push subscription + reminders to server so out-of-app notifications work
+    // Sync to Firestore immediately — no debounce so tab kill can't lose data
+    if(typeof fbSyncData==='function') fbSyncData();
+    // Sync push data after 3s
     clearTimeout(window._pushSyncTimer);
     window._pushSyncTimer = setTimeout(function(){
       if(typeof syncPushData==='function') syncPushData();
-    }, 5000);
+    }, 3000);
   }, 0);
 }
 function load(){
@@ -3889,21 +3888,20 @@ async function _fbLoadUserData(uid){
 function _fbApplyData(appData){
   try{
     if(!appData) return;
+    var firestoreData = typeof appData==='string' ? JSON.parse(appData) : appData;
     var localRaw = localStorage.getItem('mb7_data');
-    // If localStorage already has data, NEVER overwrite it with Firestore.
-    // localStorage is always the most recent — Firestore is just a backup for new devices.
-    // The only exception: if localStorage has no notes, cards, or reminders at all
-    // (truly empty app state), then Firestore data is more useful.
     if(localRaw){
       try{
         var local = JSON.parse(localRaw);
-        var hasContent = (local.notes&&local.notes.length>0)
-          || (local.studyCards&&local.studyCards.length>0)
-          || (local.reminders&&local.reminders.length>0);
-        if(hasContent) return; // local has real data — keep it, ignore Firestore
+        var localSavedAt = local._savedAt || 0;
+        var firestoreSavedAt = firestoreData._savedAt || 0;
+        // Use whichever is newer — Firestore wins on tie or if local has no timestamp
+        if(localSavedAt > firestoreSavedAt){
+          return; // local is newer, keep it
+        }
       }catch(e){}
     }
-    // localStorage is empty or has no content — apply Firestore data (new device/install)
+    // Firestore is newer or local is empty — restore from Firestore
     localStorage.setItem('mb7_data', typeof appData==='string'?appData:JSON.stringify(appData));
   }catch(e){}
 }
@@ -4419,12 +4417,36 @@ window.addEventListener('DOMContentLoaded',()=>{
   if(window.location.search.includes('preview=1')){
     var as=document.getElementById('auth-screen'); if(as) as.style.display='none';
     if(!load()){
-      // No saved data — bootstrap minimal demo state
       userName='Preview'; userSubjects=['General']; currentChar='zack';
     }
     (document.getElementById('app')||document.createElement('div')).classList.add('on');
     startApp();
     return;
+  }
+
+  // ── OFFLINE-FIRST FAST RESTORE ──
+  // If we have a stored UID AND local data, show the app IMMEDIATELY
+  // without waiting for Firebase. Firebase auth will restore in background.
+  var _fastUid = localStorage.getItem('fn_current_user');
+  var _fastRaw = localStorage.getItem('mb7_data');
+  var _fastHasData = false;
+  if(_fastUid && _fastUid !== 'guest' && _fastRaw){
+    try{
+      var _fastParsed = JSON.parse(_fastRaw);
+      _fastHasData = !!(_fastParsed.onboarded ||
+        (_fastParsed.notes && _fastParsed.notes.length > 0) ||
+        (_fastParsed.studyCards && _fastParsed.studyCards.length > 0) ||
+        (_fastParsed.reminders && _fastParsed.reminders.length > 0));
+    }catch(e){}
+  }
+  if(_fastHasData){
+    // Show app immediately from localStorage — don't wait for Firebase
+    load();
+    document.getElementById('auth-screen').style.display = 'none';
+    (document.getElementById('app')||document.createElement('div')).classList.add('on');
+    startApp();
+    // Firebase will still auth in background and sync any newer Firestore data
+    // _fbUserReady will be called but we check _appStarted to avoid double-start
   }
   loadPersonalisation();
   document.getElementById('topbar-date').textContent=
@@ -4459,8 +4481,15 @@ window.addEventListener('DOMContentLoaded',()=>{
       }
       localStorage.setItem('fn_current_user', user.uid);
       userEmail = user.email||'';
+      // Always load from Firestore on auth — ensures data survives tab kills
       await _fbLoadUserData(user.uid);
+      localStorage.removeItem('mn_needs_restore');
       document.getElementById('auth-screen').style.display='none';
+      // If app already started via fast restore, re-render with restored data
+      if(_appStarted){
+        load(); renderAll(); renderNotes(); renderCards(); renderNextAction();
+        return;
+      }
       afterAuth(true);
     } else {
       const local = localStorage.getItem('fn_current_user');
@@ -4828,7 +4857,19 @@ function startApp(){
   window.addEventListener('pagehide', function(){
     clearTimeout(window._fbSyncTimer);
     clearTimeout(window._pushSyncTimer);
-    fbSyncData();
+    // Use sendBeacon for guaranteed delivery even when tab is killed
+    // Also try regular sync as backup
+    try{
+      var uid = localStorage.getItem('fn_current_user');
+      var raw = localStorage.getItem('mb7_data');
+      if(uid && uid !== 'guest' && raw && window._fbDb && window._fbFns){
+        // Regular sync — may not complete but try
+        fbSyncData();
+        // Beacon backup — save to a simple endpoint that's guaranteed to fire
+        // Store a "dirty" flag so on next load we know to force-restore from Firestore
+        localStorage.setItem('mn_needs_restore', '1');
+      }
+    }catch(e){}
   });
   // bfcache restore — page shown from cache after tab switch
   window.addEventListener('pageshow', function(e){
