@@ -3890,7 +3890,6 @@ function _fbApplyData(appData){
   }catch(e){}
 }
 
-
 async function fbSyncData(){
   const uid = localStorage.getItem('fn_current_user');
   if(!uid||uid==='guest'||!window._fbDb) return;
@@ -4437,33 +4436,43 @@ window.addEventListener('DOMContentLoaded',()=>{
     window._fbUserReady = null; // only fire once
     if(user){
       var _storedUid = localStorage.getItem('fn_current_user');
-      if(_storedUid && _storedUid !== user.uid){
+      // Only clear data if switching to a genuinely different account
+      if(_storedUid && _storedUid !== user.uid && _storedUid !== 'guest'){
         _clearAllUserData();
       }
       localStorage.setItem('fn_current_user', user.uid);
       userEmail = user.email||'';
-      await _fbLoadUserData(user.uid);
+      // Load from Firestore — _fbApplyData will only overwrite if Firestore is newer
+      try{ await _fbLoadUserData(user.uid); }catch(e){ console.warn('Firestore load failed',e); }
       document.getElementById('auth-screen').style.display='none';
       afterAuth(true);
     } else {
+      // Firebase auth returned null — could be network issue, not necessarily logged out
       const local = localStorage.getItem('fn_current_user');
-      if(local==='guest'){
-        localStorage.removeItem('fn_current_user');
-        document.getElementById('auth-screen').style.display='flex';
+      if(local && local !== 'guest'){
+        // We have a stored session — show app with local data, don't force login
+        // Firebase may just be slow or offline
+        document.getElementById('auth-screen').style.display='none';
+        afterAuth(true);
       } else {
         document.getElementById('auth-screen').style.display='flex';
       }
     }
   };
-  // Fallback if Firebase doesn't respond in 3s
-  setTimeout(()=>{
+  // Fallback if Firebase doesn't respond in 4s
+  setTimeout(async ()=>{
     if(window._fbUserReady){
       window._fbUserReady = null;
       const local = localStorage.getItem('fn_current_user');
-      if(local){ afterAuth(true); }
+      if(local && local !== 'guest'){
+        // Use local data — Firebase is slow but user is logged in
+        try{ await _fbLoadUserData(local); }catch(e){}
+        document.getElementById('auth-screen').style.display='none';
+        afterAuth(true);
+      }
       else { document.getElementById('auth-screen').style.display='flex'; }
     }
-  },3000);
+  },4000);
 });
 
 function updateBadge(){
