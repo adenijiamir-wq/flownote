@@ -3552,6 +3552,8 @@ function getMemoryGaps(){
 // AUTH — localStorage now, swap for Supabase later
 // ══════════════════════════════════════════════════════
 function _clearAllUserData(){
+  // NOTE: mb7_data and fn_countdowns are NOT cleared here
+  // They are only wiped on explicit signOut() to prevent accidental data loss
   // Safety: log what's being cleared so we can debug
   var _mb7backup = localStorage.getItem('mb7_data');
   var _backupUid = localStorage.getItem('fn_current_user');
@@ -3560,13 +3562,13 @@ function _clearAllUserData(){
   // Note: mb7_data and study logs are only cleared via this function
   // which should only be called on genuine account switches
   [
-    'fn_current_user','mb7_data',
+    'fn_current_user',
     'fn_study_log','fn_quiz_log',
     'fn_trash','fn_trash_notes','fn_trash_cards',
     'fn_push_sub',
     'mn_age_verified',
     'mn_study_email_sent','mn_cd_check_date','mn_checkin_state',
-    'fn_feedback','fn_countdowns',
+    'fn_feedback',
     // Avatar & appearance — clears old profile pic/emoji so new account is fresh
     'fn_avatar','fn_avatar_img','fn_accent','fn_theme_pref',
     // Permission flags, daily chat counter, reminder fired log
@@ -3643,6 +3645,8 @@ function signOut(){
       try{ await window._fbFns.fbSignOut(window._fbAuth); }catch(e){}
     }
     _clearAllUserData();
+    localStorage.removeItem('mb7_data');
+    localStorage.removeItem('fn_countdowns');
     location.reload();
   },'Sign out');
 }
