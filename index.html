@@ -3888,45 +3888,61 @@ async function _fbLoadUserData(uid){
 function _fbApplyData(appData){
   try{
     if(!appData) return;
-    var firestoreData = typeof appData==='string' ? JSON.parse(appData) : appData;
+    var parsed = typeof appData==='string' ? JSON.parse(appData) : appData;
+    var fsNotes = (parsed.notes||[]).length;
+    var fsCards = (parsed.studyCards||[]).length;
+    var hasContent = fsNotes > 0 || fsCards > 0 || (parsed.reminders||[]).length > 0 || parsed.onboarded;
+    if(!hasContent){ console.log('_fbApplyData: Firestore empty, skipping'); return; }
     var localRaw = localStorage.getItem('mb7_data');
     if(localRaw){
       try{
         var local = JSON.parse(localRaw);
-        var localSavedAt = local._savedAt || 0;
-        var firestoreSavedAt = firestoreData._savedAt || 0;
-        // Use whichever is newer — Firestore wins on tie or if local has no timestamp
-        if(localSavedAt > firestoreSavedAt){
-          return; // local is newer, keep it
+        var localNotes = (local.notes||[]).length;
+        var localCards = (local.studyCards||[]).length;
+        var localHas = localNotes>0||localCards>0||(local.reminders||[]).length>0||local.onboarded;
+        var localTs = local._savedAt || 0;
+        var fsTs = parsed._savedAt || 0;
+        console.log('_fbApplyData: local='+localNotes+'notes/'+localCards+'cards ts='+localTs+' | fs='+fsNotes+'notes/'+fsCards+'cards ts='+fsTs);
+        if(localHas && localTs >= fsTs){
+          console.log('_fbApplyData: keeping local (newer or same)');
+          return;
         }
       }catch(e){}
+    } else {
+      console.log('_fbApplyData: no local data, writing Firestore data ('+fsNotes+' notes, '+fsCards+' cards)');
     }
-    // Firestore is newer or local is empty — restore from Firestore
     localStorage.setItem('mb7_data', typeof appData==='string'?appData:JSON.stringify(appData));
-  }catch(e){}
+    console.log('_fbApplyData: wrote Firestore data to localStorage');
+  }catch(e){ console.warn('_fbApplyData error:',e); }
 }
 
 async function fbSyncData(){
   const uid = localStorage.getItem('fn_current_user');
   if(!uid||uid==='guest'||!window._fbDb) return;
-  if(isMinor()) return; // COPPA: no cloud sync for under-14
+  if(isMinor()) return;
   try{
     const raw = localStorage.getItem('mb7_data');
-    if(raw){
-      await window._fbFns.setDoc(window._fbFns.doc(window._fbDb,'users',uid),{
-        appData: raw,
-        appDataSavedAt: (function(){ try{ return JSON.parse(raw)._savedAt||0; }catch(e){ return 0; } })(),
-        // Persist these separate keys so they survive logout/login
-        studyLog:    localStorage.getItem('fn_study_log')||'{}',
-        quizLog:     localStorage.getItem('fn_quiz_log')||'[]',
-        countdowns:  localStorage.getItem('fn_countdowns')||'[]',
-        streakDate:  localStorage.getItem('fn_streak_date')||'',
-        goalData:    localStorage.getItem('fn_goal')||'',
-        goalWeek:    localStorage.getItem('fn_goal_week')||'',
-        lastSync: new Date().toISOString()
-      },{merge:true});
-    }
-  }catch(e){ console.warn('Sync failed',e); }
+    if(!raw){ console.warn('fbSyncData: no mb7_data to sync'); return; }
+    const parsed = JSON.parse(raw);
+    // Don't sync empty data to Firestore - would overwrite real data with nothing
+    const hasContent = (parsed.notes&&parsed.notes.length>0)||
+      (parsed.studyCards&&parsed.studyCards.length>0)||
+      (parsed.reminders&&parsed.reminders.length>0)||
+      parsed.onboarded;
+    if(!hasContent){ console.warn('fbSyncData: skipping empty data'); return; }
+    await window._fbFns.setDoc(window._fbFns.doc(window._fbDb,'users',uid),{
+      appData: raw,
+      appDataSavedAt: parsed._savedAt||0,
+      studyLog:    localStorage.getItem('fn_study_log')||'{}',
+      quizLog:     localStorage.getItem('fn_quiz_log')||'[]',
+      countdowns:  localStorage.getItem('fn_countdowns')||'[]',
+      streakDate:  localStorage.getItem('fn_streak_date')||'',
+      goalData:    localStorage.getItem('fn_goal')||'',
+      goalWeek:    localStorage.getItem('fn_goal_week')||'',
+      lastSync: new Date().toISOString()
+    },{merge:true});
+    console.log('fbSyncData: synced OK, notes='+parsed.notes.length+' cards='+parsed.studyCards.length);
+  }catch(e){ console.warn('fbSyncData FAILED:',e.message); }
   syncPushData();
 }
 
@@ -4475,17 +4491,10 @@ window.addEventListener('DOMContentLoaded',()=>{
   window._fbUserReady = async (user) => {
     window._fbUserReady = null; // only fire once
     if(user){
-      var _storedUid = localStorage.getItem('fn_current_user');
-      if(_storedUid && _storedUid !== user.uid){
-        _clearAllUserData();
-      }
       localStorage.setItem('fn_current_user', user.uid);
       userEmail = user.email||'';
-      // Always load from Firestore on auth — ensures data survives tab kills
       await _fbLoadUserData(user.uid);
-      localStorage.removeItem('mn_needs_restore');
       document.getElementById('auth-screen').style.display='none';
-      // If app already started via fast restore, re-render with restored data
       if(_appStarted){
         load(); renderAll(); renderNotes(); renderCards(); renderNextAction();
         return;
