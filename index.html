@@ -142,9 +142,31 @@ button{-webkit-tap-highlight-color:transparent;}
   --purple:#b794f4;
   --purple-light:#1a1130;
 }
+[data-theme="oled"]{
+  --ink:#f0ede8;
+  --paper:#000000;
+  --paper2:#0d0d0d;
+  --line:#222222;
+  --muted:#888;
+  --green:#52d98a;
+  --green-light:#0a1f12;
+  --amber:#fbbf24;
+  --amber-light:#1a1200;
+  --red:#fc8181;
+  --red-light:#1a0808;
+  --blue:#63b3ed;
+  --blue-light:#081525;
+  --purple:#b794f4;
+  --purple-light:#100b20;
+}
 
 /* Base */
 [data-theme="dark"] body{background:var(--paper);color:var(--ink);}
+[data-theme="oled"] body{background:var(--paper);color:var(--ink);}
+[data-theme="oled"] .topbar,[data-theme="oled"] .sidebar,[data-theme="oled"] .nav{background:#000;border-color:var(--line);}
+[data-theme="oled"] .paper,[data-theme="oled"] .card,[data-theme="oled"] .fw-modal{background:#0d0d0d;}
+[data-theme="oled"] .fc-face{background:#0d0d0d;border-color:var(--line);}
+[data-theme="oled"] .fc-face-back{background:#0d0d0d;}
 
 /* Greet card */
 [data-theme="dark"] .greet-card{background:var(--green);color:#fff;}
@@ -153,12 +175,15 @@ button{-webkit-tap-highlight-color:transparent;}
 
 /* Navigation & chrome */
 [data-theme="dark"] .sidebar{background:#1e1e1e;border-color:var(--line);}
+[data-theme="oled"] .sidebar{background:#000;border-color:var(--line);}
 [data-theme="dark"] .sb-logo{border-color:var(--line);}
 [data-theme="dark"] .topbar{background:#1e1e1e;border-color:var(--line);}
+[data-theme="oled"] .topbar{background:#000;border-color:var(--line);}
 [data-theme="dark"] .tb-title,[data-theme="dark"] .tb-sub{color:var(--ink);}
 [data-theme="dark"] .nav-btn{color:var(--muted);}
 [data-theme="dark"] .nav-btn:hover{background:var(--paper2);color:var(--ink);}
 [data-theme="dark"] .nav-btn.active{background:#2a3a2e;color:var(--green);}
+[data-theme="oled"] .nav-btn.active{background:#0a1f12;color:var(--green);}
 [data-theme="dark"] .sb-section{color:var(--muted);}
 [data-theme="dark"] .sb-comp{background:var(--paper2);border-color:var(--line);}
 [data-theme="dark"] .sb-cname{color:var(--ink);}
@@ -2635,6 +2660,7 @@ body{
             <div class="theme-row" id="theme-row">
               <button class="theme-pill" data-theme-val="light"  onclick="applyTheme('light')"><svg viewBox="0 0 24 24" style="width:13px;height:13px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;display:inline-block;vertical-align:middle;margin-right:3px;"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>Light</button>
               <button class="theme-pill" data-theme-val="dark"   onclick="applyTheme('dark')"><svg viewBox="0 0 24 24" style="width:13px;height:13px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;display:inline-block;vertical-align:middle;margin-right:3px;"><path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/></svg>Dark</button>
+              <button class="theme-pill" data-theme-val="oled" onclick="applyTheme('oled')">⬛ OLED</button>
               <button class="theme-pill" data-theme-val="system" onclick="applyTheme('system')"><svg viewBox="0 0 24 24" style="width:1em;height:1em;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;display:inline-block;vertical-align:middle;"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg> System</button>
             </div>
 
@@ -2746,17 +2772,18 @@ body{
                 <span style="font-size:.82rem;font-weight:600;color:var(--ink);flex:1;">Privacy Policy</span>
                 <svg viewBox="0 0 24 24" fill="none" stroke="var(--muted)" stroke-width="2" style="width:14px;height:14px;flex-shrink:0;"><path d="M9 18l6-6-6-6"/></svg>
               </button>
-              <button onclick="runStorageDiagnostic()" style="display:flex;align-items:center;gap:.75rem;width:100%;padding:.75rem 1rem;background:none;border:none;cursor:pointer;font-family:inherit;text-align:left;-webkit-tap-highlight-color:transparent;">
-                <div style="width:32px;height:32px;border-radius:9px;background:var(--paper);border:1px solid var(--line);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="var(--muted)" stroke-width="2.2" style="width:15px;height:15px;"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 010 14.14M4.93 4.93a10 10 0 000 14.14"/></svg>
-                </div>
-                <span style="font-size:.82rem;font-weight:600;color:var(--ink);flex:1;">Storage Diagnostic</span>
-              </button>
+
               <button onclick="runVaultRecover()" style="display:flex;align-items:center;gap:.75rem;width:100%;padding:.75rem 1rem;background:none;border:none;cursor:pointer;font-family:inherit;text-align:left;-webkit-tap-highlight-color:transparent;">
                 <div style="width:32px;height:32px;border-radius:9px;background:var(--paper);border:1px solid var(--line);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
                   <svg viewBox="0 0 24 24" fill="none" stroke="var(--muted)" stroke-width="2.2" style="width:15px;height:15px;"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 102.13-9.36L1 10"/></svg>
                 </div>
                 <span style="font-size:.82rem;font-weight:600;color:var(--ink);flex:1;">Restore from Backup</span>
+              </button>
+              <button onclick="openExportModal()" style="display:flex;align-items:center;gap:.75rem;width:100%;padding:.75rem 1rem;background:none;border:none;cursor:pointer;font-family:inherit;text-align:left;-webkit-tap-highlight-color:transparent;">
+                <div style="width:32px;height:32px;border-radius:9px;background:var(--paper);border:1px solid var(--line);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="var(--muted)" stroke-width="2.2" style="width:15px;height:15px;"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                </div>
+                <span style="font-size:.82rem;font-weight:600;color:var(--ink);flex:1;">Export Data</span>
               </button>
               <button onclick="signOut()" style="display:flex;align-items:center;gap:.75rem;width:100%;padding:.75rem 1rem;background:none;border:none;cursor:pointer;font-family:inherit;text-align:left;-webkit-tap-highlight-color:transparent;">
                 <div style="width:32px;height:32px;border-radius:9px;background:var(--paper);border:1px solid var(--line);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
@@ -2767,7 +2794,10 @@ body{
             </div>
 
             <!-- Danger zone -->
-            <div style="font-size:.62rem;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--red);margin-bottom:.4rem;opacity:.7;">Danger Zone</div>
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:.4rem;">
+              <div style="font-size:.62rem;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--red);opacity:.7;">Danger Zone</div>
+              <button onclick="openDevTools()" style="font-size:.6rem;font-weight:600;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);opacity:.45;background:none;border:none;cursor:pointer;font-family:inherit;padding:0;">Dev Tools</button>
+            </div>
             <div style="background:var(--red-light);border:1px solid #fca5a5;border-radius:14px;overflow:hidden;margin-bottom:1rem;">
               <button onclick="resetAccount()" style="display:flex;align-items:center;gap:.75rem;width:100%;padding:.75rem 1rem;background:none;border:none;border-bottom:1px solid #fca5a5;cursor:pointer;font-family:inherit;text-align:left;-webkit-tap-highlight-color:transparent;">
                 <div style="width:32px;height:32px;border-radius:9px;background:rgba(192,57,43,.1);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
@@ -3780,6 +3810,89 @@ async function runStorageDiagnostic(){
   alert(msg);
   console.log('[Diagnostic]\nLOCAL: '+localInfo+'\nFIRESTORE: '+fsInfo+'\nUID: '+uid);
 }
+// ══════════════════════════════════════════════════════
+// EXPORT — download notes + cards as JSON or CSV
+// ══════════════════════════════════════════════════════
+function openExportModal(){
+  if(typeof closeFWModal==='function') closeFWModal();
+  var html='<div class="fw-modal-bg" id="fw-modal-bg" onclick="if(event.target===this)closeFWModal()">'
+    +'<div class="fw-modal">'
+    +'<div class="fw-modal-title">Export your data</div>'
+    +'<p style="font-size:.8rem;color:var(--muted);margin-bottom:1.2rem;line-height:1.5;">Download everything so your data is always yours.</p>'
+    +'<div style="display:flex;flex-direction:column;gap:.6rem;">'
+    +'<button onclick="exportJSON()" style="display:flex;align-items:center;gap:.75rem;padding:.8rem 1rem;background:var(--paper2);border:1.5px solid var(--line);border-radius:12px;font-family:inherit;font-size:.85rem;font-weight:600;color:var(--ink);cursor:pointer;text-align:left;">'
+    +'<span style="font-size:1.2rem;">📦</span>'
+    +'<div><div>Full backup (JSON)</div><div style="font-size:.7rem;font-weight:400;color:var(--muted);">Notes, cards, reminders, settings — everything. Re-importable.</div></div>'
+    +'</button>'
+    +'<button onclick="exportNotesCSV()" style="display:flex;align-items:center;gap:.75rem;padding:.8rem 1rem;background:var(--paper2);border:1.5px solid var(--line);border-radius:12px;font-family:inherit;font-size:.85rem;font-weight:600;color:var(--ink);cursor:pointer;text-align:left;">'
+    +'<span style="font-size:1.2rem;">📝</span>'
+    +'<div><div>Notes (CSV)</div><div style="font-size:.7rem;font-weight:400;color:var(--muted);">Open in Excel, Google Sheets, or Notion.</div></div>'
+    +'</button>'
+    +'<button onclick="exportCardsCSV()" style="display:flex;align-items:center;gap:.75rem;padding:.8rem 1rem;background:var(--paper2);border:1.5px solid var(--line);border-radius:12px;font-family:inherit;font-size:.85rem;font-weight:600;color:var(--ink);cursor:pointer;text-align:left;">'
+    +'<span style="font-size:1.2rem;">🃏</span>'
+    +'<div><div>Flashcards (CSV)</div><div style="font-size:.7rem;font-weight:400;color:var(--muted);">Compatible with Anki and other apps.</div></div>'
+    +'</button>'
+    +'</div>'
+    +'<div class="fw-btn-row" style="margin-top:1.2rem;">'
+    +'<button class="fw-btn fw-btn-ghost" onclick="closeFWModal()">Close</button>'
+    +'</div>'
+    +'</div></div>';
+  document.body.insertAdjacentHTML('beforeend', html);
+}
+
+function _downloadFile(filename, content, type){
+  var blob = new Blob([content], {type: type});
+  var url = URL.createObjectURL(blob);
+  var a = document.createElement('a');
+  a.href=url; a.download=filename;
+  document.body.appendChild(a); a.click();
+  setTimeout(function(){ document.body.removeChild(a); URL.revokeObjectURL(url); }, 200);
+}
+
+function _csvEscape(v){
+  var s = String(v===null||v===undefined?'':v).replace(/"/g,'""');
+  return '"'+s+'"';
+}
+
+function exportJSON(){
+  var data = {};
+  try{ data = JSON.parse(localStorage.getItem('mb7_data')||'{}'); }catch(e){}
+  var out = {
+    exportedAt: new Date().toISOString(),
+    app: 'Menmory',
+    notes: data.notes||[],
+    studyCards: data.studyCards||[],
+    reminders: data.reminders||[],
+    userName: data.userName||''
+  };
+  _downloadFile('menmory-backup-'+new Date().toISOString().slice(0,10)+'.json', JSON.stringify(out,null,2), 'application/json');
+  if(typeof toast==='function') toast('📦 JSON backup downloaded!');
+}
+
+function exportNotesCSV(){
+  var data = {}; try{ data=JSON.parse(localStorage.getItem('mb7_data')||'{}'); }catch(e){}
+  var ns = data.notes||[];
+  if(!ns.length){ if(typeof toast==='function') toast('No notes to export.'); return; }
+  var rows = [['Title','Subject','Body','Created'].map(_csvEscape).join(',')];
+  ns.forEach(function(n){
+    rows.push([n.title||'',n.subject||'General',n.body||'',n.created||''].map(_csvEscape).join(','));
+  });
+  _downloadFile('menmory-notes-'+new Date().toISOString().slice(0,10)+'.csv', rows.join('\n'), 'text/csv');
+  if(typeof toast==='function') toast('📝 Notes exported!');
+}
+
+function exportCardsCSV(){
+  var data = {}; try{ data=JSON.parse(localStorage.getItem('mb7_data')||'{}'); }catch(e){}
+  var cs = data.studyCards||[];
+  if(!cs.length){ if(typeof toast==='function') toast('No cards to export.'); return; }
+  var rows = [['Question','Answer','Subject','Topic','Reps','Lapses','Next Review'].map(_csvEscape).join(',')];
+  cs.forEach(function(c){
+    rows.push([c.question||c.q||'',c.answer||c.a||'',c.subject||'General',c.topic||'',c.reps||0,c.lapses||0,c.nextReview||''].map(_csvEscape).join(','));
+  });
+  _downloadFile('menmory-cards-'+new Date().toISOString().slice(0,10)+'.csv', rows.join('\n'), 'text/csv');
+  if(typeof toast==='function') toast('🃏 Cards exported!');
+}
+
 function signOut(){
   showConfirm('Sign out?','You can log back in anytime.',async function(){
     // Sync to Firestore FIRST so no data is lost on logout
@@ -4072,7 +4185,7 @@ function _fbApplyData(appData){
 
 async function fbSyncData(){
   const uid = localStorage.getItem('fn_current_user');
-  if(!uid||uid==='guest'||!window._fbDb){ console.log('[Sync] skipped uid='+uid+' db='+!!window._fbDb); return; }
+  if(!uid||uid==='guest'||!window._fbDb){ return; } // silently skip if not authed yet
   if(isMinor()) return;
   try{
     const raw = localStorage.getItem('mb7_data');
@@ -4907,10 +5020,28 @@ function _maybeShowIOSNudge(){
 }
 
 function _initNetworkWatcher(){
+  var _wasOffline = false;
   function update(){
     var bar=document.getElementById('offline-bar');
     if(!bar) return;
-    bar.style.display=navigator.onLine?'none':'block';
+    if(navigator.onLine){
+      if(_wasOffline){
+        // Just came back online — show green "syncing" state briefly
+        bar.style.background='#16a34a';
+        bar.textContent='Back online — syncing…';
+        bar.style.display='block';
+        if(typeof fbSyncData==='function') fbSyncData();
+        setTimeout(function(){ bar.style.display='none'; bar.style.background='#ef4444'; bar.textContent='No internet — data is saved locally'; },3000);
+      } else {
+        bar.style.display='none';
+      }
+      _wasOffline=false;
+    } else {
+      _wasOffline=true;
+      bar.style.background='#ef4444';
+      bar.textContent='No internet — data is saved locally';
+      bar.style.display='block';
+    }
   }
   window.addEventListener('online', update);
   window.addEventListener('offline', update);
@@ -6960,9 +7091,13 @@ function prevSessionCard(){
   if(sh) sh.style.display='block';
   document.getElementById('fc-side').textContent='Question';
 }
+function _haptic(pattern){
+  try{ if(navigator.vibrate) navigator.vibrate(pattern||30); }catch(e){}
+}
 function flipCard(){
   if(sessionFlipped)return;
   sessionFlipped=true;
+  _haptic(30); // subtle click on flip
   (document.getElementById('flashcard')||document.createElement('div')).classList.add('flipped');
   const hint=document.getElementById('fc-hint');
   if(hint) hint.style.display='none';
@@ -6971,6 +7106,7 @@ function flipCard(){
   document.getElementById('fc-grade-btns').style.display='grid';
 }
 function gradeCard(grade){
+  _haptic(grade===0?[40,30,40]:grade===1?50:20); // Again=double, Good=medium, Easy=light
   // Save current position to history so user can go back
   sessionHistory.push(sessionIdx);
   if(sessionHistory.length>10) sessionHistory.shift(); // keep last 10
@@ -7419,6 +7555,79 @@ function renderGaps(){
         </div>`;
       }).join('');
 
+  // ── Card difficulty heat map by subject ──
+  // Each cell = one card. Color = difficulty based on lapses and reps.
+  // Green=mastered, amber=learning, red=struggling, grey=never reviewed
+  var heatMapSections = '';
+  var subjectOrder = Object.keys(getMemoryGaps());
+  if(subjectOrder.length > 0 && studyCards.length > 0){
+    var heatMapRows = subjectOrder.map(function(subj){
+      var subjCards = studyCards.filter(function(c){ return (c.subject||'General')===subj; });
+      if(!subjCards.length) return '';
+      // Sort: struggling first, then learning, then mastered, then new
+      subjCards = subjCards.slice().sort(function(a,b){
+        function score(c){ if((c.lapses||0)>=1) return 0; if((c.reps||0)===0) return 1; if((c.reps||0)<3) return 2; return 3; }
+        return score(a)-score(b);
+      });
+      var cells = subjCards.map(function(card){
+        var lapses = card.lapses||0;
+        var reps   = card.reps||0;
+        var col, title;
+        if(lapses>=2){       col='#ef4444'; title='Struggling ('+lapses+' wrong)'; }
+        else if(lapses===1){ col='#f97316'; title='Needs work (1 wrong)'; }
+        else if(reps===0){   col='#d1d5db'; title='Never reviewed'; }
+        else if(reps<3){     col='#fbbf24'; title='Learning ('+reps+' reps)'; }
+        else if(reps<6){     col='#4ade80'; title='Good ('+reps+' reps)'; }
+        else {               col='#16a34a'; title='Mastered ('+reps+' reps)'; }
+        var q = (card.question||card.q||'').replace(/'/g,'&apos;').slice(0,80);
+        return "<div title='"+q+"\n"+title+"' style='width:12px;height:12px;border-radius:3px;background:"+col+";flex-shrink:0;cursor:default;'></div>";
+      }).join('');
+
+      // Stats for this subject
+      var nStruggling = subjCards.filter(function(c){return (c.lapses||0)>=1;}).length;
+      var nMastered   = subjCards.filter(function(c){return (c.reps||0)>=3&&(c.lapses||0)===0;}).length;
+      var nNew        = subjCards.filter(function(c){return (c.reps||0)===0;}).length;
+      var pct = subjCards.length>0 ? Math.round((nMastered/subjCards.length)*100) : 0;
+      var pctCol = pct>=70?'var(--green)':pct>=40?'var(--amber)':'var(--red)';
+      var dotCol = (typeof SUBJECT_COLORS!=='undefined'&&SUBJECT_COLORS[subj])||'#6b7280';
+
+      return "<div style='margin-bottom:.9rem;'>"
+        +"<div style='display:flex;align-items:center;justify-content:space-between;margin-bottom:.35rem;'>"
+        +"<div style='display:flex;align-items:center;gap:.35rem;'>"
+        +"<span style='width:7px;height:7px;border-radius:50%;background:"+dotCol+";display:inline-block;'></span>"
+        +"<span style='font-size:.78rem;font-weight:600;color:var(--ink);'>"+subj+"</span>"
+        +"<span style='font-size:.62rem;color:var(--muted);'>("+subjCards.length+" cards)</span>"
+        +"</div>"
+        +"<span style='font-size:.72rem;font-weight:700;color:"+pctCol+";'>"+pct+"% mastered</span>"
+        +"</div>"
+        +"<div style='display:flex;flex-wrap:wrap;gap:3px;'>"
+        +cells
+        +"</div>"
+        +(nStruggling>0||nNew>0?"<div style='display:flex;gap:.75rem;margin-top:.28rem;'>"
+          +(nStruggling>0?"<span style='font-size:.6rem;color:#ef4444;'>⚠ "+nStruggling+" struggling</span>":"")
+          +(nNew>0?"<span style='font-size:.6rem;color:var(--muted);'>"+nNew+" never reviewed</span>":"")
+          +"</div>":"")
+        +"</div>";
+    }).join('');
+
+    // Legend
+    var legend = "<div style='display:flex;flex-wrap:wrap;gap:.5rem;margin-top:.6rem;align-items:center;'>"
+      +"<span style='font-size:.6rem;color:var(--muted);'>Difficulty:</span>"
+      +"<div style='display:flex;align-items:center;gap:.25rem;'><div style='width:9px;height:9px;border-radius:2px;background:#d1d5db;'></div><span style='font-size:.6rem;color:var(--muted);'>New</span></div>"
+      +"<div style='display:flex;align-items:center;gap:.25rem;'><div style='width:9px;height:9px;border-radius:2px;background:#fbbf24;'></div><span style='font-size:.6rem;color:var(--muted);'>Learning</span></div>"
+      +"<div style='display:flex;align-items:center;gap:.25rem;'><div style='width:9px;height:9px;border-radius:2px;background:#4ade80;'></div><span style='font-size:.6rem;color:var(--muted);'>Good</span></div>"
+      +"<div style='display:flex;align-items:center;gap:.25rem;'><div style='width:9px;height:9px;border-radius:2px;background:#16a34a;'></div><span style='font-size:.6rem;color:var(--muted);'>Mastered</span></div>"
+      +"<div style='display:flex;align-items:center;gap:.25rem;'><div style='width:9px;height:9px;border-radius:2px;background:#f97316;'></div><span style='font-size:.6rem;color:var(--muted);'>Needs work</span></div>"
+      +"<div style='display:flex;align-items:center;gap:.25rem;'><div style='width:9px;height:9px;border-radius:2px;background:#ef4444;'></div><span style='font-size:.6rem;color:var(--muted);'>Struggling</span></div>"
+      +"</div>";
+
+    heatMapSections = "<div style='background:var(--paper);border:1px solid var(--line);border-radius:14px;padding:1rem;margin-bottom:1rem;'>"
+      +"<div style='font-size:.8rem;font-weight:700;color:var(--ink);margin-bottom:.75rem;'>Card difficulty map</div>"
+      +heatMapRows
+      +legend
+      +"</div>";
+  }
+
   // ── Weak spots (cards with most lapses or never reviewed) ──
   const weakCards=studyCards
     .filter(c=>(c.lapses||0)>0||(c.reps||0)===0)
@@ -7534,6 +7743,9 @@ function renderGaps(){
       </div>
       ${subjectBarsHTML}
     </div>
+
+    <!-- Card difficulty heat map -->
+    ${heatMapSections}
 
     <!-- Weak spots -->
     <div style="background:var(--paper);border:1px solid var(--line);border-radius:14px;padding:1rem;margin-bottom:1rem;">
@@ -8709,25 +8921,29 @@ function startVoice(target){
   function makeRec(){
     if(!_voiceActive) return;
     const rec=new SR();
-    rec.lang='en-US';
+    rec.lang=navigator.language||'en-US'; // use device language, not hardcoded en-US
     rec.continuous=false;
     rec.interimResults=true;
-    rec.maxAlternatives=1;
+    rec.maxAlternatives=3; // more alternatives = better accuracy
     rec.onresult=e=>{
       let interim='';
       for(let i=e.resultIndex;i<e.results.length;i++){
         if(e.results[i].isFinal) fullText+=e.results[i][0].transcript+' ';
         else interim=e.results[i][0].transcript;
       }
-      updateField(fullText+interim);
+      var displayVal = fullText + (interim ? '…'+interim : '');
+      updateField(displayVal);
       if(target==='chat') armSilenceTimer();
     };
     rec.onerror=e=>{ if(e.error!=='no-speech'&&e.error!=='aborted'){ toast('🎤 Mic error: '+e.error); stopVoice(); } };
     rec.onend=()=>{
       if(!_voiceActive) return; // user stopped — don't restart
       clearTimeout(silenceTimer);
-      // Small delay before restarting to avoid rapid-fire restarts
-      setTimeout(()=>{ if(_voiceActive) makeRec(); }, 200);
+      // Commit any interim text before restarting so nothing is lost
+      var f=getField();
+      if(f && f.value && !f.value.endsWith(' ')) fullText = f.value + ' ';
+      // Restart immediately — 200ms gap causes lost words on Android
+      if(_voiceActive) makeRec();
     };
     try{
       _recognition=rec;
@@ -8736,15 +8952,28 @@ function startVoice(target){
   }
 
   makeRec();
-  const hint=target==='chat'?'Listening — speak, then pause to send':'Listening… tap Stop to stop';
+  // Update mic button to show visual pulse so user knows it's active
+  var btn = document.getElementById(target==='chat'?'chat-mic-btn':target==='note'?'note-mic-btn':'qc-mic-btn');
+  if(btn){ btn.title='Tap to stop recording'; }
+  const hint=target==='chat'?'Listening — speak naturally, pause to send':'Listening… tap the mic to stop';
   toast(hint);
 }
 
 function stopVoice(){
   _voiceActive=false; // set FIRST so onend doesn't restart
+  // Clean up interim "…" preview from field — leave only committed text
+  var _tgt = _voiceTarget;
+  if(_tgt){
+    var _f = _tgt==='chat'?document.getElementById('chat-input'):_tgt==='note'?document.getElementById('note-body'):document.getElementById('qc-textarea');
+    if(_f && _f.value){
+      // Strip trailing "…anything" left by interim display
+      _f.value = _f.value.split('…')[0].trimEnd();
+      if(_f.tagName==='TEXTAREA'){_f.style.height='auto';_f.style.height=_f.scrollHeight+'px';}
+    }
+  }
   if(_recognition){
-    try{_recognition.onend=null;}catch(e){} // detach handler before stopping
-    try{_recognition.abort();}catch(e){}    // abort is faster than stop
+    try{_recognition.onend=null;}catch(e){}
+    try{_recognition.abort();}catch(e){}
     _recognition=null;
   }
   setMicState('all',false);
@@ -8813,6 +9042,7 @@ function applyTheme(pref){
   currentThemePref=pref;
   localStorage.setItem('fn_theme_pref',pref);
   let dark;
+  if(pref==='oled'){ document.documentElement.setAttribute('data-theme','oled'); applyAccent(currentAccent); updateThemeUI(); if(typeof save==='function'&&typeof userName!=='undefined') save(); return; }
   if(pref==='dark') dark=true;
   else if(pref==='light') dark=false;
   else dark=window.matchMedia('(prefers-color-scheme: dark)').matches;
@@ -8993,11 +9223,22 @@ function secretTap(){
   _secretTaps++;
   clearTimeout(_secretTimer);
   _secretTimer=setTimeout(()=>{_secretTaps=0;},2000);
-  if(_secretTaps>=5){
-    _secretTaps=0;
-    openSettings();
-    toast('Developer settings');
-  }
+}
+
+function openDevTools(){
+  if(typeof closeFWModal==='function') closeFWModal();
+  var html='<div class="fw-modal-bg" id="fw-modal-bg" onclick="if(event.target===this)closeFWModal()">'
+    +'<div class="fw-modal">'
+    +'<div class="fw-modal-title" style="font-size:.9rem;">&#x1F6E0; Developer Tools</div>'
+    +'<p style="font-size:.72rem;color:var(--muted);margin-bottom:1rem;">Diagnostics and recovery tools.</p>'
+    +'<div style="display:flex;flex-direction:column;gap:.5rem;">'
+    +'<button onclick="runStorageDiagnostic()" style="background:var(--paper2);border:1px solid var(--line);border-radius:10px;padding:.7rem 1rem;font-family:inherit;font-size:.8rem;font-weight:600;color:var(--ink);cursor:pointer;text-align:left;">&#x1F4E6; Storage Diagnostic</button>'
+    +'<button onclick="runVaultRecover()" style="background:var(--paper2);border:1px solid var(--line);border-radius:10px;padding:.7rem 1rem;font-family:inherit;font-size:.8rem;font-weight:600;color:var(--ink);cursor:pointer;text-align:left;">&#x1F504; Restore from Vault Backup</button>'
+    +'<button onclick="debugFireAll()" style="background:var(--paper2);border:1px solid var(--line);border-radius:10px;padding:.7rem 1rem;font-family:inherit;font-size:.8rem;font-weight:600;color:var(--ink);cursor:pointer;text-align:left;">&#x1F514; Force-fire all reminders</button>'
+    +'</div>'
+    +'<div class="fw-btn-row" style="margin-top:1rem;"><button class="fw-btn fw-btn-ghost" onclick="closeFWModal()">Close</button></div>'
+    +'</div></div>';
+  document.body.insertAdjacentHTML('beforeend', html);
 }
 function switchAITab(tab){ /* no-op — API key now handled server-side via proxy */ }
 function saveSettings(){ closeSettings(); toast('✓ Settings saved.'); }
@@ -10501,6 +10742,21 @@ function checkAndFireReminders(){
   if(changed){ fired[today]=firedToday; localStorage.setItem('fn_fired',JSON.stringify(fired)); }
   syncScheduleToSW();
   _maybeSendMorningDigest(data, today, nowMin);
+  _maybeSendWeeklyDigest(today, nowMin);
+}
+
+function _maybeSendWeeklyDigest(today, nowMin){
+  if(typeof prefVal!=='function' || !prefVal('digest', true)) return;
+  if(typeof sendMenmoryEmail!=='function' || typeof getEmailAddr!=='function' || !getEmailAddr()) return;
+  // Only fire on Sundays
+  var dow = new Date().getDay(); // 0 = Sunday
+  if(dow !== 0) return;
+  // Fire between 9:00am and 9:10am
+  if(nowMin < 540 || nowMin > 550) return;
+  var weeklyKey = 'mn_weekly_'+today;
+  if(localStorage.getItem(weeklyKey)) return;
+  localStorage.setItem(weeklyKey, '1');
+  if(typeof window.notifWeeklyDigest === 'function') window.notifWeeklyDigest();
 }
 
 function _maybeSendMorningDigest(data, today, nowMin){
@@ -10542,7 +10798,7 @@ function startNotifPoller(){
   if(_notifPollerStarted) return;
   _notifPollerStarted=true;
   nlog('poller start');
-  setInterval(function(){ nlog('tick'); checkAndFireReminders(); if(typeof renderAll==='function') renderAll(); refreshDebug(); }, 15000);
+  setInterval(function(){ nlog('tick'); checkAndFireReminders(); if(typeof renderAll==='function') renderAll(); refreshDebug(); }, 5000);
   document.addEventListener('visibilitychange',function(){
     if(document.visibilityState==='visible'){ nlog('visible'); checkAndFireReminders(); if(typeof renderAll==='function') renderAll(); }
   });
@@ -11399,17 +11655,93 @@ window.notifStreakWarning = async function(streakDays){
 
 window.notifWeeklyDigest = async function(){
   if(!prefVal("digest", false)) return;
-  var gw = typeof getGoalWeek === "function" ? getGoalWeek() : {done: 0};
-  var gs = typeof getGoalSettings === "function" ? getGoalSettings() : {};
-  var done = gw.done || 0;
-  var target = gs.target || 0;
-  var body = "<p>Here is your Menmory week in review:</p>"
-    + "<div style='display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:16px 0'>"
-    + "<div style='background:#e8f4ed;border-radius:10px;padding:14px;text-align:center'><div style='font-size:1.6rem;font-weight:800;color:#1a6b3c'>" + done + "</div><div style='font-size:.75rem;color:#666'>Cards reviewed</div></div>"
-    + "<div style='background:#fef3c7;border-radius:10px;padding:14px;text-align:center'><div style='font-size:1.6rem;font-weight:800;color:#b45309'>" + (target || "--") + "</div><div style='font-size:.75rem;color:#666'>Weekly goal</div></div>"
-    + "</div>"
-    + (done >= (gs.target || Infinity) ? "<p>Goal complete! Amazing work this week.</p>" : "<p>Keep going - every card counts!</p>");
-  await sendMenmoryEmail("Menmory: Your weekly digest", emailWrap("Weekly Recap", "📊", body));
+  // Gather all stats for the past 7 days
+  var studyLog = {}; try{ studyLog=JSON.parse(localStorage.getItem('fn_study_log')||'{}'); }catch(e){}
+  var quizLog = []; try{ quizLog=JSON.parse(localStorage.getItem('fn_quiz_log')||'[]'); }catch(e){}
+  var data = {}; try{ data=JSON.parse(localStorage.getItem('mb7_data')||'{}'); }catch(e){}
+  var userName = data.userName || 'there';
+  var studyCards = data.studyCards || [];
+
+  // Last 7 days stats
+  var totalReviews=0, totalCorrect=0, activeDays=0;
+  var weekAgo = new Date(); weekAgo.setDate(weekAgo.getDate()-7);
+  var weekAgoStr = weekAgo.toISOString().slice(0,10);
+  for(var k in studyLog){
+    if(k >= weekAgoStr){
+      var entry = studyLog[k];
+      totalReviews += entry.reviewed||0;
+      totalCorrect += entry.correct||0;
+      if((entry.reviewed||0)>0) activeDays++;
+    }
+  }
+  var weeklyAcc = totalReviews>0 ? Math.round((totalCorrect/totalReviews)*100) : null;
+
+  // Quizzes this week
+  var weekQuizzes = quizLog.filter(function(q){ return q.date >= weekAgoStr; });
+  var quizAvg = weekQuizzes.length>0 ? Math.round(weekQuizzes.reduce(function(a,q){return a+q.pct;},0)/weekQuizzes.length) : null;
+
+  // Best and worst subjects by quiz score
+  var subjScores = {};
+  weekQuizzes.forEach(function(q){
+    if(!subjScores[q.subject]) subjScores[q.subject]={sum:0,n:0};
+    subjScores[q.subject].sum+=q.pct; subjScores[q.subject].n++;
+  });
+  var subjEntries = Object.entries(subjScores).map(function(e){ return {name:e[0], avg:Math.round(e[1].sum/e[1].n)}; });
+  subjEntries.sort(function(a,b){return b.avg-a.avg;});
+  var bestSubj = subjEntries[0]||null;
+  var worstSubj = subjEntries.length>1 ? subjEntries[subjEntries.length-1] : null;
+
+  // Card mastery
+  var mastered = studyCards.filter(function(c){return (c.reps||0)>=1&&(c.lapses||0)===0;}).length;
+  var struggling = studyCards.filter(function(c){return (c.lapses||0)>=1;}).length;
+
+  // Goal
+  var gw = typeof getGoalWeek==='function' ? getGoalWeek() : {done:0};
+  var gs = typeof getGoalSettings==='function' ? getGoalSettings() : {};
+  var goalDone = gw.done||0; var goalTarget = gs.target||0;
+  var goalMet = goalTarget>0 && goalDone>=goalTarget;
+
+  // Streak
+  var streak = data.streakDays||0;
+
+  // Motivational message
+  var msg = '';
+  if(goalMet){ msg = "You hit your weekly goal — that's real discipline. 🏆"; }
+  else if(activeDays>=5){ msg = "Five or more active days this week. Consistency is everything."; }
+  else if(totalReviews===0){ msg = "No reviews this week. This is your sign to get back on track!"; }
+  else if(weeklyAcc!==null && weeklyAcc>=80){ msg = "Accuracy above 80% — you're retaining information well!"; }
+  else if(worstSubj && worstSubj.avg<50){ msg = "Focus more on "+worstSubj.name+" this week — your quiz average there was "+worstSubj.avg+"%."; }
+  else { msg = "Every review session compounds. Keep showing up!"; }
+
+  // Stat cell helper
+  function cell(val, label, bg, col){
+    return "<div style='background:"+bg+";border-radius:10px;padding:14px 10px;text-align:center'>"
+      +"<div style='font-size:1.5rem;font-weight:800;color:"+col+";line-height:1'>"+val+"</div>"
+      +"<div style='font-size:.7rem;color:#666;margin-top:4px'>"+label+"</div></div>";
+  }
+
+  var body = "<p>Hey <strong>"+userName+"</strong>! Here's your week in review:</p>"
+    +"<div style='display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:16px 0'>"
+    +cell(totalReviews,'Cards reviewed','#e8f4ed','#1a6b3c')
+    +cell(activeDays+'/7','Active days','#ede9fe','#6d28d9')
+    +cell(weeklyAcc!==null?weeklyAcc+'%':'—','Accuracy','#fef3c7','#b45309')
+    +cell(weekQuizzes.length,'Quizzes taken','#fee2e2','#dc2626')
+    +"</div>"
+    +"<div style='background:#f3f4f6;border-radius:10px;padding:12px 16px;margin:12px 0;display:flex;justify-content:space-between;align-items:center'>"
+    +"<div><div style='font-size:.7rem;color:#666'>Weekly goal</div><div style='font-size:1rem;font-weight:700;color:"+(goalMet?'#1a6b3c':'#b45309')+"'>"+goalDone+(goalTarget?' / '+goalTarget:'')+" cards</div></div>"
+    +"<div><div style='font-size:.7rem;color:#666'>Streak</div><div style='font-size:1rem;font-weight:700;color:#1a6b3c'>🔥 "+streak+" days</div></div>"
+    +"<div><div style='font-size:.7rem;color:#666'>Mastered</div><div style='font-size:1rem;font-weight:700;color:#1a6b3c'>"+mastered+" cards</div></div>"
+    +"</div>"
+    +(bestSubj?"<p style='font-size:.85rem'>💪 Strongest subject this week: <strong>"+bestSubj.name+"</strong> ("+bestSubj.avg+"% avg)</p>":"")
+    +(worstSubj&&worstSubj!==bestSubj?"<p style='font-size:.85rem'>📍 Needs work: <strong>"+worstSubj.name+"</strong> ("+worstSubj.avg+"% avg)</p>":"")
+    +(struggling>0?"<p style='font-size:.85rem'>⚠️ <strong>"+struggling+" card"+(struggling>1?'s':'')+
+      "</strong> still struggling — review them soon.</p>":"")
+    +"<div style='background:#e8f4ed;border-left:4px solid #1a6b3c;border-radius:0 10px 10px 0;padding:12px 16px;margin:16px 0;font-size:.88rem;color:#1a6b3c;font-weight:600'>"+msg+"</div>"
+    +"<p style='margin-top:20px;text-align:center'>"
+    +"<a href='"+(window.APP_URL||'https://menmory.netlify.app')+"' style='background:#1a6b3c;color:#fff;padding:12px 28px;border-radius:10px;text-decoration:none;font-weight:700;display:inline-block'>Open Menmory →</a>"
+    +"</p>";
+
+  await sendMenmoryEmail("Menmory: Your weekly recap 📊", emailWrap("Weekly Recap", "📊", body));
 };
 
 function checkCountdownAlerts(){
@@ -11460,8 +11792,9 @@ window.openEmailNotifSettings = function(){
   html += buildNotifToggle("en-t-study", "Cards due for review", prefVal("studyReminder", true));
   html += buildNotifToggle("en-t-cd", "Upcoming countdowns", prefVal("countdowns", true));
   html += buildNotifToggle("en-t-streak", "Streak at risk", prefVal("streakWarning", true));
-  html += buildNotifToggle("en-t-digest", "Weekly digest (Sundays)", prefVal("digest", false));
-  html += "<div class='fw-btn-row' style='margin-top:1.2rem'>";
+  html += buildNotifToggle("en-t-digest", "Weekly digest (Sundays)", prefVal("digest", true));
+  html += "<button onclick='testWeeklyDigest()' style='width:100%;margin-top:.75rem;background:none;border:1.5px solid var(--line);border-radius:10px;padding:.55rem;font-family:inherit;font-size:.78rem;font-weight:600;color:var(--muted);cursor:pointer;'>📊 Send test weekly summary now</button>";
+  html += "<div class='fw-btn-row' style='margin-top:1rem'>";
   html += "<button class='fw-btn fw-btn-ghost' onclick='closeFWModal()'>Cancel</button>";
   html += "<button class='fw-btn fw-btn-ghost' onclick='testNotifEmail()' style='flex:.7'>Test</button>";
   html += "<button class='fw-btn fw-btn-primary' onclick='saveEmailNotifSettings()'>Save</button>";
@@ -11500,6 +11833,20 @@ window.testNotifEmail = async function(){
   } else {
     if(typeof toast === "function") toast("❌ Email failed — check Netlify function logs.");
   }
+};
+
+window.testWeeklyDigest = async function(){
+  var email = (document.getElementById("en-email")||{}).value || getEmailAddr();
+  email = (email||'').trim();
+  if(!email){ if(typeof toast==='function') toast("Enter your email first"); return; }
+  saveEmailAddr(email);
+  if(typeof toast==='function') toast("Sending weekly summary...");
+  // Temporarily force digest pref on so notifWeeklyDigest doesn't bail
+  var _old = prefVal('digest', true);
+  saveEmailPrefs(Object.assign(getEmailPrefs(), {digest: true}));
+  if(typeof window.notifWeeklyDigest==='function') await window.notifWeeklyDigest();
+  if(!_old) saveEmailPrefs(Object.assign(getEmailPrefs(), {digest: false}));
+  if(typeof toast==='function') toast("📊 Weekly summary sent! Check your inbox.");
 };
 
 document.addEventListener("DOMContentLoaded", function(){
