@@ -3438,9 +3438,9 @@ body{
     <label style="font-size:.68rem;font-weight:700;text-transform:uppercase;letter-spacing:.09em;color:var(--muted);display:block;margin-bottom:.4rem;">How many?</label>
     <div style="display:flex;align-items:center;gap:.75rem;margin-bottom:1rem;">
       <button onclick="adjGenCount(-1)" style="width:36px;height:36px;border-radius:50%;border:1.5px solid var(--line);background:var(--paper2);font-size:1.2rem;cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--ink);">−</button>
-      <span id="gen-count-display" style="font-size:1.4rem;font-weight:800;color:var(--green);min-width:32px;text-align:center;">5</span>
+      <input id="gen-count-display" type="number" min="1" max="30" value="5" oninput="var v=parseInt(this.value)||1;_genCount=Math.max(1,Math.min(30,v));this.value=_genCount;" onblur="this.value=_genCount;" style="font-size:1.4rem;font-weight:800;color:var(--green);width:54px;text-align:center;border:none;background:transparent;font-family:inherit;outline:none;-moz-appearance:textfield;"/>
       <button onclick="adjGenCount(1)" style="width:36px;height:36px;border-radius:50%;border:1.5px solid var(--line);background:var(--paper2);font-size:1.2rem;cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--ink);">+</button>
-      <span style="font-size:.72rem;color:var(--muted);">suggested based on note length</span>
+      <span style="font-size:.72rem;color:var(--muted);">max 30</span>
     </div>
 
     <div id="gen-modal-type-row" style="display:none;">
@@ -6185,7 +6185,8 @@ function openGenModal(mode, noteId){
     suggested = Math.min(pool.length, 8);
   }
   _genCount = suggested;
-  document.getElementById('gen-count-display').textContent = _genCount;
+  var _el = document.getElementById('gen-count-display');
+  if(_el){ if(_el.tagName==='INPUT') _el.value = _genCount; else _el.textContent = _genCount; }
 
   // Reset type buttons
   ['mixed','mcq','open'].forEach(t=>{
@@ -6210,8 +6211,9 @@ function closeGenModal(){
 }
 
 function adjGenCount(delta){
-  _genCount = Math.max(1, Math.min(15, _genCount + delta));
-  document.getElementById('gen-count-display').textContent = _genCount;
+  _genCount = Math.max(1, Math.min(30, _genCount + delta));
+  var el = document.getElementById('gen-count-display');
+  if(el.tagName==='INPUT') el.value = _genCount; else el.textContent = _genCount;
 }
 
 function setGenType(btn, type){
@@ -6260,7 +6262,7 @@ Rules:
 - Questions should be clear and unambiguous
 - Answers concise (1-2 sentences max)
 - No markdown, no explanation, just the array`,
-      body.substring(0,2000), 800
+      body.substring(0,3000), 4000
     );
     let cards;
     try{cards=JSON.parse(raw.replace(/```json|```/g,'').trim());}catch{toast('AI response error — try again');return;}
