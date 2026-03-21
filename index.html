@@ -2746,6 +2746,12 @@ body{
                 <span style="font-size:.82rem;font-weight:600;color:var(--ink);flex:1;">Privacy Policy</span>
                 <svg viewBox="0 0 24 24" fill="none" stroke="var(--muted)" stroke-width="2" style="width:14px;height:14px;flex-shrink:0;"><path d="M9 18l6-6-6-6"/></svg>
               </button>
+              <button onclick="runStorageDiagnostic()" style="display:flex;align-items:center;gap:.75rem;width:100%;padding:.75rem 1rem;background:none;border:none;cursor:pointer;font-family:inherit;text-align:left;-webkit-tap-highlight-color:transparent;">
+                <div style="width:32px;height:32px;border-radius:9px;background:var(--paper);border:1px solid var(--line);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="var(--muted)" stroke-width="2.2" style="width:15px;height:15px;"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 010 14.14M4.93 4.93a10 10 0 000 14.14"/></svg>
+                </div>
+                <span style="font-size:.82rem;font-weight:600;color:var(--ink);flex:1;">Storage Diagnostic</span>
+              </button>
               <button onclick="signOut()" style="display:flex;align-items:center;gap:.75rem;width:100%;padding:.75rem 1rem;background:none;border:none;cursor:pointer;font-family:inherit;text-align:left;-webkit-tap-highlight-color:transparent;">
                 <div style="width:32px;height:32px;border-radius:9px;background:var(--paper);border:1px solid var(--line);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
                   <svg viewBox="0 0 24 24" fill="none" stroke="var(--muted)" stroke-width="2.2" style="width:15px;height:15px;"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
@@ -3314,6 +3320,8 @@ const SUBJECT_COLORS={
 // ══════════════════════════════════════════════════════
 let userName='', userEmail='', userStruggles=[], userSubjects=[], currentChar='zack';
 let anthropicApiKey='', aiBackend='anthropic';
+const MENMORY_BUILD = 'BUILD_MAR20_V9';
+console.log('%c Menmory ' + MENMORY_BUILD + ' loaded', 'background:#1a6b3c;color:#fff;padding:4px 8px;border-radius:4px;');
 let reminders=[], notes=[], studyCards=[], streakDays=0;
 let reviewSession=[], reviewIndex=0, reviewMode=false;
 let currentNoteFilter='all', currentCardFilter='all', currentCardTopicFilter='all';
@@ -3637,6 +3645,36 @@ function saveEditName(){
   closeFWModal();
   toast('Name updated ✓');
 }
+
+async function runStorageDiagnostic(){
+  const uid = localStorage.getItem('fn_current_user') || '(none)';
+  const raw = localStorage.getItem('mb7_data');
+  let localInfo = 'EMPTY';
+  if(raw){
+    try{
+      const d = JSON.parse(raw);
+      localInfo = 'notes:'+(d.notes||[]).length+' cards:'+(d.studyCards||[]).length+' savedAt:'+new Date(d._savedAt||0).toLocaleTimeString();
+    }catch(e){ localInfo = 'PARSE ERROR'; }
+  }
+  let fsInfo = 'not checked';
+  try{
+    if(window._fbDb && window._fbFns && uid !== '(none)'){
+      const snap = await window._fbFns.getDoc(window._fbFns.doc(window._fbDb,'users',uid));
+      if(snap.exists()){
+        const d = snap.data();
+        if(d.appData){
+          try{
+            const pd = JSON.parse(d.appData);
+            fsInfo = 'notes:'+(pd.notes||[]).length+' cards:'+(pd.studyCards||[]).length+' savedAt:'+new Date(pd._savedAt||0).toLocaleTimeString();
+          }catch(e){ fsInfo = 'PARSE ERROR'; }
+        } else { fsInfo = 'doc exists, NO appData field'; }
+      } else { fsInfo = 'NO DOCUMENT (never synced)'; }
+    } else { fsInfo = 'Firebase not ready / not logged in'; }
+  }catch(e){ fsInfo = 'ERROR: '+e.message; }
+  const msg = '📦 LOCAL:\n'+localInfo+'\n\n☁️ FIRESTORE:\n'+fsInfo+'\n\n👤 UID: '+uid.slice(0,12)+'...';
+  alert(msg);
+  console.log('[Diagnostic]\nLOCAL: '+localInfo+'\nFIRESTORE: '+fsInfo+'\nUID: '+uid);
+}
 function signOut(){
   showConfirm('Sign out?','You can log back in anytime.',async function(){
     // Sync to Firestore FIRST so no data is lost on logout
@@ -3869,8 +3907,12 @@ async function _fbSaveUser(user){
 async function _fbLoadUserData(uid){
   try{
     const snap = await window._fbFns.getDoc(window._fbFns.doc(window._fbDb,'users',uid));
+    console.log('[Load] Firestore snap.exists='+snap.exists()+' uid='+uid.slice(0,8));
     if(snap.exists()){
       const d = snap.data();
+      if(d.appData){
+        try{ const _pd=JSON.parse(d.appData); console.log('[Load] Firestore has notes='+(_pd.notes||[]).length+' cards='+(_pd.studyCards||[]).length+' savedAt='+_pd._savedAt); }catch(e){}
+      } else { console.log('[Load] Firestore doc exists but NO appData field'); }
       // Restore main app data — inject Firestore's saved timestamp for comparison
       if(d.appData) _fbApplyData(d.appData);
       // Restore progress logs
@@ -3897,44 +3939,41 @@ async function _fbLoadUserData(uid){
 function _fbApplyData(appData){
   try{
     if(!appData) return;
-    // Parse incoming Firestore data
     var incoming = typeof appData==='string' ? JSON.parse(appData) : appData;
-    // Only write if Firestore actually has real content
-    // If Firestore has empty notes/cards/reminders, don't overwrite local data
     var remoteHasContent = (incoming.notes&&incoming.notes.length>0)
       || (incoming.studyCards&&incoming.studyCards.length>0)
       || (incoming.reminders&&incoming.reminders.length>0);
     var localRaw = localStorage.getItem('mb7_data');
+    var localNotes=0; var localTs=0; var remoteTs=incoming._savedAt||0;
+    if(localRaw){ try{ var _ld=JSON.parse(localRaw); localNotes=(_ld.notes||[]).length; localTs=_ld._savedAt||0; }catch(e){} }
+    console.log('[Apply] local='+localNotes+'notes/ts='+localTs+' remote='+((incoming.notes||[]).length)+'notes/ts='+remoteTs+' remoteHasContent='+remoteHasContent);
     if(!localRaw){
-      // Nothing local — always apply Firestore
       localStorage.setItem('mb7_data', typeof appData==='string'?appData:JSON.stringify(appData));
+      console.log('[Apply] → wrote Firestore (nothing local)');
       return;
     }
     if(!remoteHasContent){
-      // Firestore is empty — keep local data, don't wipe it
+      console.log('[Apply] → kept local (Firestore empty)');
       return;
     }
-    // Both have content — use the newer one
-    try{
-      var localTs = JSON.parse(localRaw)._savedAt||0;
-      var remoteTs = incoming._savedAt||0;
-      if(remoteTs > localTs){
-        localStorage.setItem('mb7_data', typeof appData==='string'?appData:JSON.stringify(appData));
-      }
-      // else keep local — it's newer
-    }catch(e){
-      // Can't compare — keep local to be safe
+    if(remoteTs > localTs){
+      localStorage.setItem('mb7_data', typeof appData==='string'?appData:JSON.stringify(appData));
+      console.log('[Apply] → wrote Firestore (newer)');
+    } else {
+      console.log('[Apply] → kept local (newer or equal)');
     }
-  }catch(e){}
+  }catch(e){ console.error('[Apply] error:',e); }
 }
 
 async function fbSyncData(){
   const uid = localStorage.getItem('fn_current_user');
-  if(!uid||uid==='guest'||!window._fbDb) return;
-  if(isMinor()) return; // COPPA: no cloud sync for under-14
+  if(!uid||uid==='guest'||!window._fbDb){ console.log('[Sync] skipped uid='+uid+' db='+!!window._fbDb); return; }
+  if(isMinor()) return;
   try{
     const raw = localStorage.getItem('mb7_data');
     if(raw){
+      const _rawSize = Math.round(raw.length/1024);
+      console.log('[Sync] writing to Firestore, size='+_rawSize+'KB uid='+uid.slice(0,8));
       await window._fbFns.setDoc(window._fbFns.doc(window._fbDb,'users',uid),{
         appData: raw,
         appDataSavedAt: (function(){ try{ return JSON.parse(raw)._savedAt||0; }catch(e){ return 0; } })(),
@@ -3948,7 +3987,8 @@ async function fbSyncData(){
         lastSync: new Date().toISOString()
       },{merge:true});
     }
-  }catch(e){ console.warn('Sync failed',e); }
+    console.log('[Sync] Firestore write SUCCESS');
+  }catch(e){ console.error('[Sync] FAILED:',e.message,e.code); }
   syncPushData();
 }
 
