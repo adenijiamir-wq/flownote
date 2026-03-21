@@ -184,6 +184,41 @@ button{-webkit-tap-highlight-color:transparent;}
 [data-theme="dark"] .nav-btn:hover{background:var(--paper2);color:var(--ink);}
 [data-theme="dark"] .nav-btn.active{background:#2a3a2e;color:var(--green);}
 [data-theme="oled"] .nav-btn.active{background:#0a1f12;color:var(--green);}
+
+/* OLED — raise contrast on elements that look washed out on pure black */
+[data-theme="oled"] .hamburger span{background:#e0ddd8;}
+[data-theme="oled"] .nav-btn{color:#c0bdb8;}
+[data-theme="oled"] .nav-btn:hover,[data-theme="oled"] .nav-btn:focus{background:#111;color:#f0ede8;}
+[data-theme="oled"] .tb-title{color:#f0ede8;}
+[data-theme="oled"] .tb-sub{color:#999;}
+[data-theme="oled"] .note-card{background:#0d0d0d;border-color:#2a2a2a;}
+[data-theme="oled"] .note-card:active{background:#141414;}
+[data-theme="oled"] .card-item{background:#000;border-color:#2a2a2a;}
+[data-theme="oled"] .card-item:active{background:#0d0d0d;}
+[data-theme="oled"] .note-editor-area{background:#0d0d0d;border-color:#2a2a2a;}
+[data-theme="oled"] .note-title-input,[data-theme="oled"] .note-body-input{color:#f0ede8;background:#0d0d0d;}
+[data-theme="oled"] .note-editor-foot{border-color:#2a2a2a;background:#000;}
+[data-theme="oled"] .chat-input{background:#111;border-color:#2a2a2a;color:#f0ede8;}
+[data-theme="oled"] .chat-input::placeholder{color:#666;}
+[data-theme="oled"] .qc-head{background:#0d0d0d;border-color:#2a2a2a;}
+[data-theme="oled"] .qc-sheet{background:#000;}
+[data-theme="oled"] .streak-pill{background:#111;border-color:#2a2a2a;}
+[data-theme="oled"] .sb-logo{border-color:#2a2a2a;}
+[data-theme="oled"] .sb-logo-text{color:#f0ede8;}
+[data-theme="oled"] .sb-close{color:#aaa;}
+[data-theme="oled"] .sb-section{color:#777;}
+[data-theme="oled"] .sb-comp{background:#0d0d0d;border-color:#2a2a2a;}
+[data-theme="oled"] .heat-cell.heat-0{background:#1a1a1a;}
+[data-theme="oled"] .fc-progress-bar{background:#1a1a1a;}
+[data-theme="oled"] .chip{background:#111;border-color:#2a2a2a;color:#c0bdb8;}
+[data-theme="oled"] .chip.active{background:#0a1f12;border-color:var(--green);color:var(--green);}
+[data-theme="oled"] .fw-modal-bg{background:rgba(0,0,0,.8);}
+[data-theme="oled"] .fw-inp{background:#111;border-color:#2a2a2a;color:#f0ede8;}
+[data-theme="oled"] .fw-btn-ghost{background:#111;color:#f0ede8;}
+[data-theme="oled"] .empty-state{color:#666;}
+[data-theme="oled"] input,
+[data-theme="oled"] textarea,
+[data-theme="oled"] select{background:#111;border-color:#2a2a2a;color:#f0ede8;}
 [data-theme="dark"] .sb-section{color:var(--muted);}
 [data-theme="dark"] .sb-comp{background:var(--paper2);border-color:var(--line);}
 [data-theme="dark"] .sb-cname{color:var(--ink);}
@@ -2914,6 +2949,7 @@ body{
     <input class="note-title-input" id="note-title" placeholder="Title…" style="font-size:1.5rem;margin-bottom:.75rem;"/>
     <div class="note-body-input" id="note-body" contenteditable="true"
       data-placeholder="Write your notes here…&#10;&#10;Your AI coach will automatically generate study cards from what you write."
+      onblur="if(typeof _voiceTarget!=='undefined'&&_voiceTarget==='note')stopVoice();"
       style="flex:1;min-height:60vh;font-size:.95rem;line-height:1.75;font-family:'DM Sans',sans-serif;outline:none;overflow-y:auto;white-space:pre-wrap;word-break:break-word;"></div>
   </div>
   <!-- Word count bar -->
@@ -2947,7 +2983,7 @@ body{
 <!-- Quick Capture -->
 <div id="qc-sidebar">
   <div class="qc-head"><div class="qc-title" style="display:flex;align-items:center;gap:.4rem;"><svg viewBox="0 0 24 24" style="width:15px;height:15px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>Quick Capture</div><button class="qc-x" onclick="closeQC()" aria-label="Close Quick Capture"><svg viewBox="0 0 24 24" style="width:14px;height:14px;fill:none;stroke:currentColor;stroke-width:2.5;stroke-linecap:round;"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button></div>
-  <textarea id="qc-textarea" placeholder="Write a thought, concept, or note before it disappears…"></textarea>
+  <textarea id="qc-textarea" placeholder="Write a thought, concept, or note before it disappears…" onblur="if(typeof _voiceTarget!=='undefined'&&_voiceTarget==='qc')stopVoice();"></textarea>
   <div class="qc-foot" style="display:flex;gap:.5rem;align-items:center;">
     <button class="mic-btn" id="qc-mic-btn" onclick="toggleVoice('qc')" title="Speak your capture">
       <svg viewBox="0 0 24 24"><path d="M12 1a4 4 0 0 1 4 4v6a4 4 0 0 1-8 0V5a4 4 0 0 1 4-4zm-1 17.93V21h-2a1 1 0 0 0 0 2h6a1 1 0 0 0 0-2h-2v-2.07A8 8 0 0 0 20 11a1 1 0 0 0-2 0 6 6 0 0 1-12 0 1 1 0 0 0-2 0 8 8 0 0 0 7 7.93z"/></svg>
