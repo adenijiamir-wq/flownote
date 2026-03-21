@@ -177,7 +177,7 @@ button{-webkit-tap-highlight-color:transparent;}
 [data-theme="dark"] .sidebar{background:#1e1e1e;border-color:var(--line);}
 [data-theme="oled"] .sidebar{background:#000;border-color:var(--line);}
 [data-theme="dark"] .sb-logo{border-color:var(--line);}
-[data-theme="dark"] .topbar{background:#1e1e1e;border-color:var(--line);}
+[data-theme="dark"] .topbar{background:#1e1e1e!important;border-color:var(--line);}
 [data-theme="oled"] .topbar{background:#000;border-color:var(--line);}
 [data-theme="dark"] .tb-title,[data-theme="dark"] .tb-sub{color:var(--ink);}
 [data-theme="dark"] .nav-btn{color:var(--muted);}
@@ -190,7 +190,7 @@ button{-webkit-tap-highlight-color:transparent;}
 [data-theme="oled"] .bn-icon svg{stroke:#aaa;}
 [data-theme="oled"] .bn-btn.active .bn-icon svg{stroke:var(--green);}
 [data-theme="oled"] .hamburger span{background:#e0ddd8;}
-[data-theme="oled"] .topbar{background:#000;border-color:#2a2a2a;}
+[data-theme="oled"] .topbar{background:#000!important;border-color:#2a2a2a;}
 [data-theme="oled"] .tb-title{color:#f0ede8;}
 [data-theme="oled"] .tb-sub{color:#888;}
 
@@ -1517,17 +1517,24 @@ body::after{
   padding:8px 14px calc(10px + env(safe-area-inset-bottom,0px))!important;
   position:sticky;bottom:0;
 }
+/* Dark/OLED: override !important with higher specificity */
+[data-theme="dark"] #bottom-nav{background:#1e1e1e!important;border-color:var(--line);}
+[data-theme="oled"] #bottom-nav{background:#000!important;border-color:#2a2a2a;}
 /* PWA standalone mode: fill the gesture bar with the same bg as the nav */
 @media all and (display-mode: standalone){
   #bottom-nav{
     padding-bottom:calc(16px + env(safe-area-inset-bottom,0px))!important;
     background:var(--paper)!important;
   }
+  [data-theme="dark"] #bottom-nav{background:#1e1e1e!important;}
+  [data-theme="oled"] #bottom-nav{background:#000!important;}
 }
 /* Fill gesture bar area — body bg extends behind system nav */
 body{
   background:var(--paper);
 }
+[data-theme="dark"] body{background:#111111!important;}
+[data-theme="oled"] body{background:#000!important;}
 .bn-inner{
   background:rgba(250,249,246,.92);
   backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);
@@ -1789,6 +1796,11 @@ body{
 [data-theme="dark"] .topbar{
   background:rgba(24,24,24,.88)!important;
   border-bottom-color:rgba(255,255,255,.06)!important;
+}
+[data-theme="oled"] .topbar{
+  background:#000!important;
+  border-bottom-color:#2a2a2a!important;
+  backdrop-filter:none;-webkit-backdrop-filter:none;
 }
 
 /* ── Greet card — rich gradient ── */
@@ -2997,7 +3009,6 @@ body{
                 <span class="avatar-upload-title">Tap to upload photo or GIF</span>
                 <span class="avatar-upload-sub">JPG, PNG, GIF, WebP · Any size</span>
               </div>
-              <input type="file" id="avatar-file-input" accept="image/*,image/gif" style="display:none" onchange="handleAvatarUpload(this)"/>
             </label>
 
             <!-- Or pick an emoji -->
@@ -9441,6 +9452,7 @@ function handleAvatarUpload(input){
     _updateAvatarDisplay(null, dataUrl);
     // Clear emoji active state
     document.querySelectorAll('.avatar-pick').forEach(b=>b.classList.remove('active'));
+    if(typeof save==='function' && typeof userName!=='undefined') save();
     toast('✓ Profile picture updated!');
   };
   reader.readAsDataURL(file);
@@ -12454,5 +12466,6 @@ function _showEnergyResponseBubble(level, isPostPomo){
   }, 10000);
 }
 </script>
+<input type="file" id="avatar-file-input" accept="image/*,image/gif" style="display:none;position:fixed;left:-9999px" onchange="handleAvatarUpload(this)"/>
 </body>
 </html>
