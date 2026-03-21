@@ -1793,7 +1793,7 @@ body{
 
 
 /* ── Scan sheet ── */
-.scan-sheet-bg{position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:60;display:none;align-items:flex-end;justify-content:center;}
+.scan-sheet-bg{position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:9500;display:none;align-items:flex-end;justify-content:center;}
 .scan-sheet-bg.open{display:flex;}
 .scan-sheet{background:var(--paper);border-radius:22px 22px 0 0;border:1px solid var(--line);border-bottom:none;width:100%;max-width:600px;padding:1.2rem 1.2rem 2.5rem;animation:scanSheetUp .3s cubic-bezier(.22,1,.36,1) both;}
 @keyframes scanSheetUp{from{transform:translateY(100%);}to{transform:translateY(0);}}
@@ -3049,6 +3049,9 @@ body{
   </div>
   <!-- Formatting toolbar -->
   <div style="display:flex;align-items:center;gap:.25rem;padding:.45rem 1rem;border-bottom:1px solid var(--line);background:var(--paper2);flex-shrink:0;overflow-x:auto;">
+    <button onclick="summarizeCurrentNote()" title="AI summarize" style="background:var(--amber-light);border:1px solid var(--amber);color:var(--amber);border-radius:6px;padding:.18rem .5rem;font-size:.65rem;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap;flex-shrink:0;">✦ Sum</button>
+    <button onclick="openScanSheet()" title="Upload photo or PDF" style="background:var(--green-light);border:1px solid var(--green);color:var(--green);border-radius:6px;padding:.18rem .5rem;font-size:.65rem;font-weight:700;cursor:pointer;font-family:inherit;display:flex;align-items:center;gap:.25rem;white-space:nowrap;flex-shrink:0;"><svg viewBox="0 0 24 24" style="width:10px;height:10px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>Upload</button>
+    <div style="width:1px;height:18px;background:var(--line);margin:0 .2rem;flex-shrink:0;"></div>
     <button onclick="fmtNote('bold')"     title="Bold"        class="fmt-btn"><b>B</b></button>
     <button onclick="fmtNote('italic')"   title="Italic"      class="fmt-btn"><i>I</i></button>
     <button onclick="fmtNote('h1')"       title="Heading 1"   class="fmt-btn" style="font-size:.8rem;font-weight:700;">H1</button>
@@ -3059,9 +3062,6 @@ body{
     <div style="width:1px;height:18px;background:var(--line);margin:0 .2rem;flex-shrink:0;"></div>
     <button onclick="fmtNote('quote')"    title="Quote"       class="fmt-btn" style="font-size:1rem;line-height:1;">"</button>
     <button onclick="fmtNote('code')"     title="Code"        class="fmt-btn" style="font-family:monospace;font-size:.8rem;">&lt;/&gt;</button>
-    <div style="width:1px;height:18px;background:var(--line);margin:0 .2rem;flex-shrink:0;"></div>
-    <button onclick="summarizeCurrentNote()" title="AI summarize" class="fmt-btn" style="color:var(--amber);border:1px solid var(--amber);border-radius:6px;padding:.2rem .45rem;font-size:.7rem;font-weight:700;">✦ Sum</button>
-    <button onclick="openScanSheet()" title="Upload photo or PDF" class="fmt-btn" style="color:var(--green);background:var(--green-light);border:1px solid var(--green);border-radius:6px;padding:.2rem .45rem;font-size:.7rem;font-weight:700;display:flex;align-items:center;gap:.25rem;"><svg viewBox="0 0 24 24" style="width:11px;height:11px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>Upload</button>
   </div>
   <!-- Writing area — full height, scrollable -->
   <div style="flex:1;overflow-y:auto;padding:1.25rem 1.1rem 2rem;display:flex;flex-direction:column;">
