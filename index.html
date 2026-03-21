@@ -184,6 +184,15 @@ button{-webkit-tap-highlight-color:transparent;}
 [data-theme="dark"] .nav-btn:hover{background:var(--paper2);color:var(--ink);}
 [data-theme="dark"] .nav-btn.active{background:#2a3a2e;color:var(--green);}
 [data-theme="oled"] .nav-btn.active{background:#0a1f12;color:var(--green);}
+[data-theme="oled"] #bottom-nav{background:#000;border-color:#2a2a2a;}
+[data-theme="oled"] .bn-btn{color:#aaa;}
+[data-theme="oled"] .bn-btn.active{color:var(--green);}
+[data-theme="oled"] .bn-icon svg{stroke:#aaa;}
+[data-theme="oled"] .bn-btn.active .bn-icon svg{stroke:var(--green);}
+[data-theme="oled"] .hamburger span{background:#e0ddd8;}
+[data-theme="oled"] .topbar{background:#000;border-color:#2a2a2a;}
+[data-theme="oled"] .tb-title{color:#f0ede8;}
+[data-theme="oled"] .tb-sub{color:#888;}
 
 /* OLED — raise contrast on elements that look washed out on pure black */
 [data-theme="oled"] .hamburger span{background:#e0ddd8;}
@@ -2110,6 +2119,260 @@ body{
 </div>
 
 <!-- ════ APP ════ -->
+
+<!-- ── SPLASH SCREEN ── -->
+<div id="mn-splash">
+<style>
+  #mn-splash{position:fixed;inset:0;z-index:99999;background:#0a1f12;display:flex;align-items:center;justify-content:center;overflow:hidden;}
+  @keyframes mn-splashhide{to{opacity:0;pointer-events:none;}}
+  #mn-splash.hiding{animation:mn-splashhide .45s ease forwards;}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{
+  background:#0a1f12;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;min-height:100vh;gap:1.5rem;
+}
+.mn-sp-wrap{
+  width:280px;height:400px;border-radius:28px;
+  overflow:hidden;
+  position:relative;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;
+  background:linear-gradient(155deg,#0e2d1c 0%,#1a4228 55%,#0a1f12 100%);
+}
+@keyframes owlDrop{
+  0%  {opacity:0;transform:translateX(-50%) translateY(-40px) rotate(-10deg);}
+  65% {transform:translateX(-50%) translateY(5px) rotate(2deg);}
+  80% {transform:translateX(-50%) translateY(-2px);}
+  100%{opacity:1;transform:translateX(-50%) translateY(0);}
+}
+@keyframes owlBob{
+  0%,100%{transform:translateX(-50%) translateY(0);}
+  50%    {transform:translateX(-50%) translateY(-4px);}
+}
+@keyframes owlBlink{
+  0%,84%,100%{transform:scaleY(1);}89%{transform:scaleY(.07);}
+}
+/* pupils: left during left cat peek (0-50%), right during right cat peek (50-100%) */
+@keyframes owlLook{
+  0%   {transform:translate(0,0);}
+  10%  {transform:translate(-1.8px,0);}
+  38%  {transform:translate(-1.8px,0);}
+  48%  {transform:translate(0,0);}
+  58%  {transform:translate(1.8px,0);}
+  86%  {transform:translate(1.8px,0);}
+  96%  {transform:translate(0,0);}
+  100% {transform:translate(0,0);}
+}
+@keyframes cardRise{
+  from{opacity:0;transform:translateY(26px);}to{opacity:1;transform:translateY(0);}
+}
+@keyframes subFade{from{opacity:0;}to{opacity:1;}}
+@keyframes dotP{
+  0%,100%{opacity:.2;transform:scale(.65);}50%{opacity:1;transform:scale(1);}
+}
+@keyframes catBlink{
+  0%,80%,100%{transform:scaleY(1);}85%{transform:scaleY(.08);}
+}
+
+/* LEFT: hidden fully off-left, slides right so just face peeks past pill edge */
+@keyframes peekL{
+  0%  {transform:translateY(-50%) translateX(-100%);}
+  8%  {transform:translateY(-50%) translateX(-50%);}
+  24% {transform:translateY(-50%) translateX(-50%);}
+  32% {transform:translateY(-50%) translateX(-100%);}
+  100%{transform:translateY(-50%) translateX(-100%);}
+}
+/* RIGHT: hidden fully off-right, slides left so just face peeks */
+@keyframes peekR{
+  0%,50%{transform:translateY(-50%) translateX(100%);}
+  58%   {transform:translateY(-50%) translateX(50%);}
+  74%   {transform:translateY(-50%) translateX(50%);}
+  82%   {transform:translateY(-50%) translateX(100%);}
+  100%  {transform:translateY(-50%) translateX(100%);}
+}
+
+.mn-sp-card{
+  position:relative;
+  display:flex;flex-direction:column;align-items:center;
+  animation:cardRise .6s cubic-bezier(.22,1,.36,1) both;
+}
+.mn-sp-logo-wrap{
+  position:relative;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+}
+.mn-sp-logo{
+  position:relative;
+  z-index:10;
+  font-family:'Georgia',serif;
+  font-size:2.4rem;color:#fff;letter-spacing:-.03em;
+  background:#173823;
+  border:1.5px solid rgba(255,255,255,.2);
+  border-radius:16px;
+  padding:.7rem 2.2rem .65rem;
+}
+.mn-sp-owl{
+  position:absolute;
+  bottom:100%;left:50%;
+  margin-bottom:-4px;
+  z-index:12;
+  animation:owlDrop .7s .5s cubic-bezier(.22,1,.36,1) both,
+            owlBob 3s 1.6s ease-in-out infinite;
+}
+.mn-sp-owl-eye{transform-origin:center;animation:owlBlink 4s 2.5s infinite;}
+
+.mn-sp-cat-l{
+  position:absolute;
+  top:50%;
+  right:100%;
+  z-index:11;
+  animation:peekL 16s 1.8s ease-in-out infinite;
+}
+.mn-sp-cat-r{
+  position:absolute;
+  top:50%;
+  left:100%;
+  z-index:11;
+  animation:peekR 16s 1.8s ease-in-out infinite;
+}
+.mn-sp-owl-pupil{animation:owlLook 16s 2s ease-in-out infinite;}
+.mn-sp-cat-eye{transform-origin:center;animation:catBlink 3.5s 3s infinite;}
+
+.mn-sp-sub{
+  font-family:system-ui,sans-serif;
+  font-size:.58rem;color:rgba(255,255,255,.45);
+  font-weight:700;letter-spacing:.15em;text-transform:uppercase;
+  margin-top:.85rem;animation:subFade .5s .4s both;
+}
+.mn-sp-msg{
+  font-family:system-ui,sans-serif;
+  font-size:.6rem;color:rgba(255,255,255,.28);
+  margin-top:.2rem;letter-spacing:.04em;animation:subFade .5s .55s both;
+}
+.mn-sp-dots{display:flex;gap:.38rem;margin-top:1.4rem;animation:subFade .4s .7s both;}
+.mn-sp-dot{width:5px;height:5px;border-radius:50%;background:rgba(82,217,138,.5);}
+.mn-sp-dot:nth-child(1){animation:dotP 1.25s 0s infinite;}
+.mn-sp-dot:nth-child(2){animation:dotP 1.25s .22s infinite;}
+.mn-sp-dot:nth-child(3){animation:dotP 1.25s .44s infinite;}
+</style>
+<div class="mn-sp-wrap">
+  <div class="mn-sp-card">
+    <div class="mn-sp-logo-wrap">
+
+      <div class="mn-sp-owl">
+        <svg width="48" height="52" viewBox="0 0 48 52" fill="none">
+          <ellipse cx="24" cy="38" rx="13" ry="13" fill="#6b4510"/>
+          <ellipse cx="24" cy="38" rx="13" ry="13" stroke="#9a6820" stroke-width="1" fill="none"/>
+          <ellipse cx="24" cy="41" rx="7" ry="9" fill="#c49030" opacity=".22"/>
+          <ellipse cx="11" cy="40" rx="6" ry="10" fill="#503208" stroke="#7a5010" stroke-width=".9" transform="rotate(-14 11 40)"/>
+          <ellipse cx="37" cy="40" rx="6" ry="10" fill="#503208" stroke="#7a5010" stroke-width=".9" transform="rotate(14 37 40)"/>
+          <ellipse cx="24" cy="18" rx="13" ry="13" fill="#7a5218"/>
+          <ellipse cx="24" cy="18" rx="13" ry="13" stroke="#a87828" stroke-width="1" fill="none"/>
+          <polygon points="15,8 11,0 19,8" fill="#6b4510" stroke="#9a6820" stroke-width=".8"/>
+          <polygon points="33,8 37,0 29,8" fill="#6b4510" stroke="#9a6820" stroke-width=".8"/>
+          <ellipse cx="24" cy="19" rx="10" ry="10" fill="#c49838"/>
+          <circle cx="18.5" cy="18" r="6.2" fill="rgba(0,0,0,.6)"/>
+          <circle cx="18.5" cy="18" r="6.2" stroke="#f0c030" stroke-width="2.6" fill="none"/>
+          <circle cx="29.5" cy="18" r="6.2" fill="rgba(0,0,0,.6)"/>
+          <circle cx="29.5" cy="18" r="6.2" stroke="#f0c030" stroke-width="2.6" fill="none"/>
+          <line x1="24.7" y1="18" x2="23.3" y2="18" stroke="#f0c030" stroke-width="2.2" stroke-linecap="round"/>
+          <line x1="12.3" y1="16" x2="7" y2="13.5" stroke="#c8a020" stroke-width="1.4" stroke-linecap="round"/>
+          <line x1="35.7" y1="16" x2="41" y2="13.5" stroke="#c8a020" stroke-width="1.4" stroke-linecap="round"/>
+          <circle class="mn-sp-owl-eye" cx="18.5" cy="18" r="3.8" fill="#fdf6d8"/>
+          <circle class="mn-sp-owl-eye" cx="29.5" cy="18" r="3.8" fill="#fdf6d8"/>
+          <circle class="mn-sp-owl-pupil" cx="19.2" cy="18.4" r="2.1" fill="#100800"/>
+          <circle class="mn-sp-owl-pupil" cx="30.2" cy="18.4" r="2.1" fill="#100800"/>
+          <circle class="mn-sp-owl-pupil" cx="20" cy="17.3" r=".75" fill="white"/>
+          <circle class="mn-sp-owl-pupil" cx="31" cy="17.3" r=".75" fill="white"/>
+          <polygon points="24,22.5 22.5,25.5 25.5,25.5" fill="#e8a818"/>
+          <line x1="19" y1="50" x2="17" y2="52" stroke="#d4a020" stroke-width="1.4" stroke-linecap="round"/>
+          <line x1="19" y1="50" x2="19" y2="52" stroke="#d4a020" stroke-width="1.4" stroke-linecap="round"/>
+          <line x1="19" y1="50" x2="21" y2="52" stroke="#d4a020" stroke-width="1.4" stroke-linecap="round"/>
+          <line x1="29" y1="50" x2="27" y2="52" stroke="#d4a020" stroke-width="1.4" stroke-linecap="round"/>
+          <line x1="29" y1="50" x2="29" y2="52" stroke="#d4a020" stroke-width="1.4" stroke-linecap="round"/>
+          <line x1="29" y1="50" x2="31" y2="52" stroke="#d4a020" stroke-width="1.4" stroke-linecap="round"/>
+        </svg>
+      </div>
+
+      <!-- LEFT CAT (v6 design, smaller 34x22) — body off-left, face peeks right -->
+      <div class="mn-sp-cat-l">
+        <svg width="34" height="22" viewBox="0 0 44 28" fill="none">
+          <ellipse cx="13" cy="20" rx="13" ry="9" fill="#0d0d0d"/>
+          <ellipse cx="23" cy="16" rx="9" ry="8" fill="#0d0d0d"/>
+          <ellipse cx="33" cy="12" rx="10" ry="11" fill="#111"/>
+          <polygon points="25,3 22,0 31,7" fill="#111"/>
+          <polygon points="39,3 43,0 36,7" fill="#111"/>
+          <ellipse cx="19" cy="26" rx="5" ry="3" fill="#0d0d0d"/>
+          <ellipse cx="17" cy="27.5" rx="1.8" ry="1.2" fill="#181818"/>
+          <ellipse cx="20" cy="28" rx="1.8" ry="1.2" fill="#181818"/>
+          <ellipse cx="23" cy="27.5" rx="1.8" ry="1.2" fill="#181818"/>
+          <circle class="mn-sp-cat-eye" cx="29" cy="12" r="5" fill="white"/>
+          <circle class="mn-sp-cat-eye" cx="38" cy="10" r="4.5" fill="white"/>
+          <circle cx="29" cy="12" r="3.3" fill="#15803d"/>
+          <circle cx="38" cy="10" r="3" fill="#15803d"/>
+          <ellipse cx="29" cy="12" rx="1" ry="2.8" fill="#060606"/>
+          <ellipse cx="38" cy="10" rx=".9" ry="2.5" fill="#060606"/>
+          <circle cx="30.8" cy="11" r="1" fill="white"/>
+          <circle cx="39.8" cy="9" r=".9" fill="white"/>
+          <line x1="43" y1="15" x2="35" y2="15.5" stroke="rgba(255,255,255,.5)" stroke-width=".8"/>
+          <line x1="43" y1="17" x2="35" y2="16.8" stroke="rgba(255,255,255,.5)" stroke-width=".8"/>
+          <line x1="24" y1="15.5" x2="32" y2="15.5" stroke="rgba(255,255,255,.5)" stroke-width=".8"/>
+          <polygon points="33,15.5 32,17 34,17" fill="#d63a6b"/>
+        </svg>
+      </div>
+
+      <!-- RIGHT CAT (mirrored v6, smaller 34x22) — body off-right, face peeks left -->
+      <div class="mn-sp-cat-r">
+        <svg width="34" height="22" viewBox="0 0 44 28" fill="none" transform="scale(-1,1)">
+          <ellipse cx="13" cy="20" rx="13" ry="9" fill="#0d0d0d"/>
+          <ellipse cx="23" cy="16" rx="9" ry="8" fill="#0d0d0d"/>
+          <ellipse cx="33" cy="12" rx="10" ry="11" fill="#111"/>
+          <polygon points="25,3 22,0 31,7" fill="#111"/>
+          <polygon points="39,3 43,0 36,7" fill="#111"/>
+          <ellipse cx="19" cy="26" rx="5" ry="3" fill="#0d0d0d"/>
+          <ellipse cx="17" cy="27.5" rx="1.8" ry="1.2" fill="#181818"/>
+          <ellipse cx="20" cy="28" rx="1.8" ry="1.2" fill="#181818"/>
+          <ellipse cx="23" cy="27.5" rx="1.8" ry="1.2" fill="#181818"/>
+          <circle class="mn-sp-cat-eye" cx="29" cy="12" r="5" fill="white"/>
+          <circle class="mn-sp-cat-eye" cx="38" cy="10" r="4.5" fill="white"/>
+          <circle cx="29" cy="12" r="3.3" fill="#15803d"/>
+          <circle cx="38" cy="10" r="3" fill="#15803d"/>
+          <ellipse cx="29" cy="12" rx="1" ry="2.8" fill="#060606"/>
+          <ellipse cx="38" cy="10" rx=".9" ry="2.5" fill="#060606"/>
+          <circle cx="30.8" cy="11" r="1" fill="white"/>
+          <circle cx="39.8" cy="9" r=".9" fill="white"/>
+          <line x1="43" y1="15" x2="35" y2="15.5" stroke="rgba(255,255,255,.5)" stroke-width=".8"/>
+          <line x1="43" y1="17" x2="35" y2="16.8" stroke="rgba(255,255,255,.5)" stroke-width=".8"/>
+          <line x1="24" y1="15.5" x2="32" y2="15.5" stroke="rgba(255,255,255,.5)" stroke-width=".8"/>
+          <polygon points="33,15.5 32,17 34,17" fill="#d63a6b"/>
+        </svg>
+      </div>
+
+      <div class="mn-sp-logo">Men<span style="opacity:.62;">mory</span></div>
+    </div>
+
+    <div class="mn-sp-sub">Your personal study OS</div>
+    <div class="mn-sp-msg">Welcome back!</div>
+    <div class="mn-sp-dots">
+      <div class="mn-sp-dot"></div><div class="mn-sp-dot"></div><div class="mn-sp-dot"></div>
+    </div>
+  </div>
+</div>
+<script>
+(function(){
+  var msg = document.querySelector('#mn-splash .mn-sp-msg');
+  if(!msg) return;
+  var uid = localStorage.getItem('fn_current_user');
+  if(uid && uid !== 'guest'){
+    try{
+      var d = JSON.parse(localStorage.getItem('mb7_data')||'{}');
+      msg.textContent = d.userName ? 'Welcome back, '+d.userName+'!' : 'Loading…';
+    }catch(e){}
+  }
+})();
+</script>
+</div>
+</div>
 <div id="app">
   <div class="app-row">
     <!-- Sidebar backdrop overlay — tap to close -->
@@ -4353,6 +4616,15 @@ function afterAuth(isReturning){
   document.getElementById('ob').style.display='none';
   (document.getElementById('app')||document.createElement('div')).classList.add('on');
   startApp();
+  // Dismiss splash now that data is loaded and app is rendered
+  _hideSplash();
+}
+
+function _hideSplash(){
+  var splash = document.getElementById('mn-splash');
+  if(!splash) return;
+  splash.classList.add('hiding');
+  setTimeout(function(){ splash.style.display='none'; }, 450);
 }
 
 // ══════════════════════════════════════════════════════
@@ -4812,7 +5084,7 @@ window.addEventListener('DOMContentLoaded',()=>{
         document.getElementById('auth-screen').style.display='none';
         afterAuth(true);
       }
-      else { document.getElementById('auth-screen').style.display='flex'; }
+      else { document.getElementById('auth-screen').style.display='flex'; _hideSplash(); }
     }
   },4000);
 });
@@ -4939,6 +5211,7 @@ function finishOB(){
   save();
   if(typeof fbSyncData === 'function') fbSyncData();
   startApp();
+  _hideSplash();
   // Launch tour for new users right after onboarding
   setTimeout(startTour, 1500);
   localStorage.setItem('mn_toured','1'); // won't fire again from startApp
@@ -6190,23 +6463,54 @@ Reply with ONLY valid JSON (no markdown): {"correct":true/false,"feedback":"1 en
     feedback.innerHTML = '<div style="font-size:.72rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:.35rem;">Model answer</div>'
       + '<div style="font-size:.85rem;color:var(--ink);line-height:1.5;margin-bottom:.75rem;">' + (modelAnswer||'(no answer saved)') + '</div>'
       + '<div style="font-size:.72rem;color:var(--muted);margin-bottom:.5rem;">Did you get it right?</div>';
+    _pendingSelfGrade = { q: _quizQuestions[_quizIdx]?.q||'', correct: modelAnswer||'', idx: _quizIdx };
     const actions = document.getElementById('quiz-action-btns');
-    var qText = _quizQuestions[_quizIdx]?.q||'';
-    actions.innerHTML = '<button onclick="(function(){'
-      + '_quizWrongItems.push({q:'+JSON.stringify(qText)+',correct:'+JSON.stringify(modelAnswer||'')+',idx:'+_quizIdx+'});'
-      + '_quizAnswered=true;'
-      + 'document.getElementById(\'quiz-feedback-area\').style.background=\'#fef9c3\';'
-      + 'nextQuizQuestion();'
-      + '})()" style="flex:1;background:none;border:1.5px solid var(--red);color:var(--red);border-radius:10px;padding:.55rem;font-family:inherit;font-size:.82rem;font-weight:700;cursor:pointer;">No</button>'
-      + '<button onclick="(function(){'
-      + '_quizScore++;_quizCorrectItems.push({q:'+JSON.stringify(qText)+',correct:'+JSON.stringify(modelAnswer||'')+',idx:'+_quizIdx+'});'
-      + '_quizAnswered=true;'
-      + 'document.getElementById(\'quiz-feedback-area\').style.background=\'#dcfce7\';'
-      + 'nextQuizQuestion();'
-      + '})()" style="flex:1;background:none;border:1.5px solid var(--green);color:var(--green);border-radius:10px;padding:.55rem;font-family:inherit;font-size:.82rem;font-weight:700;cursor:pointer;">Yes</button>';
+    actions.innerHTML =
+      '<button onclick="selfGradeNo()" style="flex:1;background:none;border:1.5px solid var(--red);color:var(--red);border-radius:10px;padding:.55rem;font-family:inherit;font-size:.82rem;font-weight:700;cursor:pointer;">No</button>'
+      + '<button onclick="selfGradeYes()" style="flex:1;background:none;border:1.5px solid var(--green);color:var(--green);border-radius:10px;padding:.55rem;font-family:inherit;font-size:.82rem;font-weight:700;cursor:pointer;">Yes</button>';
   }
 }
 
+var _pendingSelfGrade = null;
+function selfGradeNo(){
+  if(!_pendingSelfGrade) return;
+  _quizWrongItems.push({q:_pendingSelfGrade.q, correct:_pendingSelfGrade.correct, idx:_pendingSelfGrade.idx});
+  _quizAnswered = true;
+  var fb = document.getElementById('quiz-feedback-area');
+  if(fb) fb.style.background = '#fef9c3';
+  _pendingSelfGrade = null;
+  nextQuizQuestion();
+}
+function selfGradeYes(){
+  if(!_pendingSelfGrade) return;
+  _quizScore++;
+  _quizCorrectItems.push({q:_pendingSelfGrade.q, correct:_pendingSelfGrade.correct, idx:_pendingSelfGrade.idx});
+  _quizAnswered = true;
+  var fb = document.getElementById('quiz-feedback-area');
+  if(fb) fb.style.background = '#dcfce7';
+  _pendingSelfGrade = null;
+  nextQuizQuestion();
+}
+var _pendingSelfGrade = null;
+function selfGradeNo(){
+  if(!_pendingSelfGrade) return;
+  _quizWrongItems.push({q:_pendingSelfGrade.q, correct:_pendingSelfGrade.correct, idx:_pendingSelfGrade.idx});
+  _quizAnswered = true;
+  var fb = document.getElementById('quiz-feedback-area');
+  if(fb) fb.style.background = '#fef9c3';
+  _pendingSelfGrade = null;
+  nextQuizQuestion();
+}
+function selfGradeYes(){
+  if(!_pendingSelfGrade) return;
+  _quizScore++;
+  _quizCorrectItems.push({q:_pendingSelfGrade.q, correct:_pendingSelfGrade.correct, idx:_pendingSelfGrade.idx});
+  _quizAnswered = true;
+  var fb = document.getElementById('quiz-feedback-area');
+  if(fb) fb.style.background = '#dcfce7';
+  _pendingSelfGrade = null;
+  nextQuizQuestion();
+}
 function skipQuizQuestion(){
   if(_quizAnswered) return;
   const q = _quizQuestions[_quizIdx];
