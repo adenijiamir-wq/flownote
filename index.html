@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+\<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8"/>
@@ -2738,7 +2738,8 @@ body{
             <div class="prof-section-label" style="margin-top:1.1rem;">Profile picture</div>
 
             <!-- Upload zone -->
-            <label class="avatar-upload-zone" for="avatar-file-input" style="cursor:pointer;">
+            <label class="avatar-upload-zone" style="cursor:pointer;">
+              <input type="file" id="avatar-file-input" accept="image/*,image/gif" style="display:none" onchange="handleAvatarUpload(this)"/>
               <div id="avatar-preview-large">🙂</div>
               <div class="avatar-upload-hint">
                 <span class="avatar-upload-title">Tap to upload photo or GIF</span>
@@ -6861,7 +6862,10 @@ function startDeckSessionByCardId(cardId){
   var card=studyCards.find(function(c){return c.id===cardId||c.id===Number(cardId);});
   if(!card){toast('Card not found');return;}
   var key=(card.subject||'General')+'|'+(card.topic||'');
-  startDeckSession(key,card.id);
+  // Navigate to cards page first, then start session
+  navTo('cards',document.getElementById('nav-cards'));
+  setBN('cards');
+  setTimeout(function(){ startDeckSession(key,card.id); },250);
 }
 function renameTopic(subj,oldTopic){
   var newName=prompt('Rename topic "'+oldTopic+'" to:',oldTopic);
@@ -10928,25 +10932,12 @@ function renderCountdownWidget(){
   items.sort(function(a,b){return daysUntilDate(a.date)-daysUntilDate(b.date);});
   var dEl=document.getElementById('cd-days'),tEl=document.getElementById('cd-title'),iEl=document.getElementById('cd-icon');
   if(!items.length){
-    // No countdown — show next upcoming reminder instead
-    var td=todayStr();
-    var tm=new Date();tm.setDate(tm.getDate()+1);
-    var tmStr=tm.getFullYear()+'-'+String(tm.getMonth()+1).padStart(2,'0')+'-'+String(tm.getDate()).padStart(2,'0');
-    var upcoming=(reminders||[]).filter(function(r){
-      return !r.done&&(r.date===tmStr||r.date==='tomorrow');
-    });
-    if(upcoming.length){
-      var next=upcoming[0];
-      if(dEl){dEl.textContent='1';dEl.style.color='var(--blue)';}
-      const dLbl2=document.getElementById('cd-days-label');
-      if(dLbl2)dLbl2.textContent='day';
-      if(tEl)tEl.textContent=next.text;
-      if(iEl)iEl.innerHTML='<svg viewBox="0 0 24 24" style="width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>';
-    } else {
-      if(dEl){dEl.textContent='+';dEl.style.color='var(--green)';}
-      if(tEl)tEl.textContent='Add a countdown to an event';
-      if(iEl)iEl.innerHTML='<svg viewBox="0 0 24 24" style="width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;"><path d="M6 2h12M6 22h12M6 2v6l6 4-6 4v6M18 2v6l-6 4 6 4v6"/></svg>';
-    }
+    // No countdown — just show add prompt
+    if(dEl){dEl.textContent='+';dEl.style.color='var(--green)';}
+    const dLbl2=document.getElementById('cd-days-label');
+    if(dLbl2)dLbl2.textContent='';
+    if(tEl)tEl.textContent='Add a countdown to an event';
+    if(iEl)iEl.innerHTML='<svg viewBox="0 0 24 24" style="width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;"><path d="M6 2h12M6 22h12M6 2v6l6 4-6 4v6M18 2v6l-6 4 6 4v6"/></svg>';
     return;
   }
   var c=items[0],days=daysUntilDate(c.date);
@@ -11968,6 +11959,5 @@ function _showEnergyResponseBubble(level, isPostPomo){
   }, 10000);
 }
 </script>
-<input type="file" id="avatar-file-input" accept="image/*,image/gif" style="display:none;position:fixed;left:-9999px" onchange="handleAvatarUpload(this)"/>
 </body>
 </html>
