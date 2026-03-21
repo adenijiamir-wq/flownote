@@ -1791,6 +1791,20 @@ body{
   backdrop-filter:none;-webkit-backdrop-filter:none;
 }
 
+
+/* ── Scan sheet ── */
+.scan-sheet-bg{position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:60;display:none;align-items:flex-end;justify-content:center;}
+.scan-sheet-bg.open{display:flex;}
+.scan-sheet{background:var(--paper);border-radius:22px 22px 0 0;border:1px solid var(--line);border-bottom:none;width:100%;max-width:600px;padding:1.2rem 1.2rem 2.5rem;animation:scanSheetUp .3s cubic-bezier(.22,1,.36,1) both;}
+@keyframes scanSheetUp{from{transform:translateY(100%);}to{transform:translateY(0);}}
+.scan-sheet-handle{width:36px;height:4px;background:var(--line);border-radius:2px;margin:0 auto .9rem;}
+.scan-sheet-title{font-size:.95rem;font-weight:700;color:var(--ink);margin-bottom:.2rem;}
+.scan-sheet-sub{font-size:.75rem;color:var(--muted);margin-bottom:1rem;}
+.scan-drop-zone{border:2px dashed var(--line);border-radius:16px;padding:1.8rem 1rem;text-align:center;cursor:pointer;transition:all .2s;background:var(--paper2);margin-bottom:.85rem;}
+.scan-drop-zone:hover,.scan-drop-zone.drag{border-color:var(--green);background:var(--green-light);}
+.scan-mode-pill{flex:1;background:var(--paper2);border:1.5px solid var(--line);border-radius:10px;padding:.55rem .4rem;text-align:center;cursor:pointer;transition:all .15s;color:var(--muted);}
+.scan-mode-pill.active{border-color:var(--green);background:var(--green-light);color:var(--green);}
+
 /* ── Greet card — rich gradient ── */
 .greet-card{
   background:linear-gradient(135deg,#1a6b3c 0%,#145530 55%,#1d7844 100%)!important;
@@ -2340,10 +2354,9 @@ body{
           <button class="add-note-btn" id="add-note-btn" onclick="openNoteEditor()" style="margin-bottom:0;flex:1;">
             <span style="font-size:1.1rem;">+</span> New note
           </button>
-          <button onclick="document.getElementById('note-img-input').click()" style="background:var(--paper);border:2px dashed var(--line);border-radius:var(--r);padding:.6rem .9rem;font-size:.78rem;font-weight:600;color:var(--muted);cursor:pointer;white-space:nowrap;display:flex;align-items:center;gap:.3rem;transition:all .15s;font-family:inherit;" onmouseover="this.style.borderColor='var(--green)';this.style.color='var(--green)'" onmouseout="this.style.borderColor='var(--line)';this.style.color='var(--muted)'">
-            <svg viewBox="0 0 24 24" style="width:14px;height:14px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;display:inline-block;vertical-align:middle;margin-right:4px;"><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/><circle cx="12" cy="13" r="4"/></svg>Upload
+          <button onclick="openScanSheet()" style="background:var(--paper);border:2px dashed var(--line);border-radius:var(--r);padding:.6rem .9rem;font-size:.78rem;font-weight:600;color:var(--muted);cursor:pointer;white-space:nowrap;display:flex;align-items:center;gap:.3rem;transition:all .15s;font-family:inherit;" onmouseover="this.style.borderColor='var(--green)';this.style.color='var(--green)'" onmouseout="this.style.borderColor='var(--line)';this.style.color='var(--muted)'">
+            <svg viewBox="0 0 24 24" style="width:14px;height:14px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;display:inline-block;vertical-align:middle;margin-right:4px;"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>Upload
           </button>
-          <input type="file" id="note-img-input" accept="image/*" style="display:none" onchange="handleNoteImageUpload(this)"/>
         </div>
 
         <!-- Quick Captures section -->
@@ -2739,7 +2752,74 @@ body{
 
             <!-- Upload zone -->
             <label class="avatar-upload-zone" style="cursor:pointer;">
-              <input type="file" id="avatar-file-input" accept="image/*,image/gif" style="display:none" onchange="handleAvatarUpload(this)"/>
+              
+<!-- ── SCAN SHEET ── -->
+<div class="scan-sheet-bg" id="scan-bg" onclick="if(event.target===this)closeScanSheet();">
+  <div class="scan-sheet">
+    <div class="scan-sheet-handle"></div>
+    <div class="scan-sheet-title">Upload to note</div>
+    <div class="scan-sheet-sub">Photo or PDF — AI extracts the content directly into your note</div>
+
+    <div class="scan-drop-zone" id="scan-drop-zone">
+      <label style="display:flex;flex-direction:column;align-items:center;cursor:pointer;width:100%;">
+        <input type="file" id="scan-file-input" accept="image/*,application/pdf" style="display:none" onchange="handleScanFile(this)"/>
+        <svg viewBox="0 0 24 24" style="width:36px;height:36px;fill:none;stroke:var(--muted);stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round;margin-bottom:.5rem;"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+        <div style="font-size:.88rem;font-weight:600;color:var(--ink);margin-bottom:.2rem;">Drop files here</div>
+        <div style="font-size:.72rem;color:var(--muted);">Photos, PDFs, screenshots, slides</div>
+      </label>
+    </div>
+
+    <div id="scan-file-preview" style="display:none;align-items:center;gap:.75rem;background:var(--paper2);border-radius:10px;padding:.7rem .9rem;margin-bottom:.85rem;">
+      <img id="scan-preview-thumb" src="" alt="" style="width:44px;height:44px;object-fit:cover;border-radius:8px;flex-shrink:0;"/>
+      <div style="flex:1;min-width:0;">
+        <div id="scan-preview-name" style="font-size:.8rem;font-weight:600;color:var(--ink);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;"></div>
+        <div id="scan-preview-meta" style="font-size:.68rem;color:var(--muted);"></div>
+      </div>
+      <button onclick="clearScanFile()" style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:1rem;flex-shrink:0;">✕</button>
+    </div>
+
+    <div style="display:flex;gap:.5rem;margin-bottom:.85rem;">
+      <div class="scan-mode-pill active" data-mode="extract" onclick="setScanMode(this)">
+        <span style="font-size:1rem;display:block;margin-bottom:.2rem;">📋</span>
+        <span style="font-size:.68rem;font-weight:700;">Extract</span>
+      </div>
+      <div class="scan-mode-pill" data-mode="cards" onclick="setScanMode(this)">
+        <span style="font-size:1rem;display:block;margin-bottom:.2rem;">🃏</span>
+        <span style="font-size:.68rem;font-weight:700;">Flashcards</span>
+      </div>
+      <div class="scan-mode-pill" data-mode="quiz" onclick="setScanMode(this)">
+        <span style="font-size:1rem;display:block;margin-bottom:.2rem;">📝</span>
+        <span style="font-size:.68rem;font-weight:700;">Quiz</span>
+      </div>
+    </div>
+
+    <div id="scan-count-row" style="display:none;align-items:center;gap:.6rem;margin-bottom:.85rem;">
+      <div style="font-size:.73rem;color:var(--muted);font-weight:600;flex:1;">How many?</div>
+      <div style="display:flex;align-items:center;gap:.5rem;">
+        <button onclick="adjScanCount(-1)" style="width:28px;height:28px;border-radius:50%;border:1px solid var(--line);background:var(--paper2);color:var(--ink);font-size:1rem;cursor:pointer;display:flex;align-items:center;justify-content:center;">−</button>
+        <input type="number" id="scan-count" value="8" min="1" max="30" style="width:32px;font-size:1rem;font-weight:800;color:var(--green);text-align:center;background:transparent;border:none;outline:none;font-family:inherit;-moz-appearance:textfield;"
+          oninput="var v=parseInt(this.value)||1;this.value=Math.max(1,Math.min(30,v));"/>
+        <button onclick="adjScanCount(1)" style="width:28px;height:28px;border-radius:50%;border:1px solid var(--line);background:var(--paper2);color:var(--ink);font-size:1rem;cursor:pointer;display:flex;align-items:center;justify-content:center;">+</button>
+      </div>
+    </div>
+
+    <button id="scan-gen-btn" onclick="runScan()" disabled
+      style="width:100%;background:var(--green);color:#071a0f;border:none;border-radius:12px;padding:.8rem;font-family:inherit;font-size:.92rem;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:.5rem;opacity:.35;">
+      Generate
+    </button>
+  </div>
+</div>
+
+<!-- Summary banner (shown in note editor) -->
+<div id="note-summary-banner" style="display:none;background:var(--amber-light);border:1px solid var(--amber);border-radius:12px;padding:.85rem 1rem;margin-bottom:.75rem;">
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:.4rem;">
+    <div style="font-size:.65rem;font-weight:700;color:var(--amber);text-transform:uppercase;letter-spacing:.08em;">✦ AI Summary</div>
+    <button onclick="document.getElementById('note-summary-banner').style.display='none';" style="background:none;border:none;color:var(--amber);cursor:pointer;font-size:.8rem;">✕</button>
+  </div>
+  <div id="note-summary-text" style="font-size:.8rem;color:var(--ink);line-height:1.65;white-space:pre-wrap;"></div>
+</div>
+
+<input type="file" id="avatar-file-input" accept="image/*,image/gif" style="display:none" onchange="handleAvatarUpload(this)"/>
               <div id="avatar-preview-large">🙂</div>
               <div class="avatar-upload-hint">
                 <span class="avatar-upload-title">Tap to upload photo or GIF</span>
@@ -2979,10 +3059,20 @@ body{
     <div style="width:1px;height:18px;background:var(--line);margin:0 .2rem;flex-shrink:0;"></div>
     <button onclick="fmtNote('quote')"    title="Quote"       class="fmt-btn" style="font-size:1rem;line-height:1;">"</button>
     <button onclick="fmtNote('code')"     title="Code"        class="fmt-btn" style="font-family:monospace;font-size:.8rem;">&lt;/&gt;</button>
+    <div style="width:1px;height:18px;background:var(--line);margin:0 .2rem;flex-shrink:0;"></div>
+    <button onclick="summarizeCurrentNote()" title="AI summarize" class="fmt-btn" style="color:var(--amber);border:1px solid var(--amber);border-radius:6px;padding:.2rem .45rem;font-size:.7rem;font-weight:700;">✦ Sum</button>
+    <button onclick="openScanSheet()" title="Upload photo or PDF" class="fmt-btn" style="color:var(--green);background:var(--green-light);border:1px solid var(--green);border-radius:6px;padding:.2rem .45rem;font-size:.7rem;font-weight:700;display:flex;align-items:center;gap:.25rem;"><svg viewBox="0 0 24 24" style="width:11px;height:11px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>Upload</button>
   </div>
   <!-- Writing area — full height, scrollable -->
   <div style="flex:1;overflow-y:auto;padding:1.25rem 1.1rem 2rem;display:flex;flex-direction:column;">
     <input class="note-title-input" id="note-title" placeholder="Title…" style="font-size:1.5rem;margin-bottom:.75rem;"/>
+    <div id="note-summary-banner-editor" style="display:none;background:var(--amber-light);border:1px solid var(--amber);border-radius:12px;padding:.85rem 1rem;margin-bottom:.75rem;">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:.4rem;">
+        <div style="font-size:.65rem;font-weight:700;color:var(--amber);text-transform:uppercase;letter-spacing:.08em;">✦ AI Summary</div>
+        <button onclick="document.getElementById('note-summary-banner-editor').style.display='none';" style="background:none;border:none;color:var(--amber);cursor:pointer;font-size:.8rem;">✕</button>
+      </div>
+      <div id="note-summary-text-editor" style="font-size:.8rem;color:var(--ink);line-height:1.65;white-space:pre-wrap;"></div>
+    </div>
     <div class="note-body-input" id="note-body" contenteditable="true"
       data-placeholder="Write your notes here…&#10;&#10;Your AI coach will automatically generate study cards from what you write."
       onblur="if(typeof _voiceTarget!=='undefined'&&_voiceTarget==='note')stopVoice();"
@@ -9349,6 +9439,33 @@ async function callAI(sys, msg, maxT = 500) {
   }
 }
 
+
+async function callAIWithContent(sys, contentArray, maxT=4000){
+  try{
+    const response = await fetch(getAIUrl(), {
+      method: 'POST',
+      headers: getAIHeaders(),
+      body: JSON.stringify({
+        model: 'claude-haiku-4-5-20251001',
+        max_tokens: maxT,
+        system: sys,
+        messages: [{ role: 'user', content: contentArray }]
+      })
+    });
+    const rawText = await response.text();
+    if(!response.ok){
+      let _em=`AI error (${response.status})`;
+      try{_em=JSON.parse(rawText).error?.message||_em;}catch(_){}
+      throw new Error(_em);
+    }
+    let parsed;
+    try{parsed=JSON.parse(rawText);}catch(_){throw new Error('Non-JSON response.');}
+    return parsed.content[0].text.trim();
+  }catch(err){
+    console.error('callAIWithContent failed:',err);
+    throw err;
+  }
+}
 async function askAI(sys, msg, maxT=600){ return callAI(sys, msg, maxT); }
 async function callAIWithHistory(sys, history, maxT=600, _attempt=0){
   try{
@@ -11958,6 +12075,213 @@ function _showEnergyResponseBubble(level, isPostPomo){
     if(el) el.remove();
   }, 10000);
 }
+
+// ════════════════════════════════
+// SCAN TO NOTE
+// ════════════════════════════════
+var _scanFileData = null;
+var _scanFileType = null;
+var _scanIsPdf = false;
+var _scanMode = 'extract';
+var _scanFromEditor = false;
+
+function openScanSheet(){
+  // determine if called from editor
+  var editor = document.getElementById('note-editor');
+  _scanFromEditor = editor && (editor.style.display==='flex'||editor.style.display==='block'||editor.classList.contains('open')||editor.style.transform==='translateX(0px)'||editor.style.transform==='translateX(0)');
+  // reset state
+  clearScanFile();
+  document.querySelectorAll('.scan-mode-pill').forEach(function(p){ p.classList.remove('active'); });
+  var extractPill = document.querySelector('[data-mode="extract"]');
+  if(extractPill) extractPill.classList.add('active');
+  _scanMode = 'extract';
+  var cr = document.getElementById('scan-count-row');
+  if(cr) cr.style.display = 'none';
+  document.getElementById('scan-bg').classList.add('open');
+}
+function closeScanSheet(){
+  document.getElementById('scan-bg').classList.remove('open');
+}
+
+function setScanMode(pill){
+  document.querySelectorAll('.scan-mode-pill').forEach(function(p){ p.classList.remove('active'); });
+  pill.classList.add('active');
+  _scanMode = pill.dataset.mode;
+  var cr = document.getElementById('scan-count-row');
+  if(cr) cr.style.display = _scanMode==='extract' ? 'none' : 'flex';
+  checkScanReady();
+}
+function adjScanCount(d){
+  var inp = document.getElementById('scan-count');
+  if(inp) inp.value = Math.max(1,Math.min(30,(parseInt(inp.value)||8)+d));
+}
+function handleScanFile(input){
+  var file = input.files[0]; if(!file) return;
+  _scanIsPdf = file.type==='application/pdf';
+  _scanFileType = file.type;
+  var reader = new FileReader();
+  reader.onload = function(e){
+    _scanFileData = e.target.result.split(',')[1];
+    document.getElementById('scan-drop-zone').style.display = 'none';
+    var fp = document.getElementById('scan-file-preview');
+    fp.style.display = 'flex';
+    document.getElementById('scan-preview-name').textContent = file.name;
+    document.getElementById('scan-preview-meta').textContent = (file.size/1024).toFixed(0)+' KB · '+(_scanIsPdf?'PDF':'Image');
+    var thumb = document.getElementById('scan-preview-thumb');
+    var _pdfIcon = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48"><rect width="48" height="48" rx="8" fill="#1a3a24"/><text x="50%" y="58%" text-anchor="middle" fill="#52d98a" font-size="18" font-family="sans-serif">PDF</text></svg>');
+    thumb.src = _scanIsPdf ? _pdfIcon : e.target.result;
+    checkScanReady();
+  };
+  reader.readAsDataURL(file);
+}
+function clearScanFile(){
+  _scanFileData=null;_scanFileType=null;_scanIsPdf=false;
+  var dz = document.getElementById('scan-drop-zone');
+  var fp = document.getElementById('scan-file-preview');
+  var inp = document.getElementById('scan-file-input');
+  if(dz) dz.style.display='block';
+  if(fp) fp.style.display='none';
+  if(inp) inp.value='';
+  checkScanReady();
+}
+function checkScanReady(){
+  var btn = document.getElementById('scan-gen-btn');
+  if(!btn) return;
+  var ready = !!_scanFileData;
+  btn.disabled = !ready;
+  btn.style.opacity = ready ? '1' : '.35';
+}
+
+async function runScan(){
+  if(!_scanFileData){ toast('Upload a file first'); return; }
+  var count = parseInt(document.getElementById('scan-count').value)||8;
+  var btn = document.getElementById('scan-gen-btn');
+  btn.disabled=true; btn.style.opacity='.5';
+  btn.innerHTML='<span style="display:inline-block;width:14px;height:14px;border:2px solid rgba(7,26,15,.3);border-top-color:#071a0f;border-radius:50%;animation:spin .7s linear infinite;vertical-align:middle;margin-right:6px;"></span>Reading…';
+
+  var sys, usr;
+  if(_scanMode==='extract'){
+    sys='You are a precise note extractor. Read the provided material and faithfully extract ALL text content — every heading, sentence, list item, label, and detail. Preserve the structure. Output plain text only. Use UPPERCASE for section headings.';
+    usr='Extract all text from this material faithfully.';
+  } else if(_scanMode==='cards'){
+    sys='Create exactly '+count+' flashcards from the material. Return ONLY a JSON array, no markdown. Format: [{"q":"question","a":"answer","topic":"subject"}]';
+    usr='Create '+count+' flashcards. Return only the JSON array.';
+  } else {
+    sys='Create exactly '+count+' quiz questions (mix MCQ and open). Return ONLY a JSON array. MCQ: {"type":"mcq","q":"...","options":["A","B","C","D"],"answer":"correct option text"}. Open: {"type":"open","q":"...","answer":"model answer"}';
+    usr='Create '+count+' quiz questions. Return only the JSON array.';
+  }
+
+  var contentArr = _scanIsPdf
+    ? [{type:'document',source:{type:'base64',media_type:'application/pdf',data:_scanFileData}},{type:'text',text:usr}]
+    : [{type:'image',source:{type:'base64',media_type:_scanFileType,data:_scanFileData}},{type:'text',text:usr}];
+
+  try{
+    var raw = await callAIWithContent(sys, contentArr, 4000);
+    raw = raw.replace(/```json|```/g,'').trim();
+
+    if(_scanMode==='extract'){
+      var noteBody = document.getElementById('note-body');
+      if(_scanFromEditor && noteBody){
+        var existing = noteBody.innerText||'';
+        noteBody.innerText = (existing?existing+'\n\n':'')+raw;
+        closeScanSheet();
+        toast('✓ Content extracted into note');
+      } else {
+        // Create new note and open it
+        var newNote = {
+          id: Date.now()+Math.random(),
+          title: 'Scan — '+new Date().toLocaleDateString(),
+          body: raw.replace(/\n/g,'<br>'),
+          subject: 'General',
+          created: new Date().toISOString()
+        };
+        notes.unshift(newNote);
+        save();
+        renderNotes();
+        closeScanSheet();
+        setTimeout(function(){ openNoteEditor(newNote.id); toast('✓ Note created from scan'); }, 200);
+      }
+    } else {
+      var parsed;
+      try{ parsed=JSON.parse(raw); }catch(e){ throw new Error('Could not parse AI response'); }
+      var isCards = _scanMode==='cards';
+      var noteBody2 = document.getElementById('note-body');
+      var html = parsed.map(function(item,i){
+        if(isCards) return '<p><strong>'+(i+1)+'. Q: '+(item.q||'')+'</strong><br>A: '+(item.a||item.answer||'')+'</p>';
+        var opts = item.options?item.options.map(function(o,j){return '<br>'+['A','B','C','D'][j]+'. '+o;}).join(''):'';
+        return '<p><strong>'+(i+1)+'. '+(item.q||'')+'</strong>'+opts+'<br>✓ '+(item.answer||'')+'</p>';
+      }).join('');
+      if(_scanFromEditor && noteBody2){
+        noteBody2.innerHTML += html;
+        closeScanSheet();
+        toast('✓ '+parsed.length+' items added to note');
+      } else {
+        var newNote2 = {
+          id: Date.now()+Math.random(),
+          title: (isCards?'Cards':'Quiz')+' — '+new Date().toLocaleDateString(),
+          body: html,
+          subject: 'General',
+          created: new Date().toISOString()
+        };
+        notes.unshift(newNote2);
+        save();
+        renderNotes();
+        closeScanSheet();
+        setTimeout(function(){ openNoteEditor(newNote2.id); toast('✓ '+parsed.length+' items — note created'); }, 200);
+      }
+    }
+  }catch(e){
+    toast('Error: '+e.message);
+  }finally{
+    btn.disabled=false; btn.style.opacity='1'; btn.innerHTML='Generate';
+    checkScanReady();
+  }
+}
+
+// ── Drag & drop on scan drop zone ──
+(function(){
+  var dz = document.getElementById('scan-drop-zone');
+  if(!dz) return;
+  dz.addEventListener('dragover',function(e){e.preventDefault();dz.classList.add('drag');});
+  dz.addEventListener('dragleave',function(){dz.classList.remove('drag');});
+  dz.addEventListener('drop',function(e){
+    e.preventDefault();dz.classList.remove('drag');
+    var f=e.dataTransfer.files[0];if(!f)return;
+    var dt=new DataTransfer();dt.items.add(f);
+    var inp=document.getElementById('scan-file-input');
+    inp.files=dt.files;handleScanFile(inp);
+  });
+})();
+
+// ════════════════════════════════
+// SUMMARIZE NOTE
+// ════════════════════════════════
+async function summarizeCurrentNote(){
+  var body = document.getElementById('note-body');
+  if(!body){ toast('Open a note first'); return; }
+  var text = (body.innerText||body.textContent||'').trim();
+  if(!text){ toast('Nothing to summarize yet'); return; }
+  var banner = document.getElementById('note-summary-banner-editor');
+  var bannerText = document.getElementById('note-summary-text-editor');
+  if(!banner) return;
+  banner.style.display='block';
+  bannerText.textContent='Summarising…';
+  try{
+    var summary = await callAI(
+      'Summarise the following study notes into a concise set of key points (max 6 bullet points). Start each bullet with •. Be specific, retain important facts, dates, and definitions. No preamble, no extra text.',
+      text.slice(0,3000), 600
+    );
+    bannerText.textContent = summary;
+    // Scroll to top of editor body to show banner
+    var editorBody = banner.parentElement;
+    if(editorBody) editorBody.scrollTo({top:0,behavior:'smooth'});
+    toast('Summary ready ✓');
+  }catch(e){
+    banner.style.display='none';
+    toast('Summarize failed: '+e.message);
+  }
+}
+
 </script>
 </body>
 </html>
