@@ -229,6 +229,32 @@ button{-webkit-tap-highlight-color:transparent;}
 [data-theme="oled"] textarea,
 [data-theme="oled"] select{background:#111;border-color:#2a2a2a;color:#f0ede8;}
 [data-theme="dark"] .sb-section{color:var(--muted);}
+
+/* OLED — missing elements that show white */
+[data-theme="oled"] #auth-screen{background:#000;color:#f0ede8;}
+[data-theme="oled"] .auth-card{background:#0d0d0d;border-color:#2a2a2a;}
+[data-theme="oled"] .auth-title{color:#f0ede8;}
+[data-theme="oled"] .auth-sub{color:#888;}
+[data-theme="oled"] .auth-label{color:#999;}
+[data-theme="oled"] .auth-input{background:#111;border-color:#2a2a2a;color:#f0ede8;}
+[data-theme="oled"] .auth-input::placeholder{color:#555;}
+[data-theme="oled"] .auth-error{background:#1a0808;border-color:#7f1d1d;color:#fca5a5;}
+[data-theme="oled"] .auth-success{background:#0a1f12;border-color:#14532d;color:#86efac;}
+[data-theme="oled"] .auth-google-btn{background:#111;color:#f0ede8;border-color:#2a2a2a;}
+[data-theme="oled"] .auth-ghost{background:#111;color:#f0ede8;border-color:#2a2a2a;}
+[data-theme="oled"] .auth-switch{color:#666;}
+[data-theme="oled"] .auth-switch button{color:#f0ede8;}
+[data-theme="oled"] #ob{background:#000;}
+[data-theme="oled"] .ob-card{background:#0d0d0d;border-color:#2a2a2a;}
+[data-theme="oled"] .ob-h{color:#f0ede8;}
+[data-theme="oled"] .ob-sub,.ob-label{color:#888;}
+[data-theme="oled"] .page-area,[data-theme="oled"] .page{background:#000;}
+[data-theme="oled"] .section-title{color:#f0ede8;}
+[data-theme="oled"] .stat-box{background:#0d0d0d;border-color:#2a2a2a;}
+[data-theme="oled"] .card{background:#0d0d0d;border-color:#2a2a2a;}
+[data-theme="oled"] .btn-primary{background:var(--green);color:#000;}
+[data-theme="oled"] .rem-item{background:#0d0d0d;border-color:#2a2a2a;}
+[data-theme="oled"] .rem-text{color:#f0ede8;}
 [data-theme="dark"] .sb-comp{background:var(--paper2);border-color:var(--line);}
 [data-theme="dark"] .sb-cname{color:var(--ink);}
 [data-theme="dark"] .streak-pill{background:var(--paper2);border-color:var(--line);color:var(--ink);}
@@ -2965,14 +2991,14 @@ body{
             <div class="prof-section-label" style="margin-top:1.1rem;">Profile picture</div>
 
             <!-- Upload zone -->
-            <div class="avatar-upload-zone" onclick="document.getElementById('avatar-file-input').click()">
+            <label class="avatar-upload-zone" for="avatar-file-input" style="cursor:pointer;">
               <div id="avatar-preview-large">🙂</div>
               <div class="avatar-upload-hint">
                 <span class="avatar-upload-title">Tap to upload photo or GIF</span>
                 <span class="avatar-upload-sub">JPG, PNG, GIF, WebP · Any size</span>
               </div>
               <input type="file" id="avatar-file-input" accept="image/*,image/gif" style="display:none" onchange="handleAvatarUpload(this)"/>
-            </div>
+            </label>
 
             <!-- Or pick an emoji -->
             <div style="display:flex;align-items:center;gap:.5rem;margin:.9rem 0 .55rem;">
