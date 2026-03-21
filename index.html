@@ -2753,62 +2753,6 @@ body{
             <!-- Upload zone -->
             <label class="avatar-upload-zone" style="cursor:pointer;">
               
-<!-- ── SCAN SHEET ── -->
-<div class="scan-sheet-bg" id="scan-bg" onclick="if(event.target===this)closeScanSheet();">
-  <div class="scan-sheet">
-    <div class="scan-sheet-handle"></div>
-    <div class="scan-sheet-title">Upload to note</div>
-    <div class="scan-sheet-sub">Photo or PDF — AI extracts the content directly into your note</div>
-
-    <div class="scan-drop-zone" id="scan-drop-zone">
-      <label style="display:flex;flex-direction:column;align-items:center;cursor:pointer;width:100%;">
-        <input type="file" id="scan-file-input" accept="image/*,application/pdf" style="display:none" onchange="handleScanFile(this)"/>
-        <svg viewBox="0 0 24 24" style="width:36px;height:36px;fill:none;stroke:var(--muted);stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round;margin-bottom:.5rem;"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-        <div style="font-size:.88rem;font-weight:600;color:var(--ink);margin-bottom:.2rem;">Drop files here</div>
-        <div style="font-size:.72rem;color:var(--muted);">Photos, PDFs, screenshots, slides</div>
-      </label>
-    </div>
-
-    <div id="scan-file-preview" style="display:none;align-items:center;gap:.75rem;background:var(--paper2);border-radius:10px;padding:.7rem .9rem;margin-bottom:.85rem;">
-      <img id="scan-preview-thumb" src="" alt="" style="width:44px;height:44px;object-fit:cover;border-radius:8px;flex-shrink:0;"/>
-      <div style="flex:1;min-width:0;">
-        <div id="scan-preview-name" style="font-size:.8rem;font-weight:600;color:var(--ink);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;"></div>
-        <div id="scan-preview-meta" style="font-size:.68rem;color:var(--muted);"></div>
-      </div>
-      <button onclick="clearScanFile()" style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:1rem;flex-shrink:0;">✕</button>
-    </div>
-
-    <div style="display:flex;gap:.5rem;margin-bottom:.85rem;">
-      <div class="scan-mode-pill active" data-mode="extract" onclick="setScanMode(this)">
-        <span style="font-size:1rem;display:block;margin-bottom:.2rem;">📋</span>
-        <span style="font-size:.68rem;font-weight:700;">Extract</span>
-      </div>
-      <div class="scan-mode-pill" data-mode="cards" onclick="setScanMode(this)">
-        <span style="font-size:1rem;display:block;margin-bottom:.2rem;">🃏</span>
-        <span style="font-size:.68rem;font-weight:700;">Flashcards</span>
-      </div>
-      <div class="scan-mode-pill" data-mode="quiz" onclick="setScanMode(this)">
-        <span style="font-size:1rem;display:block;margin-bottom:.2rem;">📝</span>
-        <span style="font-size:.68rem;font-weight:700;">Quiz</span>
-      </div>
-    </div>
-
-    <div id="scan-count-row" style="display:none;align-items:center;gap:.6rem;margin-bottom:.85rem;">
-      <div style="font-size:.73rem;color:var(--muted);font-weight:600;flex:1;">How many?</div>
-      <div style="display:flex;align-items:center;gap:.5rem;">
-        <button onclick="adjScanCount(-1)" style="width:28px;height:28px;border-radius:50%;border:1px solid var(--line);background:var(--paper2);color:var(--ink);font-size:1rem;cursor:pointer;display:flex;align-items:center;justify-content:center;">−</button>
-        <input type="number" id="scan-count" value="8" min="1" max="30" style="width:32px;font-size:1rem;font-weight:800;color:var(--green);text-align:center;background:transparent;border:none;outline:none;font-family:inherit;-moz-appearance:textfield;"
-          oninput="var v=parseInt(this.value)||1;this.value=Math.max(1,Math.min(30,v));"/>
-        <button onclick="adjScanCount(1)" style="width:28px;height:28px;border-radius:50%;border:1px solid var(--line);background:var(--paper2);color:var(--ink);font-size:1rem;cursor:pointer;display:flex;align-items:center;justify-content:center;">+</button>
-      </div>
-    </div>
-
-    <button id="scan-gen-btn" onclick="runScan()" disabled
-      style="width:100%;background:var(--green);color:#071a0f;border:none;border-radius:12px;padding:.8rem;font-family:inherit;font-size:.92rem;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:.5rem;opacity:.35;">
-      Generate
-    </button>
-  </div>
-</div>
 
 <!-- Summary banner (shown in note editor) -->
 <div id="note-summary-banner" style="display:none;background:var(--amber-light);border:1px solid var(--amber);border-radius:12px;padding:.85rem 1rem;margin-bottom:.75rem;">
@@ -12087,8 +12031,8 @@ var _scanFromEditor = false;
 
 function openScanSheet(){
   // determine if called from editor
-  var editor = document.getElementById('note-editor');
-  _scanFromEditor = editor && (editor.style.display==='flex'||editor.style.display==='block'||editor.classList.contains('open')||editor.style.transform==='translateX(0px)'||editor.style.transform==='translateX(0)');
+  var editor = document.getElementById('note-editor-overlay');
+  _scanFromEditor = editor && editor.style.display==='flex';
   // reset state
   clearScanFile();
   document.querySelectorAll('.scan-mode-pill').forEach(function(p){ p.classList.remove('active'); });
@@ -12283,5 +12227,62 @@ async function summarizeCurrentNote(){
 }
 
 </script>
+
+<!-- ── SCAN SHEET ── -->
+<div class="scan-sheet-bg" id="scan-bg" onclick="if(event.target===this)closeScanSheet();">
+  <div class="scan-sheet">
+    <div class="scan-sheet-handle"></div>
+    <div class="scan-sheet-title">Upload to note</div>
+    <div class="scan-sheet-sub">Photo or PDF — AI extracts the content directly into your note</div>
+
+    <div class="scan-drop-zone" id="scan-drop-zone">
+      <label style="display:flex;flex-direction:column;align-items:center;cursor:pointer;width:100%;">
+        <input type="file" id="scan-file-input" accept="image/*,application/pdf" style="display:none" onchange="handleScanFile(this)"/>
+        <svg viewBox="0 0 24 24" style="width:36px;height:36px;fill:none;stroke:var(--muted);stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round;margin-bottom:.5rem;"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+        <div style="font-size:.88rem;font-weight:600;color:var(--ink);margin-bottom:.2rem;">Drop files here</div>
+        <div style="font-size:.72rem;color:var(--muted);">Photos, PDFs, screenshots, slides</div>
+      </label>
+    </div>
+
+    <div id="scan-file-preview" style="display:none;align-items:center;gap:.75rem;background:var(--paper2);border-radius:10px;padding:.7rem .9rem;margin-bottom:.85rem;">
+      <img id="scan-preview-thumb" src="" alt="" style="width:44px;height:44px;object-fit:cover;border-radius:8px;flex-shrink:0;"/>
+      <div style="flex:1;min-width:0;">
+        <div id="scan-preview-name" style="font-size:.8rem;font-weight:600;color:var(--ink);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;"></div>
+        <div id="scan-preview-meta" style="font-size:.68rem;color:var(--muted);"></div>
+      </div>
+      <button onclick="clearScanFile()" style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:1rem;flex-shrink:0;">✕</button>
+    </div>
+
+    <div style="display:flex;gap:.5rem;margin-bottom:.85rem;">
+      <div class="scan-mode-pill active" data-mode="extract" onclick="setScanMode(this)">
+        <span style="font-size:1rem;display:block;margin-bottom:.2rem;">📋</span>
+        <span style="font-size:.68rem;font-weight:700;">Extract</span>
+      </div>
+      <div class="scan-mode-pill" data-mode="cards" onclick="setScanMode(this)">
+        <span style="font-size:1rem;display:block;margin-bottom:.2rem;">🃏</span>
+        <span style="font-size:.68rem;font-weight:700;">Flashcards</span>
+      </div>
+      <div class="scan-mode-pill" data-mode="quiz" onclick="setScanMode(this)">
+        <span style="font-size:1rem;display:block;margin-bottom:.2rem;">📝</span>
+        <span style="font-size:.68rem;font-weight:700;">Quiz</span>
+      </div>
+    </div>
+
+    <div id="scan-count-row" style="display:none;align-items:center;gap:.6rem;margin-bottom:.85rem;">
+      <div style="font-size:.73rem;color:var(--muted);font-weight:600;flex:1;">How many?</div>
+      <div style="display:flex;align-items:center;gap:.5rem;">
+        <button onclick="adjScanCount(-1)" style="width:28px;height:28px;border-radius:50%;border:1px solid var(--line);background:var(--paper2);color:var(--ink);font-size:1rem;cursor:pointer;display:flex;align-items:center;justify-content:center;">−</button>
+        <input type="number" id="scan-count" value="8" min="1" max="30" style="width:32px;font-size:1rem;font-weight:800;color:var(--green);text-align:center;background:transparent;border:none;outline:none;font-family:inherit;-moz-appearance:textfield;"
+          oninput="var v=parseInt(this.value)||1;this.value=Math.max(1,Math.min(30,v));"/>
+        <button onclick="adjScanCount(1)" style="width:28px;height:28px;border-radius:50%;border:1px solid var(--line);background:var(--paper2);color:var(--ink);font-size:1rem;cursor:pointer;display:flex;align-items:center;justify-content:center;">+</button>
+      </div>
+    </div>
+
+    <button id="scan-gen-btn" onclick="runScan()" disabled
+      style="width:100%;background:var(--green);color:#071a0f;border:none;border-radius:12px;padding:.8rem;font-family:inherit;font-size:.92rem;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:.5rem;opacity:.35;">
+      Generate
+    </button>
+  </div>
+</div>
 </body>
 </html>
