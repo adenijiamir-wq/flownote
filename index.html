@@ -3334,6 +3334,12 @@ let feedbackHistory=JSON.parse(localStorage.getItem('fn_feedback')||'[]');
 // PERSIST
 // ══════════════════════════════════════════════════════
 function save(){
+  var _saveStack = (new Error()).stack.split('\n').slice(1,4).join(' | ');
+  console.log('[Save] notes='+notes.length+' cards='+studyCards.length+' caller='+_saveStack);
+  if(notes.length === 0 && studyCards.length === 0){
+    var _existingRaw = localStorage.getItem('mb7_data');
+    if(_existingRaw){ try{ var _ex=JSON.parse(_existingRaw); if((_ex.notes||[]).length>0||((_ex.studyCards||[]).length>0)){ console.error('[Save] BLOCKED: would overwrite '+_ex.notes.length+' notes with empty! caller='+_saveStack); return; } }catch(e){} }
+  }
   localStorage.setItem('mb7_data',JSON.stringify({
     userName,userStruggles,userSubjects,currentChar,
     reminders,notes,studyCards,streakDays,onboarded:true,
@@ -4823,7 +4829,7 @@ function startApp(){
     else if(r.date==='tomorrow'){ r.date=_tm; _migrated=true; }
     else if(r.date==='nextweek'){ r.date=_nwStr; _migrated=true; }
   });
-  save(); // always save so Firestore gets the real dates immediately
+  if(_migrated) save(); // only save if we actually changed something
   // Re-apply appearance in case load() just restored accent/avatar from this user's Firestore data
   if(typeof applyTheme==='function') applyTheme(currentThemePref||'system');
   const c=CHARS[currentChar];
