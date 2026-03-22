@@ -4266,6 +4266,9 @@ async function _fbLoadUserData(uid){
       if(d.streakDate) localStorage.setItem('fn_streak_date', d.streakDate);
       if(d.goalData)   localStorage.setItem('fn_goal',        d.goalData);
       if(d.goalWeek)   localStorage.setItem('fn_goal_week',   d.goalWeek);
+      // Restore theme and accent if local is missing (e.g. after a clear)
+      if(d.themePref && !localStorage.getItem('fn_theme_pref')) localStorage.setItem('fn_theme_pref', d.themePref);
+      if(d.accentPref && !localStorage.getItem('fn_accent')) localStorage.setItem('fn_accent', d.accentPref);
       // Restore email notification config — so user never has to re-enter it after login
       if(d.notifEmail){
         var _existing = '';
@@ -4276,6 +4279,16 @@ async function _fbLoadUserData(uid){
         if(d.notifPrefs) localStorage.setItem('mn_email_prefs', JSON.stringify(d.notifPrefs));
         localStorage.setItem('mn_email_set','1'); // don't show nudge if email already saved
       }
+    }
+    // Re-apply theme after Firestore data is fully loaded — fixes OLED/theme not restoring
+    var _restoredTheme = localStorage.getItem('fn_theme_pref');
+    if(!_restoredTheme){
+      // Also check inside mb7_data.themePref
+      try{ var _md=JSON.parse(localStorage.getItem('mb7_data')||'{}'); _restoredTheme=_md.themePref||null; }catch(e){}
+    }
+    if(_restoredTheme && typeof applyTheme==='function'){
+      console.log('[Load] Re-applying theme after Firestore restore:', _restoredTheme);
+      applyTheme(_restoredTheme);
     }
   }catch(e){ console.warn('Firestore load failed',e); }
 }
@@ -4300,7 +4313,14 @@ function _fbApplyData(appData){
       console.log('[Apply] → kept local (Firestore empty)');
       return;
     }
-    if(remoteTs > localTs){
+    // Get local content count
+    var localHasContent = false;
+    if(localRaw){ try{ var _lc=JSON.parse(localRaw); localHasContent=((_lc.notes||[]).length>0||(_lc.studyCards||[]).length>0||(_lc.reminders||[]).length>0); }catch(e){} }
+    if(!localHasContent){
+      // Local is empty — always use Firestore regardless of timestamp
+      localStorage.setItem('mb7_data', typeof appData==='string'?appData:JSON.stringify(appData));
+      console.log('[Apply] → wrote Firestore (local empty)');
+    } else if(remoteTs > localTs){
       localStorage.setItem('mb7_data', typeof appData==='string'?appData:JSON.stringify(appData));
       console.log('[Apply] → wrote Firestore (newer)');
     } else {
@@ -4328,6 +4348,8 @@ async function fbSyncData(){
         streakDate:  localStorage.getItem('fn_streak_date')||'',
         goalData:    localStorage.getItem('fn_goal')||'',
         goalWeek:    localStorage.getItem('fn_goal_week')||'',
+        themePref:   localStorage.getItem('fn_theme_pref')||'',
+        accentPref:  localStorage.getItem('fn_accent')||'',
         lastSync: new Date().toISOString()
       },{merge:true});
     }
@@ -4443,8 +4465,23 @@ function afterAuth(isReturning){
   document.getElementById('ob').style.display='none';
   (document.getElementById('app')||document.createElement('div')).classList.add('on');
   startApp();
-  // Dismiss splash now that data is loaded and app is rendered
   _hideSplash();
+  // Safety re-render: if Firestore data arrived slightly after first render, catch it
+  setTimeout(function(){
+    var _check = localStorage.getItem('mb7_data');
+    if(_check){
+      try{
+        var _d = JSON.parse(_check);
+        var _hasData = (_d.notes||[]).length>0||(_d.studyCards||[]).length>0;
+        if(_hasData && (notes.length===0 && studyCards.length===0)){
+          console.log('[SafeReload] Data found in localStorage but memory empty — reloading data');
+          load();
+          renderAll(); renderNotes(); renderCards(); renderGaps();
+          renderNextAction(); renderCountdownWidget(); renderGoalWidget();
+        }
+      }catch(e){}
+    }
+  }, 2500);
 }
 
 function _hideSplash(){ /* splash removed */ }
@@ -4871,7 +4908,17 @@ window.addEventListener('DOMContentLoaded',()=>{
         && _storedUidClean !== _newUidClean
         && !_newUidClean.startsWith(_storedUidClean.slice(0,8));
       if(_isDifferentAccount){
-        console.warn('[Menmory] Different account — clearing data');
+        // Check Firestore first — only clear if new user has their own data,
+        // OR if they have no Firestore data but UIDs are genuinely different
+        console.warn('[Menmory] Different account detected — checking Firestore...');
+        var _newUserHasData = false;
+        try{
+          var _snap = await window._fbFns.getDoc(window._fbFns.doc(window._fbDb,'users',user.uid));
+          _newUserHasData = _snap.exists();
+        }catch(e){ _newUserHasData = false; }
+        // Clear if: new user has their own Firestore data (genuine switch)
+        //       OR: new user has no data but UIDs are genuinely different (new account on shared device)
+        console.warn('[Menmory] Different account — newUserHasData='+_newUserHasData+' — clearing');
         _clearAllUserData();
       } else {
         console.log('[Menmory] Same account — data preserved');
