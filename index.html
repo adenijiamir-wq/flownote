@@ -1709,8 +1709,10 @@ body{
 [data-theme="oled"] #pomo-time{color:#f0ede8;}
 [data-theme="oled"] #pomo-label{color:#999;}
 [data-theme="oled"] circle#pomo-ring{stroke-opacity:1;}
-[data-theme="oled"] #pomo-ring-bg{stroke:#222222;}
-@keyframes pomoRestartFlash{0%{opacity:1}30%{opacity:.25}60%{opacity:1}80%{opacity:.5}100%{opacity:1}}
+[data-theme="oled"] #pomo-ring-bg{stroke:#333333;}
+[data-theme="oled"] [onclick="resetPomo()"]{background:#1a1a1a !important;border-color:#555 !important;color:#f0ede8 !important;}
+[data-theme="oled"] [onclick="resetPomo()"]:active{background:#2a2a2a !important;}
+@keyframes pomoRestartFlash{0%{opacity:1}20%{opacity:.1}50%{opacity:1}70%{opacity:.4}100%{opacity:1}}
 .pomo-restart-flash{animation:pomoRestartFlash .55s ease;}
 
 /* ── Deck study/quiz buttons ── */
@@ -2543,7 +2545,7 @@ body{
         <!-- Big timer ring -->
         <div style="display:flex;flex-direction:column;align-items:center;margin-bottom:1.6rem;">
           <div style="position:relative;width:210px;height:210px;cursor:pointer;" onclick="togglePomo()">
-            <svg width="210" height="210" style="transform:rotate(-90deg);">
+            <svg id="pomo-svg" width="210" height="210" style="transform:rotate(-90deg);">
               <circle id="pomo-ring-bg" cx="105" cy="105" r="92" fill="none" stroke="var(--line)" stroke-width="9"/>
               <circle id="pomo-ring" cx="105" cy="105" r="92" fill="none" stroke="var(--green)" stroke-width="9"
                 stroke-dasharray="578" stroke-dashoffset="578"
@@ -10324,9 +10326,9 @@ function resetPomo(){
   const lbl = document.getElementById('pomo-label');
   if(lbl) lbl.textContent = _pomoMode==='focus' ? 'Ready — tap to start' : 'Enjoy your break!';
   // Flash the ring and time display so restart is visible on OLED
-  const ring = document.getElementById('pomo-ring');
-  const timeEl = document.getElementById('pomo-time');
-  [ring, timeEl].forEach(function(el){ if(!el) return; el.classList.remove('pomo-restart-flash'); void el.offsetWidth; el.classList.add('pomo-restart-flash'); setTimeout(function(){ el.classList.remove('pomo-restart-flash'); }, 600); });
+  var svgEl = document.getElementById('pomo-svg');
+  var timeEl = document.getElementById('pomo-time');
+  [svgEl, timeEl].forEach(function(el){ if(!el) return; el.classList.remove('pomo-restart-flash'); void el.offsetWidth; el.classList.add('pomo-restart-flash'); setTimeout(function(){ el.classList.remove('pomo-restart-flash'); }, 650); });
   updatePomoDisplay();
 }
 
