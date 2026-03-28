@@ -9495,9 +9495,12 @@ async function callAI(sys, msg, maxT = 500) {
 
 async function callAIWithContent(sys, contentArray, maxT=4000){
   try{
+    const _ctrl = new AbortController();
+    const _timeout = setTimeout(()=>_ctrl.abort(), 55000); // 55s timeout (Netlify limit is 60s)
     const response = await fetch(getAIUrl(), {
       method: 'POST',
       headers: getAIHeaders(),
+      signal: _ctrl.signal,
       body: JSON.stringify({
         model: 'claude-sonnet-4-6',
         max_tokens: maxT,
@@ -9505,6 +9508,7 @@ async function callAIWithContent(sys, contentArray, maxT=4000){
         messages: [{ role: 'user', content: contentArray }]
       })
     });
+    clearTimeout(_timeout);
     const rawText = await response.text();
     if(!response.ok){
       let _em=`AI error (${response.status})`;
@@ -12176,6 +12180,16 @@ function handleScanFile(input){
   var file = input.files[0]; if(!file) return;
   _scanIsPdf = file.type==='application/pdf';
   _scanFileType = file.type;
+
+  // Netlify has a ~4MB body limit. Base64 adds 33% overhead so cap original at 3MB.
+  var maxBytes = 3 * 1024 * 1024;
+  if(file.size > maxBytes){
+    var sizeMB = (file.size/1024/1024).toFixed(1);
+    toast('File too large ('+sizeMB+'MB) — max 3MB. Try a shorter PDF or compress it first.');
+    input.value = '';
+    return;
+  }
+
   var reader = new FileReader();
   reader.onload = function(e){
     _scanFileData = e.target.result.split(',')[1];
@@ -12209,12 +12223,61 @@ function checkScanReady(){
   btn.style.opacity = ready ? '1' : '.35';
 }
 
+// ── PDF background job polling ──
+async function _pollPdfJob(jobId, btn){
+  return new Promise(function(resolve, reject){
+    var waited = 0;
+    var maxWait = 120000; // 2 minutes max
+    var pollInterval = 3000; // check every 3s
+    var dots = 0;
+    var spinHTML = '<span style="display:inline-block;width:14px;height:14px;border:2px solid rgba(7,26,15,.3);border-top-color:#071a0f;border-radius:50%;animation:spin .7s linear infinite;vertical-align:middle;margin-right:6px;"></span>';
+    var timer = setInterval(async function(){
+      waited += pollInterval;
+      dots = (dots % 3) + 1;
+      btn.innerHTML = spinHTML + 'Reading PDF' + '.'.repeat(dots);
+      if(waited > maxWait){
+        clearInterval(timer);
+        reject(new Error('PDF processing timed out — try a smaller file'));
+        return;
+      }
+      try{
+        var res = await fetch('/.netlify/functions/ai-pdf-status?jobId='+encodeURIComponent(jobId));
+        var job = await res.json();
+        if(job.status === 'done'){
+          clearInterval(timer);
+          // job.body is the raw Claude API response text
+          try{
+            var parsed = JSON.parse(job.body);
+            if(job.statusCode && job.statusCode >= 400){
+              var errMsg = (parsed.error && parsed.error.message) || ('AI error '+job.statusCode);
+              reject(new Error(errMsg));
+            } else if(!parsed.content || !parsed.content[0]){
+              reject(new Error('Empty response from AI'));
+            } else {
+              resolve(parsed.content[0].text.trim());
+            }
+          }catch(parseErr){
+            reject(new Error('Could not parse AI response'));
+          }
+        } else if(job.status === 'error'){
+          clearInterval(timer);
+          reject(new Error(job.error || 'PDF processing failed'));
+        }
+        // status === 'pending' or 'processing' — keep polling
+      }catch(fetchErr){
+        // Network hiccup during poll — keep trying until timeout
+      }
+    }, pollInterval);
+  });
+}
+
 async function runScan(){
   if(!_scanFileData){ toast('Upload a file first'); return; }
   var count = parseInt(document.getElementById('scan-count').value)||8;
   var btn = document.getElementById('scan-gen-btn');
   btn.disabled=true; btn.style.opacity='.5';
-  btn.innerHTML='<span style="display:inline-block;width:14px;height:14px;border:2px solid rgba(7,26,15,.3);border-top-color:#071a0f;border-radius:50%;animation:spin .7s linear infinite;vertical-align:middle;margin-right:6px;"></span>Reading…';
+  var spinHTML = '<span style="display:inline-block;width:14px;height:14px;border:2px solid rgba(7,26,15,.3);border-top-color:#071a0f;border-radius:50%;animation:spin .7s linear infinite;vertical-align:middle;margin-right:6px;"></span>';
+  btn.innerHTML = spinHTML + 'Reading…';
 
   var sys, usr;
   if(_scanMode==='extract'){
@@ -12228,12 +12291,40 @@ async function runScan(){
     usr='Create '+count+' quiz questions. Return only the JSON array.';
   }
 
-  var contentArr = _scanIsPdf
-    ? [{type:'document',source:{type:'base64',media_type:'application/pdf',data:_scanFileData}},{type:'text',text:usr}]
-    : [{type:'image',source:{type:'base64',media_type:_scanFileType,data:_scanFileData}},{type:'text',text:usr}];
-
   try{
-    var raw = await callAIWithContent(sys, contentArr, 4000);
+    var raw;
+    if(_scanIsPdf){
+      // PDF — use background function + polling to bypass 10s timeout
+      var jobId = 'pdf_' + Date.now() + '_' + Math.random().toString(36).slice(2,8);
+      var startRes = await fetch('/.netlify/functions/ai-pdf-background', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({
+          jobId: jobId,
+          model: 'claude-sonnet-4-6',
+          max_tokens: 4000,
+          system: sys,
+          messages: [{
+            role: 'user',
+            content: [
+              {type:'document', source:{type:'base64', media_type:'application/pdf', data:_scanFileData}},
+              {type:'text', text:usr}
+            ]
+          }]
+        })
+      });
+      // Background functions always return 202 — anything else is an error
+      if(startRes.status !== 202){
+        var errBody = await startRes.text();
+        throw new Error('Could not start PDF processing ('+startRes.status+'): '+errBody.slice(0,100));
+      }
+      btn.innerHTML = spinHTML + 'Reading PDF.';
+      raw = await _pollPdfJob(jobId, btn);
+    } else {
+      // Image — use regular sync path (fast enough for 10s limit)
+      var contentArr = [{type:'image', source:{type:'base64', media_type:_scanFileType, data:_scanFileData}},{type:'text', text:usr}];
+      raw = await callAIWithContent(sys, contentArr, 4000);
+    }
     raw = raw.replace(/```json|```/g,'').trim();
 
     if(_scanMode==='extract'){
