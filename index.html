@@ -9470,7 +9470,7 @@ async function callAI(sys, msg, maxT = 500) {
       method: 'POST',
       headers: getAIHeaders(),
       body: JSON.stringify({
-        model: 'claude-haiku-4-5-20251001',
+        model: 'claude-sonnet-4-6',
         max_tokens: maxT,
         system: sys,
         messages: [{ role: 'user', content: msg }]
@@ -9499,7 +9499,7 @@ async function callAIWithContent(sys, contentArray, maxT=4000){
       method: 'POST',
       headers: getAIHeaders(),
       body: JSON.stringify({
-        model: 'claude-haiku-4-5-20251001',
+        model: 'claude-sonnet-4-6',
         max_tokens: maxT,
         system: sys,
         messages: [{ role: 'user', content: contentArray }]
@@ -9526,7 +9526,7 @@ async function callAIWithHistory(sys, history, maxT=600, _attempt=0){
       method:'POST',
       headers:getAIHeaders(),
       body:JSON.stringify({
-        model:'claude-haiku-4-5-20251001',
+        model:'claude-sonnet-4-6',
         max_tokens:maxT,
         system:sys,
         messages:history
