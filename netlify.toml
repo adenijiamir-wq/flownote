@@ -17,3 +17,13 @@
 
 [functions."send-reminders"]
   schedule = "* * * * *"
+  
+[[redirects]]
+  from = "/api/ai-pdf-background"
+  to = "/.netlify/functions/ai-pdf-background"
+  status = 200
+
+[[redirects]]
+  from = "/api/ai-pdf-status"
+  to = "/.netlify/functions/ai-pdf-status"
+  status = 200
