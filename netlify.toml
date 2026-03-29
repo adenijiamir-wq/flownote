@@ -12,12 +12,6 @@
   to = "/.netlify/functions/send-reminders"
   status = 200
 
-[functions]
-  node_bundler = "esbuild"
-
-[functions."send-reminders"]
-  schedule = "* * * * *"
-  
 [[redirects]]
   from = "/api/ai-pdf-background"
   to = "/.netlify/functions/ai-pdf-background"
@@ -27,3 +21,15 @@
   from = "/api/ai-pdf-status"
   to = "/.netlify/functions/ai-pdf-status"
   status = 200
+
+[functions]
+  node_bundler = "esbuild"
+
+[functions."send-reminders"]
+  schedule = "* * * * *"
+
+[functions."ai-pdf-background"]
+  node_bundler = "esbuild"
+
+[functions."ai-pdf-status"]
+  node_bundler = "esbuild"
