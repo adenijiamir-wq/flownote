@@ -1,18 +1,18 @@
 [build]
   publish = "."
   functions = "netlify/functions"
-
+  
 [functions]
   node_bundler = "esbuild"
-
+  
 [functions."send-reminders"]
-  schedule = "* * * * *"
+  schedule ="* * * * *"
 
 [functions."ai-pdf-background"]
   node_bundler = "node"
 
 [functions."ai-pdf-status"]
-  node_bundler = "node"
+  node_bundler="node"
 
 [[redirects]]
   from = "/api/ai"
@@ -33,3 +33,4 @@
   from = "/api/ai-pdf-status"
   to = "/.netlify/functions/ai-pdf-status"
   status = 200
+  
