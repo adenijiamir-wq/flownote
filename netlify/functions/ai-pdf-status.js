@@ -1,67 +1,46 @@
 // netlify/functions/ai-pdf-status.js
-//
-// Polling endpoint. Client calls this every 3 seconds with ?jobId=xxx
-// Returns: { status: 'pending' | 'processing' | 'done' | 'error', body?, error? }
-// Cleans up the stored job once client has received the result.
+// Regular function — polls Firestore for job result
 
-const { getStore } = require('@netlify/blobs');
+let _adminDb = null;
+function getAdminDb() {
+  if (_adminDb) return _adminDb;
+  const admin = require('firebase-admin');
+  if (!admin.apps.length) {
+    const sa = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT);
+    admin.initializeApp({ credential: admin.credential.cert(sa) });
+  }
+  _adminDb = admin.firestore();
+  return _adminDb;
+}
 
-const CORS_HEADERS = {
+const CORS = {
   'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'Content-Type',
-  'Access-Control-Allow-Methods': 'GET, OPTIONS',
   'content-type': 'application/json'
 };
 
 exports.handler = async (event) => {
-  // Preflight
-  if (event.httpMethod === 'OPTIONS') {
-    return { statusCode: 200, headers: CORS_HEADERS, body: '' };
-  }
+  if (event.httpMethod === 'OPTIONS') return { statusCode: 200, headers: CORS, body: '' };
 
   const jobId = event.queryStringParameters && event.queryStringParameters.jobId;
-  if (!jobId) {
-    return {
-      statusCode: 400,
-      headers: CORS_HEADERS,
-      body: JSON.stringify({ error: 'Missing jobId parameter' })
-    };
-  }
-
-  const store = getStore('pdf-jobs');
+  if (!jobId) return { statusCode: 400, headers: CORS, body: JSON.stringify({ error: 'Missing jobId' }) };
 
   try {
-    const raw = await store.get(jobId);
+    const db = getAdminDb();
+    const doc = await db.collection('pdfJobs').doc(jobId).get();
 
-    // Job not found yet — background function hasn't started writing yet
-    if (raw === null || raw === undefined) {
-      return {
-        statusCode: 200,
-        headers: CORS_HEADERS,
-        body: JSON.stringify({ status: 'pending' })
-      };
+    if (!doc.exists) {
+      return { statusCode: 200, headers: CORS, body: JSON.stringify({ status: 'pending' }) };
     }
 
-    const job = JSON.parse(raw);
+    const job = doc.data();
 
-    // If terminal state, clean up so we don't leak storage
+    // Clean up terminal states
     if (job.status === 'done' || job.status === 'error') {
-      try { await store.delete(jobId); } catch (e) { /* non-fatal */ }
+      doc.ref.delete().catch(() => {});
     }
 
-    return {
-      statusCode: 200,
-      headers: CORS_HEADERS,
-      body: JSON.stringify(job)
-    };
-
+    return { statusCode: 200, headers: CORS, body: JSON.stringify(job) };
   } catch (err) {
-    // Blob read error — treat as still pending so client keeps polling
-    console.error('Status check error:', err.message);
-    return {
-      statusCode: 200,
-      headers: CORS_HEADERS,
-      body: JSON.stringify({ status: 'pending' })
-    };
+    return { statusCode: 200, headers: CORS, body: JSON.stringify({ status: 'pending' }) };
   }
 };
