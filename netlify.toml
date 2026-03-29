@@ -7,13 +7,7 @@
   
 [functions."send-reminders"]
   schedule ="* * * * *"
-
-[functions."ai-pdf-background"]
-  node_bundler = "node"
-
-[functions."ai-pdf-status"]
-  node_bundler="node"
-
+  
 [[redirects]]
   from = "/api/ai"
   to = "/.netlify/functions/ai"
