@@ -9090,19 +9090,33 @@ function pickAvatar(av){
 
 function handleAvatarUpload(input){
   const file=input.files[0]; if(!file)return;
+  if(!file.type.startsWith('image/')){ toast('Please choose an image file'); return; }
   const reader=new FileReader();
   reader.onload=e=>{
     const dataUrl=e.target.result;
-    // Store as image (base64) — up to ~500KB to keep localStorage safe
-    if(dataUrl.length > 600000){ toast('Image too large — try a smaller file'); return; }
-    localStorage.setItem('fn_avatar_img', dataUrl);
-    currentAvatar='__img__';
-    localStorage.setItem('fn_avatar','__img__');
-    _updateAvatarDisplay(null, dataUrl);
-    // Clear emoji active state
-    document.querySelectorAll('.avatar-pick').forEach(b=>b.classList.remove('active'));
-    if(typeof save==='function'&&typeof userName!=='undefined') save();
-    toast('✓ Profile picture updated!');
+    // Auto-compress to fit localStorage — target 200x200px, quality 0.82
+    const img=new Image();
+    img.onload=function(){
+      const MAX=200;
+      const scale=Math.min(1, MAX/Math.max(img.width,img.height));
+      const w=Math.round(img.width*scale), h=Math.round(img.height*scale);
+      const cv=document.createElement('canvas');
+      cv.width=w; cv.height=h;
+      const ctx=cv.getContext('2d');
+      ctx.drawImage(img,0,0,w,h);
+      // Try quality 0.82 first, drop to 0.65 if still too big
+      let out=cv.toDataURL('image/jpeg',0.82);
+      if(out.length>600000) out=cv.toDataURL('image/jpeg',0.65);
+      if(out.length>600000) out=cv.toDataURL('image/jpeg',0.45);
+      localStorage.setItem('fn_avatar_img', out);
+      currentAvatar='__img__';
+      localStorage.setItem('fn_avatar','__img__');
+      _updateAvatarDisplay(null, out);
+      document.querySelectorAll('.avatar-pick').forEach(b=>b.classList.remove('active'));
+      if(typeof save==='function'&&typeof userName!=='undefined') save();
+      toast('✓ Profile picture updated!');
+    };
+    img.src=dataUrl;
   };
   reader.readAsDataURL(file);
 }
@@ -9494,21 +9508,19 @@ async function callAI(sys, msg, maxT = 500) {
 
 
 async function callAIWithContent(sys, contentArray, maxT=4000){
+  // Images are compressed before reaching here so requests are fast (<10s)
+  // Goes through Netlify function — no user API key needed
   try{
-    const _ctrl = new AbortController();
-    const _timeout = setTimeout(()=>_ctrl.abort(), 55000); // 55s timeout (Netlify limit is 60s)
     const response = await fetch(getAIUrl(), {
       method: 'POST',
       headers: getAIHeaders(),
-      signal: _ctrl.signal,
       body: JSON.stringify({
-        model: 'claude-sonnet-4-6',
+        model: 'claude-haiku-4-5-20251001',
         max_tokens: maxT,
         system: sys,
         messages: [{ role: 'user', content: contentArray }]
       })
     });
-    clearTimeout(_timeout);
     const rawText = await response.text();
     if(!response.ok){
       let _em=`AI error (${response.status})`;
@@ -12181,29 +12193,60 @@ function handleScanFile(input){
   _scanIsPdf = file.type==='application/pdf';
   _scanFileType = file.type;
 
-  // Netlify has a ~4MB body limit. Base64 adds 33% overhead so cap original at 3MB.
-  var maxBytes = 3 * 1024 * 1024;
+  // PDFs: 10MB max (text extracted client-side, only text sent to AI)
+  // Images: any size — compressed client-side before sending
+  var maxBytes = _scanIsPdf ? 10 * 1024 * 1024 : 999 * 1024 * 1024;
   if(file.size > maxBytes){
-    var sizeMB = (file.size/1024/1024).toFixed(1);
-    toast('File too large ('+sizeMB+'MB) — max 3MB. Try a shorter PDF or compress it first.');
-    input.value = '';
-    return;
+    toast('PDF too large (max 10MB) — try splitting it first.');
+    input.value = ''; return;
   }
 
-  var reader = new FileReader();
-  reader.onload = function(e){
-    _scanFileData = e.target.result.split(',')[1];
+  var _pdfIcon = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48"><rect width="48" height="48" rx="8" fill="#1a3a24"/><text x="50%" y="58%" text-anchor="middle" fill="#52d98a" font-size="18" font-family="sans-serif">PDF</text></svg>');
+
+  function _showPreview(dataUrl, label){
     document.getElementById('scan-drop-zone').style.display = 'none';
     var fp = document.getElementById('scan-file-preview');
     fp.style.display = 'flex';
     document.getElementById('scan-preview-name').textContent = file.name;
-    document.getElementById('scan-preview-meta').textContent = (file.size/1024).toFixed(0)+' KB · '+(_scanIsPdf?'PDF':'Image');
+    document.getElementById('scan-preview-meta').textContent = label;
     var thumb = document.getElementById('scan-preview-thumb');
-    var _pdfIcon = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48"><rect width="48" height="48" rx="8" fill="#1a3a24"/><text x="50%" y="58%" text-anchor="middle" fill="#52d98a" font-size="18" font-family="sans-serif">PDF</text></svg>');
-    thumb.src = _scanIsPdf ? _pdfIcon : e.target.result;
+    thumb.src = _scanIsPdf ? _pdfIcon : dataUrl;
     checkScanReady();
-  };
-  reader.readAsDataURL(file);
+  }
+
+  if(_scanIsPdf){
+    var reader = new FileReader();
+    reader.onload = function(e){
+      _scanFileData = e.target.result.split(',')[1];
+      _scanFileType = 'application/pdf';
+      _showPreview(null, (file.size/1024).toFixed(0)+' KB · PDF');
+    };
+    reader.readAsDataURL(file);
+  } else {
+    // Images — compress to max 1200px wide and quality 0.82 before sending
+    var reader2 = new FileReader();
+    reader2.onload = function(e){
+      var img = new Image();
+      img.onload = function(){
+        var MAX_DIM = 1200;
+        var scale = Math.min(1, MAX_DIM / Math.max(img.width, img.height));
+        var w = Math.round(img.width * scale), h = Math.round(img.height * scale);
+        var cv = document.createElement('canvas');
+        cv.width = w; cv.height = h;
+        cv.getContext('2d').drawImage(img, 0, 0, w, h);
+        var compressed = cv.toDataURL('image/jpeg', 0.82);
+        // If still big, compress more
+        if(compressed.length > 4 * 1024 * 1024) compressed = cv.toDataURL('image/jpeg', 0.65);
+        if(compressed.length > 4 * 1024 * 1024) compressed = cv.toDataURL('image/jpeg', 0.5);
+        _scanFileData = compressed.split(',')[1];
+        _scanFileType = 'image/jpeg';
+        var kb = Math.round(compressed.length * 0.75 / 1024);
+        _showPreview(compressed, kb + ' KB · Image (compressed)');
+      };
+      img.src = e.target.result;
+    };
+    reader2.readAsDataURL(file);
+  }
 }
 function clearScanFile(){
   _scanFileData=null;_scanFileType=null;_scanIsPdf=false;
@@ -12285,6 +12328,7 @@ async function runScan(){
       // Truncate to ~12000 chars to stay within token limits
       if(pdfText.length > 12000) pdfText = pdfText.slice(0, 12000) + '\n[truncated]';
       btn.innerHTML = spinHTML + 'Analysing…';
+      // PDF text extracted client-side — just send text to AI (fast, no timeout risk)
       raw = await callAI(sys, 'Here is the PDF content:\n\n' + pdfText + '\n\n' + usr, 4000);
     } else {
       // Image — use regular sync path (fast enough for 10s limit)
