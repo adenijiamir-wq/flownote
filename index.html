@@ -12224,51 +12224,32 @@ function checkScanReady(){
 }
 
 // ── PDF background job polling ──
-async function _pollPdfJob(jobId, btn){
-  return new Promise(function(resolve, reject){
-    var waited = 0;
-    var maxWait = 120000; // 2 minutes max
-    var pollInterval = 3000; // check every 3s
-    var dots = 0;
-    var spinHTML = '<span style="display:inline-block;width:14px;height:14px;border:2px solid rgba(7,26,15,.3);border-top-color:#071a0f;border-radius:50%;animation:spin .7s linear infinite;vertical-align:middle;margin-right:6px;"></span>';
-    var timer = setInterval(async function(){
-      waited += pollInterval;
-      dots = (dots % 3) + 1;
-      btn.innerHTML = spinHTML + 'Reading PDF' + '.'.repeat(dots);
-      if(waited > maxWait){
-        clearInterval(timer);
-        reject(new Error('PDF processing timed out — try a smaller file'));
-        return;
-      }
-      try{
-        var res = await fetch('/.netlify/functions/ai-pdf-status?jobId='+encodeURIComponent(jobId));
-        var job = await res.json();
-        if(job.status === 'done'){
-          clearInterval(timer);
-          // job.body is the raw Claude API response text
-          try{
-            var parsed = JSON.parse(job.body);
-            if(job.statusCode && job.statusCode >= 400){
-              var errMsg = (parsed.error && parsed.error.message) || ('AI error '+job.statusCode);
-              reject(new Error(errMsg));
-            } else if(!parsed.content || !parsed.content[0]){
-              reject(new Error('Empty response from AI'));
-            } else {
-              resolve(parsed.content[0].text.trim());
-            }
-          }catch(parseErr){
-            reject(new Error('Could not parse AI response'));
-          }
-        } else if(job.status === 'error'){
-          clearInterval(timer);
-          reject(new Error(job.error || 'PDF processing failed'));
-        }
-        // status === 'pending' or 'processing' — keep polling
-      }catch(fetchErr){
-        // Network hiccup during poll — keep trying until timeout
-      }
-    }, pollInterval);
-  });
+// Extract text from PDF using PDF.js (loaded from CDN on demand)
+async function _extractPdfText(base64Data){
+  // Dynamically load PDF.js if not already loaded
+  if(!window.pdfjsLib){
+    await new Promise(function(resolve, reject){
+      var s = document.createElement('script');
+      s.src = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js';
+      s.onload = resolve;
+      s.onerror = function(){ reject(new Error('Could not load PDF reader')); };
+      document.head.appendChild(s);
+    });
+    window.pdfjsLib.GlobalWorkerOptions.workerSrc =
+      'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+  }
+  // Decode base64 to binary
+  var binary = atob(base64Data);
+  var bytes = new Uint8Array(binary.length);
+  for(var i=0;i<binary.length;i++) bytes[i] = binary.charCodeAt(i);
+  var pdf = await window.pdfjsLib.getDocument({ data: bytes }).promise;
+  var text = '';
+  for(var p=1; p<=pdf.numPages; p++){
+    var page = await pdf.getPage(p);
+    var content = await page.getTextContent();
+    text += content.items.map(function(item){ return item.str; }).join(' ') + '\n';
+  }
+  return text.trim();
 }
 
 async function runScan(){
@@ -12294,32 +12275,17 @@ async function runScan(){
   try{
     var raw;
     if(_scanIsPdf){
-      // PDF — use background function + polling to bypass 10s timeout
-      var jobId = 'pdf_' + Date.now() + '_' + Math.random().toString(36).slice(2,8);
-      var startRes = await fetch('/.netlify/functions/ai-pdf-background', {
-        method: 'POST',
-        headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify({
-          jobId: jobId,
-          model: 'claude-sonnet-4-6',
-          max_tokens: 4000,
-          system: sys,
-          messages: [{
-            role: 'user',
-            content: [
-              {type:'document', source:{type:'base64', media_type:'application/pdf', data:_scanFileData}},
-              {type:'text', text:usr}
-            ]
-          }]
-        })
-      });
-      // Background functions always return 202 — anything else is an error
-      if(startRes.status !== 202){
-        var errBody = await startRes.text();
-        throw new Error('Could not start PDF processing ('+startRes.status+'): '+errBody.slice(0,100));
+      // PDF — extract text client-side with PDF.js, then send text to Claude
+      // This avoids Netlify's 10s function timeout entirely
+      btn.innerHTML = spinHTML + 'Reading PDF…';
+      var pdfText = await _extractPdfText(_scanFileData);
+      if(!pdfText || pdfText.length < 20){
+        throw new Error('Could not extract text from PDF — is it a scanned image PDF?');
       }
-      btn.innerHTML = spinHTML + 'Reading PDF.';
-      raw = await _pollPdfJob(jobId, btn);
+      // Truncate to ~12000 chars to stay within token limits
+      if(pdfText.length > 12000) pdfText = pdfText.slice(0, 12000) + '\n[truncated]';
+      btn.innerHTML = spinHTML + 'Analysing…';
+      raw = await callAI(sys, 'Here is the PDF content:\n\n' + pdfText + '\n\n' + usr, 4000);
     } else {
       // Image — use regular sync path (fast enough for 10s limit)
       var contentArr = [{type:'image', source:{type:'base64', media_type:_scanFileType, data:_scanFileData}},{type:'text', text:usr}];
