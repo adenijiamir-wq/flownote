@@ -2779,19 +2779,8 @@ body{
             <div class="prof-section-label" style="margin-top:1.1rem;">Profile picture</div>
 
             <!-- Upload zone -->
-            <label class="avatar-upload-zone" style="cursor:pointer;">
-              
-
-<!-- Summary banner (shown in note editor) -->
-<div id="note-summary-banner" style="display:none;background:var(--amber-light);border:1px solid var(--amber);border-radius:12px;padding:.85rem 1rem;margin-bottom:.75rem;">
-  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:.4rem;">
-    <div style="font-size:.65rem;font-weight:700;color:var(--amber);text-transform:uppercase;letter-spacing:.08em;">✦ AI Summary</div>
-    <button onclick="document.getElementById('note-summary-banner').style.display='none';" style="background:none;border:none;color:var(--amber);cursor:pointer;font-size:.8rem;">✕</button>
-  </div>
-  <div id="note-summary-text" style="font-size:.8rem;color:var(--ink);line-height:1.65;white-space:pre-wrap;"></div>
-</div>
-
-<input type="file" id="avatar-file-input" accept="image/*,image/gif" style="display:none" onchange="handleAvatarUpload(this)"/>
+            <label class="avatar-upload-zone" style="cursor:pointer;" for="avatar-file-input">
+              <input type="file" id="avatar-file-input" accept="image/*,image/gif" style="display:none" onchange="handleAvatarUpload(this)"/>
               <div id="avatar-preview-large">🙂</div>
               <div class="avatar-upload-hint">
                 <span class="avatar-upload-title">Tap to upload photo or GIF</span>
@@ -9509,14 +9498,14 @@ async function callAI(sys, msg, maxT = 500) {
 
 async function callAIWithContent(sys, contentArray, maxT=4000){
   // Images are compressed before reaching here so requests are fast (<10s)
-  // Goes through Netlify function — no user API key needed
+  // Uses Haiku — fastest model, stays under Netlify's 26s timeout
   try{
     const response = await fetch(getAIUrl(), {
       method: 'POST',
       headers: getAIHeaders(),
       body: JSON.stringify({
         model: 'claude-haiku-4-5-20251001',
-        max_tokens: maxT,
+        max_tokens: Math.min(maxT, 2000),
         system: sys,
         messages: [{ role: 'user', content: contentArray }]
       })
@@ -9535,6 +9524,35 @@ async function callAIWithContent(sys, contentArray, maxT=4000){
     throw err;
   }
 }
+// callAIFast — Haiku model, for quick/mechanical tasks (scan PDF text)
+async function callAIFast(sys, msg, maxT=2000){
+  if(localStorage.getItem('mn_is_minor')==='1') throw new Error('COPPA: AI disabled.');
+  try{
+    const response = await fetch(getAIUrl(), {
+      method: 'POST',
+      headers: getAIHeaders(),
+      body: JSON.stringify({
+        model: 'claude-haiku-4-5-20251001',
+        max_tokens: maxT,
+        system: sys,
+        messages: [{ role: 'user', content: msg }]
+      })
+    });
+    const rawText = await response.text();
+    if(!response.ok){
+      let _em=`AI error (${response.status})`;
+      try{_em=JSON.parse(rawText).error?.message||_em;}catch(_){}
+      throw new Error(_em);
+    }
+    let parsed;
+    try{parsed=JSON.parse(rawText);}catch(_){throw new Error('Non-JSON response.');}
+    return parsed.content[0].text.trim();
+  }catch(err){
+    console.error('callAIFast failed:',err);
+    throw err;
+  }
+}
+
 async function askAI(sys, msg, maxT=600){ return callAI(sys, msg, maxT); }
 async function callAIWithHistory(sys, history, maxT=600, _attempt=0){
   try{
@@ -12329,7 +12347,7 @@ async function runScan(){
       if(pdfText.length > 12000) pdfText = pdfText.slice(0, 12000) + '\n[truncated]';
       btn.innerHTML = spinHTML + 'Analysing…';
       // PDF text extracted client-side — just send text to AI (fast, no timeout risk)
-      raw = await callAI(sys, 'Here is the PDF content:\n\n' + pdfText + '\n\n' + usr, 4000);
+      raw = await callAIFast(sys, 'Here is the PDF content:\n\n' + pdfText + '\n\n' + usr, 2000);
     } else {
       // Image — use regular sync path (fast enough for 10s limit)
       var contentArr = [{type:'image', source:{type:'base64', media_type:_scanFileType, data:_scanFileData}},{type:'text', text:usr}];
