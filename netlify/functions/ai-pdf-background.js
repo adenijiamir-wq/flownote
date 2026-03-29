@@ -1,72 +1,56 @@
 // netlify/functions/ai-pdf-background.js
 //
-// Netlify Background Function — auto-returns 202 immediately.
-// Runs up to 15 minutes. Calls Claude with PDF, stores result in Netlify Blobs.
-// Client polls ai-pdf-status.js to get the result.
+// Netlify Background Function.
+// CRITICAL: The handler must NOT return anything.
+// Netlify automatically responds with 202 and keeps the function alive up to 15 min.
+// We call Claude, then store the result in Netlify Blobs for the client to poll.
 
 const { getStore } = require('@netlify/blobs');
 
-const CORS_HEADERS = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'Content-Type',
-  'Access-Control-Allow-Methods': 'POST, OPTIONS',
-  'content-type': 'application/json'
-};
-
-// TTL for stored results — 10 minutes is plenty (client polls for max 2 min)
-const JOB_TTL_SECONDS = 600;
+const JOB_TTL_SECONDS = 600; // 10 minutes
 
 exports.handler = async (event) => {
-  // Preflight
-  if (event.httpMethod === 'OPTIONS') {
-    return { statusCode: 200, headers: CORS_HEADERS, body: '' };
-  }
-  if (event.httpMethod !== 'POST') {
-    return { statusCode: 405, headers: CORS_HEADERS, body: JSON.stringify({ error: 'Method Not Allowed' }) };
-  }
-
+  // For background functions: do NOT return anything.
+  // Any return causes Netlify to treat this as a regular function (10s limit).
+  
   const apiKey = process.env.ANTHROPIC_API_KEY;
-  if (!apiKey) {
-    return {
-      statusCode: 500,
-      headers: CORS_HEADERS,
-      body: JSON.stringify({ error: 'API key not configured on server.' })
-    };
+  
+  let jobId = null;
+  let store;
+
+  try {
+    store = getStore('pdf-jobs');
+  } catch (e) {
+    console.error('[pdf-bg] Failed to get blob store:', e.message);
+    return;
   }
 
-  // Parse body — extract jobId and the rest of the Claude payload
-  let jobId, aiPayload;
   try {
-    const body = JSON.parse(event.body);
+    const body = JSON.parse(event.body || '{}');
     jobId = body.jobId;
-    if (!jobId) throw new Error('Missing jobId');
-    // Everything except jobId goes to Claude
-    const { jobId: _removed, ...rest } = body;
-    aiPayload = rest;
-  } catch (err) {
-    return {
-      statusCode: 400,
-      headers: CORS_HEADERS,
-      body: JSON.stringify({ error: 'Invalid request body: ' + err.message })
-    };
-  }
 
-  const store = getStore('pdf-jobs');
+    if (!jobId) {
+      console.error('[pdf-bg] No jobId in request');
+      return;
+    }
 
-  // Mark job as processing immediately so the status endpoint knows it started
-  try {
-    await store.set(
-      jobId,
-      JSON.stringify({ status: 'processing' }),
-      { ttl: JOB_TTL_SECONDS }
-    );
-  } catch (err) {
-    // Non-fatal — continue anyway
-    console.error('Failed to set processing state:', err.message);
-  }
+    if (!apiKey) {
+      await store.set(jobId, JSON.stringify({
+        status: 'error',
+        error: 'API key not configured on server'
+      }), { ttl: JOB_TTL_SECONDS });
+      return;
+    }
 
-  // Call Claude API
-  try {
+    // Strip jobId before forwarding to Claude
+    const { jobId: _strip, ...aiPayload } = body;
+
+    // Mark as processing
+    await store.set(jobId, JSON.stringify({
+      status: 'processing'
+    }), { ttl: JOB_TTL_SECONDS });
+
+    // Call Claude — this is the slow part (15-30s for PDFs)
     const res = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
       headers: {
@@ -79,30 +63,27 @@ exports.handler = async (event) => {
 
     const responseText = await res.text();
 
-    // Store result — whether success or API error
-    await store.set(
-      jobId,
-      JSON.stringify({
-        status: 'done',
-        statusCode: res.status,
-        body: responseText
-      }),
-      { ttl: JOB_TTL_SECONDS }
-    );
+    // Store result for client to pick up
+    await store.set(jobId, JSON.stringify({
+      status: 'done',
+      statusCode: res.status,
+      body: responseText
+    }), { ttl: JOB_TTL_SECONDS });
+
+    console.log('[pdf-bg] Job', jobId, 'done, claude status:', res.status);
+
   } catch (err) {
-    // Network or other error calling Claude
-    console.error('Claude API call failed:', err.message);
-    try {
-      await store.set(
-        jobId,
-        JSON.stringify({
+    console.error('[pdf-bg] Error for job', jobId, ':', err.message);
+    if (jobId && store) {
+      try {
+        await store.set(jobId, JSON.stringify({
           status: 'error',
-          error: 'Failed to reach AI: ' + err.message
-        }),
-        { ttl: JOB_TTL_SECONDS }
-      );
-    } catch (storeErr) {
-      console.error('Failed to store error state:', storeErr.message);
+          error: err.message || 'Unknown error'
+        }), { ttl: JOB_TTL_SECONDS });
+      } catch (e2) {
+        console.error('[pdf-bg] Failed to store error:', e2.message);
+      }
     }
   }
+  // NO return — keeps it as background function
 };
