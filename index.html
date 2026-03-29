@@ -2783,8 +2783,8 @@ body{
               <input type="file" id="avatar-file-input" accept="image/*,image/gif" style="display:none" onchange="handleAvatarUpload(this)"/>
               <div id="avatar-preview-large">🙂</div>
               <div class="avatar-upload-hint">
-                <span class="avatar-upload-title">Tap to upload photo or GIF</span>
-                <span class="avatar-upload-sub">JPG, PNG, GIF, WebP · Any size</span>
+                <span class="avatar-upload-title">Tap to upload a photo</span>
+                <span class="avatar-upload-sub">JPG, PNG, WebP · Any size — auto-resized to fit</span>
               </div>
             </label>
 
@@ -2795,18 +2795,16 @@ body{
               <div style="flex:1;height:1px;background:var(--line);"></div>
             </div>
             <div class="avatar-grid" id="avatar-grid">
+              <button class="avatar-pick" data-av="😊" onclick="pickAvatar('😊')">😊</button>
               <button class="avatar-pick" data-av="😎" onclick="pickAvatar('😎')">😎</button>
-              <button class="avatar-pick" data-av="🧠" onclick="pickAvatar('🧠')">🧠</button>
-              <button class="avatar-pick" data-av="🚀" onclick="pickAvatar('🚀')">🚀</button>
-              <button class="avatar-pick" data-av="🦁" onclick="pickAvatar('🦁')">🦁</button>
-              <button class="avatar-pick" data-av="🐉" onclick="pickAvatar('🐉')">🐉</button>
-              <button class="avatar-pick" data-av="🦊" onclick="pickAvatar('🦊')">🦊</button>
-              <button class="avatar-pick" data-av="🐺" onclick="pickAvatar('🐺')">🐺</button>
-              <button class="avatar-pick" data-av="🦋" onclick="pickAvatar('🦋')">🦋</button>
-              <button class="avatar-pick" data-av="⚡" onclick="pickAvatar('⚡')">⚡</button>
-              <button class="avatar-pick" data-av="🔥" onclick="pickAvatar('🔥')">🔥</button>
-              <button class="avatar-pick" data-av="🌊" onclick="pickAvatar('🌊')">🌊</button>
-              <button class="avatar-pick" data-av="🎯" onclick="pickAvatar('🎯')">🎯</button>
+              <button class="avatar-pick" data-av="👧" onclick="pickAvatar('👧')">👧</button>
+              <button class="avatar-pick" data-av="👦" onclick="pickAvatar('👦')">👦</button>
+              <button class="avatar-pick" data-av="💓" onclick="pickAvatar('💓')">💓</button>
+              <button class="avatar-pick" data-av="😐" onclick="pickAvatar('😐')">😐</button>
+              <button class="avatar-pick" data-av="😪" onclick="pickAvatar('😪')">😪</button>
+              <button class="avatar-pick" data-av="😓" onclick="pickAvatar('😓')">😓</button>
+              <button class="avatar-pick" data-av="🤑" onclick="pickAvatar('🤑')">🤑</button>
+              <button class="avatar-pick" data-av="🤪" onclick="pickAvatar('🤪')">🤪</button>
             </div>
           </div>
 
@@ -12313,6 +12311,12 @@ async function _extractPdfText(base64Data){
   return text.trim();
 }
 
+// Track last scanned note id so user can continue into same note
+var _lastScanNoteId = null;
+var _pdfChunks = []; // for multi-chunk PDF processing
+var _pdfChunkIdx = 0;
+var _pdfTotalChunks = 0;
+
 async function runScan(){
   if(!_scanFileData){ toast('Upload a file first'); return; }
   var count = parseInt(document.getElementById('scan-count').value)||8;
@@ -12336,24 +12340,42 @@ async function runScan(){
   try{
     var raw;
     if(_scanIsPdf){
-      // PDF — extract text client-side with PDF.js, then send text to Claude
-      // This avoids Netlify's 10s function timeout entirely
       btn.innerHTML = spinHTML + 'Reading PDF…';
-      var pdfText = await _extractPdfText(_scanFileData);
-      if(!pdfText || pdfText.length < 20){
+      var fullPdfText = await _extractPdfText(_scanFileData);
+      if(!fullPdfText || fullPdfText.length < 20){
         throw new Error('Could not extract text from PDF — is it a scanned image PDF?');
       }
-      // Truncate to ~12000 chars to stay within token limits
-      if(pdfText.length > 12000) pdfText = pdfText.slice(0, 12000) + '\n[truncated]';
-      btn.innerHTML = spinHTML + 'Analysing…';
-      // PDF text extracted client-side — just send text to AI (fast, no timeout risk)
-      raw = await callAIFast(sys, 'Here is the PDF content:\n\n' + pdfText + '\n\n' + usr, 2000);
+
+      // For extract mode: chunk large PDFs and process all chunks
+      if(_scanMode==='extract' && fullPdfText.length > 8000){
+        var CHUNK = 8000;
+        var chunks = [];
+        for(var ci=0; ci<fullPdfText.length; ci+=CHUNK){
+          chunks.push(fullPdfText.slice(ci, ci+CHUNK));
+        }
+        var allExtracted = '';
+        for(var ci2=0; ci2<chunks.length; ci2++){
+          btn.innerHTML = spinHTML + 'Part '+(ci2+1)+' of '+chunks.length+'…';
+          var chunkRaw = await callAIFast(sys, 'Here is part '+(ci2+1)+' of '+chunks.length+' of the PDF content:\n\n'+chunks[ci2]+'\n\n'+usr, 2500);
+          allExtracted += (allExtracted ? '\n\n' : '') + chunkRaw.trim();
+        }
+        raw = allExtracted;
+      } else {
+        // Short PDF — single request
+        var pdfText = fullPdfText.slice(0, 8000);
+        btn.innerHTML = spinHTML + 'Analysing…';
+        raw = await callAIFast(sys, 'Here is the PDF content:\n\n' + pdfText + '\n\n' + usr, 2500);
+      }
     } else {
-      // Image — use regular sync path (fast enough for 10s limit)
+      // Image — compressed before reaching here
       var contentArr = [{type:'image', source:{type:'base64', media_type:_scanFileType, data:_scanFileData}},{type:'text', text:usr}];
       raw = await callAIWithContent(sys, contentArr, 4000);
     }
     raw = raw.replace(/```json|```/g,'').trim();
+
+    // Detect possible truncation (response ends mid-sentence without punctuation)
+    var mightBeTruncated = _scanMode==='extract' && raw.length > 50 &&
+      !/[.!?:\n]$/.test(raw.trim()) && raw.length > 3800;
 
     if(_scanMode==='extract'){
       var noteBody = document.getElementById('note-body');
@@ -12361,9 +12383,14 @@ async function runScan(){
         var existing = noteBody.innerText||'';
         noteBody.innerText = (existing?existing+'\n\n':'')+raw;
         closeScanSheet();
-        toast('✓ Content extracted into note');
+        if(mightBeTruncated){
+          setTimeout(function(){
+            toast('⚠️ Some content may be cut off — open scan again to continue into this note', 5000);
+          }, 400);
+        } else {
+          toast('✓ Content extracted into note');
+        }
       } else {
-        // Create new note and open it
         var newNote = {
           id: Date.now()+Math.random(),
           title: 'Scan — '+new Date().toLocaleDateString(),
@@ -12372,10 +12399,16 @@ async function runScan(){
           created: new Date().toISOString()
         };
         notes.unshift(newNote);
-        save();
-        renderNotes();
-        closeScanSheet();
-        setTimeout(function(){ openNoteEditor(newNote.id); toast('✓ Note created from scan'); }, 200);
+        _lastScanNoteId = newNote.id;
+        save(); renderNotes(); closeScanSheet();
+        setTimeout(function(){
+          openNoteEditor(newNote.id);
+          if(mightBeTruncated){
+            setTimeout(function(){ toast('⚠️ Some content may be cut off — tap Upload in the note to continue', 5000); }, 400);
+          } else {
+            toast('✓ Note created from scan');
+          }
+        }, 200);
       }
     } else {
       var parsed;
@@ -12400,9 +12433,7 @@ async function runScan(){
           created: new Date().toISOString()
         };
         notes.unshift(newNote2);
-        save();
-        renderNotes();
-        closeScanSheet();
+        save(); renderNotes(); closeScanSheet();
         setTimeout(function(){ openNoteEditor(newNote2.id); toast('✓ '+parsed.length+' items — note created'); }, 200);
       }
     }
