@@ -1,89 +1,57 @@
 // netlify/functions/ai-pdf-background.js
-//
-// Netlify Background Function.
-// CRITICAL: The handler must NOT return anything.
-// Netlify automatically responds with 202 and keeps the function alive up to 15 min.
-// We call Claude, then store the result in Netlify Blobs for the client to poll.
+// Background function — NO return statement = runs up to 15 min
 
-const { getStore } = require('@netlify/blobs');
-
-const JOB_TTL_SECONDS = 600; // 10 minutes
+let _adminDb = null;
+function getAdminDb() {
+  if (_adminDb) return _adminDb;
+  const admin = require('firebase-admin');
+  if (!admin.apps.length) {
+    const sa = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT);
+    admin.initializeApp({ credential: admin.credential.cert(sa) });
+  }
+  _adminDb = admin.firestore();
+  return _adminDb;
+}
 
 exports.handler = async (event) => {
-  // For background functions: do NOT return anything.
-  // Any return causes Netlify to treat this as a regular function (10s limit).
-  
-  const apiKey = process.env.ANTHROPIC_API_KEY;
-  
   let jobId = null;
-  let store;
-
-  try {
-    store = getStore('pdf-jobs');
-  } catch (e) {
-    console.error('[pdf-bg] Failed to get blob store:', e.message);
-    return;
-  }
-
   try {
     const body = JSON.parse(event.body || '{}');
     jobId = body.jobId;
+    if (!jobId) return;
 
-    if (!jobId) {
-      console.error('[pdf-bg] No jobId in request');
+    const db = getAdminDb();
+    const ref = db.collection('pdfJobs').doc(jobId);
+
+    if (!process.env.ANTHROPIC_API_KEY) {
+      await ref.set({ status: 'error', error: 'API key not configured', t: Date.now() });
       return;
     }
 
-    if (!apiKey) {
-      await store.set(jobId, JSON.stringify({
-        status: 'error',
-        error: 'API key not configured on server'
-      }), { ttl: JOB_TTL_SECONDS });
-      return;
-    }
+    await ref.set({ status: 'processing', t: Date.now() });
 
-    // Strip jobId before forwarding to Claude
-    const { jobId: _strip, ...aiPayload } = body;
-
-    // Mark as processing
-    await store.set(jobId, JSON.stringify({
-      status: 'processing'
-    }), { ttl: JOB_TTL_SECONDS });
-
-    // Call Claude — this is the slow part (15-30s for PDFs)
+    const { jobId: _x, ...aiPayload } = body;
     const res = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
       headers: {
-        'x-api-key': apiKey,
+        'x-api-key': process.env.ANTHROPIC_API_KEY,
         'anthropic-version': '2023-06-01',
         'content-type': 'application/json'
       },
       body: JSON.stringify(aiPayload)
     });
 
-    const responseText = await res.text();
-
-    // Store result for client to pick up
-    await store.set(jobId, JSON.stringify({
-      status: 'done',
-      statusCode: res.status,
-      body: responseText
-    }), { ttl: JOB_TTL_SECONDS });
-
-    console.log('[pdf-bg] Job', jobId, 'done, claude status:', res.status);
+    const text = await res.text();
+    await ref.set({ status: 'done', statusCode: res.status, body: text, t: Date.now() });
 
   } catch (err) {
-    console.error('[pdf-bg] Error for job', jobId, ':', err.message);
-    if (jobId && store) {
+    console.error('[pdf-bg]', err.message);
+    if (jobId) {
       try {
-        await store.set(jobId, JSON.stringify({
-          status: 'error',
-          error: err.message || 'Unknown error'
-        }), { ttl: JOB_TTL_SECONDS });
-      } catch (e2) {
-        console.error('[pdf-bg] Failed to store error:', e2.message);
-      }
+        const db = getAdminDb();
+        await db.collection('pdfJobs').doc(jobId).set({ status: 'error', error: err.message, t: Date.now() });
+      } catch(e) {}
     }
   }
-  // NO return — keeps it as background function
+  // NO return
 };
