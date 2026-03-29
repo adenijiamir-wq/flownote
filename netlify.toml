@@ -2,6 +2,18 @@
   publish = "."
   functions = "netlify/functions"
 
+[functions]
+  node_bundler = "esbuild"
+
+[functions."send-reminders"]
+  schedule = "* * * * *"
+
+[functions."ai-pdf-background"]
+  node_bundler = "node"
+
+[functions."ai-pdf-status"]
+  node_bundler = "node"
+
 [[redirects]]
   from = "/api/ai"
   to = "/.netlify/functions/ai"
@@ -21,15 +33,3 @@
   from = "/api/ai-pdf-status"
   to = "/.netlify/functions/ai-pdf-status"
   status = 200
-
-[functions]
-  node_bundler = "esbuild"
-
-[functions."send-reminders"]
-  schedule = "* * * * *"
-
-[functions."ai-pdf-background"]
-  node_bundler = "node"
-
-[functions."ai-pdf-status"]
-  node_bundler = "node"
