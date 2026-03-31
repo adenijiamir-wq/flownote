@@ -6101,7 +6101,7 @@ async function genCardsFromNote(noteId, body, subject, count, topic){
   if(!body||body.length<30){toast('Note is too short to generate cards from.');return;}
   toast('Generating '+count+' cards…');
   try{
-    const raw = await askAI(
+    const raw = await callAIMedium(
       `You are a study card generator. Create exactly ${count} flashcards from the note below.
 ${topic?'Topic: '+topic:''}
 Subject: ${subject}
@@ -6169,7 +6169,7 @@ async function genQuizFromNote(note, count, type, topic){
   toast('Generating quiz…');
   try{
     const typeInstr = type==='mcq'?'multiple choice only':type==='open'?'open ended only':'mix of multiple choice and open ended';
-    const raw = await askAI(
+    const raw = await callAIMedium(
       `You are a quiz generator. Create exactly ${count} quiz questions (${typeInstr}) from the note below.
 ${topic?'Topic: '+topic:''}
 
@@ -6193,7 +6193,7 @@ async function genQuizFromCards(pool, count, type, topic){
   const sample = pool.slice(0,20).map(c=>'Q: '+c.question+'\nA: '+c.answer).join('\n\n');
   try{
     const typeInstr = type==='mcq'?'multiple choice only':type==='open'?'open ended only':'mix of multiple choice and open ended';
-    const raw = await askAI(
+    const raw = await callAIMedium(
       `You are a quiz generator. Create exactly ${count} quiz questions (${typeInstr}) based on these flashcards.
 ${topic?'Topic: '+topic:''}
 
@@ -9547,6 +9547,44 @@ async function callAIFast(sys, msg, maxT=2000){
     return parsed.content[0].text.trim();
   }catch(err){
     console.error('callAIFast failed:',err);
+    throw err;
+  }
+}
+
+// callAIMedium — Haiku model for structured output tasks (quiz, cards)
+// Fast enough to stay under Netlify timeout, generates clean JSON reliably
+async function callAIMedium(sys, msg, maxT=4000, _attempt=0){
+  if(localStorage.getItem('mn_is_minor')==='1') throw new Error('COPPA: AI disabled.');
+  try{
+    const response = await fetch(getAIUrl(), {
+      method: 'POST',
+      headers: getAIHeaders(),
+      body: JSON.stringify({
+        model: 'claude-haiku-4-5-20251001',
+        max_tokens: maxT,
+        system: sys,
+        messages: [{ role: 'user', content: msg }]
+      })
+    });
+    const rawText = await response.text();
+    if((response.status===529||response.status===503||response.status===504||response.status===502)&&_attempt<2){
+      await new Promise(function(r){setTimeout(r,2000+_attempt*1500);});
+      return callAIMedium(sys, msg, maxT, _attempt+1);
+    }
+    if(!response.ok){
+      let _em=`AI error (${response.status})`;
+      try{_em=JSON.parse(rawText).error?.message||_em;}catch(_){}
+      throw new Error(_em);
+    }
+    let parsed;
+    try{parsed=JSON.parse(rawText);}catch(_){throw new Error('Non-JSON response.');}
+    return parsed.content[0].text.trim();
+  }catch(err){
+    if(_attempt<1&&(err.message.includes('fetch')||err.message.includes('Failed')||err.message.includes('network'))){
+      await new Promise(function(r){setTimeout(r,1500);});
+      return callAIMedium(sys, msg, maxT, _attempt+1);
+    }
+    console.error('callAIMedium failed:',err);
     throw err;
   }
 }
