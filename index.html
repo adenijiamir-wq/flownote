@@ -5872,7 +5872,7 @@ RULES:
 - Also identify a short topic name (2-5 words) that best describes what this note is about
 - Return ONLY a JSON object: {"topic":"topic name","cards":[{"q":"question","a":"answer"}]} or []
 - No explanation, no markdown, just the JSON`,
-      body.substring(0,1500), 400
+      body.substring(0,2000), 800
     );
     let parsed;
     try{
@@ -6178,7 +6178,7 @@ Return ONLY a JSON array. Each item:
 - Open ended: {"type":"open","q":"question","answer":"model answer","explanation":"key points to include"}
 
 No markdown, no explanation, just the array.`,
-      (note.title?note.title+'\n\n':'')+(note.body||'').substring(0,2000), 1200
+      (note.title?note.title+'\n\n':'')+(note.body||'').substring(0,4000), 4000
     );
     let qs;
     try{qs=JSON.parse(raw.replace(/```json|```/g,'').trim());}catch{toast('AI response error — try again');return;}
@@ -6202,7 +6202,7 @@ Return ONLY a JSON array. Each item:
 - Open ended: {"type":"open","q":"question","answer":"model answer","explanation":"key points to include"}
 
 No markdown, no explanation, just the array.`,
-      sample, 1200
+      sample, 4000
     );
     let qs;
     try{qs=JSON.parse(raw.replace(/```json|```/g,'').trim());}catch{toast('AI response error — try again');return;}
@@ -8522,7 +8522,7 @@ Q: [question]|A: [answer]
   // AI always available via server-side proxy
   try{
     // Send full conversation history for memory
-    const reply=await callAIWithHistory(sys, chatHistory, 800);
+    const reply=await callAIWithHistory(sys, chatHistory, 1200);
     typing.classList.remove('show');
 
     // ── Parse ACTION blocks ──
