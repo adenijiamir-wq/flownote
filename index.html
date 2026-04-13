@@ -169,7 +169,7 @@ button{-webkit-tap-highlight-color:transparent;}
 [data-theme="oled"] .fc-face-back{background:#0d0d0d;}
 
 /* Greet card */
-[data-theme="dark"] .greet-card{background:var(--green);color:#fff;}
+[data-theme="dark"] .greet-card{background:linear-gradient(135deg,#1e5c35 0%,#5a1a1a 100%);color:#fff;}
 [data-theme="dark"] .greet-card .greet-name{color:#fff;}
 [data-theme="dark"] .greet-speech{color:rgba(255,255,255,.85);}
 
@@ -698,7 +698,7 @@ html,body{height:100%;overflow:hidden;font-family:'DM Sans',-apple-system,BlinkM
 .home-grid .full{grid-column:1/-1;}
 
 /* Greet card */
-.greet-card{background:var(--green);color:#fff;border-radius:var(--r);padding:.75rem 1rem;position:relative;overflow:hidden;}
+.greet-card{background:linear-gradient(135deg,var(--green) 0%,#6b1a1a 100%);color:#fff;border-radius:var(--r);padding:.75rem 1rem;position:relative;overflow:hidden;}
 .greet-card::before{content:'';position:absolute;right:-20px;top:-20px;width:120px;height:120px;border-radius:50%;background:rgba(255,255,255,.04);}
 .greet-card::after{content:'';position:absolute;right:20px;bottom:-30px;width:80px;height:80px;border-radius:50%;background:rgba(255,255,255,.03);}
 .greet-top{display:flex;align-items:center;gap:.75rem;margin-bottom:0;position:relative;z-index:1;}
@@ -1828,7 +1828,7 @@ body{
 
 /* ── Greet card — rich gradient ── */
 .greet-card{
-  background:linear-gradient(135deg,#1a6b3c 0%,#145530 55%,#1d7844 100%)!important;
+  background:linear-gradient(135deg,#1a6b3c 0%,#145530 45%,#6b1a1a 100%)!important;
   box-shadow:0 8px 28px rgba(26,107,60,.28),0 2px 6px rgba(26,107,60,.15)!important;
   border-radius:16px!important;
 }
@@ -2779,12 +2779,23 @@ body{
             <div class="prof-section-label" style="margin-top:1.1rem;">Profile picture</div>
 
             <!-- Upload zone -->
-            <label class="avatar-upload-zone" style="cursor:pointer;" for="avatar-file-input">
-              <input type="file" id="avatar-file-input" accept="image/*,image/gif" style="display:none" onchange="handleAvatarUpload(this)"/>
+            <label class="avatar-upload-zone" style="cursor:pointer;">
+              
+
+<!-- Summary banner (shown in note editor) -->
+<div id="note-summary-banner" style="display:none;background:var(--amber-light);border:1px solid var(--amber);border-radius:12px;padding:.85rem 1rem;margin-bottom:.75rem;">
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:.4rem;">
+    <div style="font-size:.65rem;font-weight:700;color:var(--amber);text-transform:uppercase;letter-spacing:.08em;">✦ AI Summary</div>
+    <button onclick="document.getElementById('note-summary-banner').style.display='none';" style="background:none;border:none;color:var(--amber);cursor:pointer;font-size:.8rem;">✕</button>
+  </div>
+  <div id="note-summary-text" style="font-size:.8rem;color:var(--ink);line-height:1.65;white-space:pre-wrap;"></div>
+</div>
+
+<input type="file" id="avatar-file-input" accept="image/*,image/gif" style="display:none" onchange="handleAvatarUpload(this)"/>
               <div id="avatar-preview-large">🙂</div>
               <div class="avatar-upload-hint">
-                <span class="avatar-upload-title">Tap to upload a photo</span>
-                <span class="avatar-upload-sub">JPG, PNG, WebP · Any size — auto-resized to fit</span>
+                <span class="avatar-upload-title">Tap to upload photo or GIF</span>
+                <span class="avatar-upload-sub">JPG, PNG, GIF, WebP · Any size</span>
               </div>
             </label>
 
@@ -2795,16 +2806,18 @@ body{
               <div style="flex:1;height:1px;background:var(--line);"></div>
             </div>
             <div class="avatar-grid" id="avatar-grid">
-              <button class="avatar-pick" data-av="😊" onclick="pickAvatar('😊')">😊</button>
               <button class="avatar-pick" data-av="😎" onclick="pickAvatar('😎')">😎</button>
-              <button class="avatar-pick" data-av="👧" onclick="pickAvatar('👧')">👧</button>
-              <button class="avatar-pick" data-av="👦" onclick="pickAvatar('👦')">👦</button>
-              <button class="avatar-pick" data-av="💓" onclick="pickAvatar('💓')">💓</button>
-              <button class="avatar-pick" data-av="😐" onclick="pickAvatar('😐')">😐</button>
-              <button class="avatar-pick" data-av="😪" onclick="pickAvatar('😪')">😪</button>
-              <button class="avatar-pick" data-av="😓" onclick="pickAvatar('😓')">😓</button>
-              <button class="avatar-pick" data-av="🤑" onclick="pickAvatar('🤑')">🤑</button>
-              <button class="avatar-pick" data-av="🤪" onclick="pickAvatar('🤪')">🤪</button>
+              <button class="avatar-pick" data-av="🧠" onclick="pickAvatar('🧠')">🧠</button>
+              <button class="avatar-pick" data-av="🚀" onclick="pickAvatar('🚀')">🚀</button>
+              <button class="avatar-pick" data-av="🦁" onclick="pickAvatar('🦁')">🦁</button>
+              <button class="avatar-pick" data-av="🐉" onclick="pickAvatar('🐉')">🐉</button>
+              <button class="avatar-pick" data-av="🦊" onclick="pickAvatar('🦊')">🦊</button>
+              <button class="avatar-pick" data-av="🐺" onclick="pickAvatar('🐺')">🐺</button>
+              <button class="avatar-pick" data-av="🦋" onclick="pickAvatar('🦋')">🦋</button>
+              <button class="avatar-pick" data-av="⚡" onclick="pickAvatar('⚡')">⚡</button>
+              <button class="avatar-pick" data-av="🔥" onclick="pickAvatar('🔥')">🔥</button>
+              <button class="avatar-pick" data-av="🌊" onclick="pickAvatar('🌊')">🌊</button>
+              <button class="avatar-pick" data-av="🎯" onclick="pickAvatar('🎯')">🎯</button>
             </div>
           </div>
 
@@ -2814,7 +2827,7 @@ body{
           <div class="prof-panel" id="prof-panel-data">
 
             <!-- Hero account card -->
-            <div style="background:linear-gradient(135deg,var(--green) 0%,#145c32 100%);border-radius:16px;padding:1.2rem 1.1rem;margin-bottom:1.2rem;display:flex;align-items:center;gap:.9rem;position:relative;overflow:hidden;">
+            <div style="background:linear-gradient(135deg,var(--green) 0%,#145530 45%,#6b1a1a 100%);border-radius:16px;padding:1.2rem 1.1rem;margin-bottom:1.2rem;display:flex;align-items:center;gap:.9rem;position:relative;overflow:hidden;">
               <div style="position:absolute;top:-18px;right:-18px;width:80px;height:80px;border-radius:50%;background:rgba(255,255,255,.07);"></div>
               <div style="position:absolute;bottom:-24px;right:24px;width:56px;height:56px;border-radius:50%;background:rgba(255,255,255,.05);"></div>
               <div id="acct-avatar-sm" style="width:48px;height:48px;border-radius:50%;background:rgba(255,255,255,.2);border:2.5px solid rgba(255,255,255,.4);display:flex;align-items:center;justify-content:center;font-size:1.3rem;flex-shrink:0;overflow:hidden;"></div>
@@ -3223,7 +3236,7 @@ body{
     <label style="font-size:.68rem;font-weight:700;text-transform:uppercase;letter-spacing:.09em;color:var(--muted);display:block;margin-bottom:.4rem;">How many?</label>
     <div style="display:flex;align-items:center;gap:.75rem;margin-bottom:1rem;">
       <button onclick="adjGenCount(-1)" style="width:36px;height:36px;border-radius:50%;border:1.5px solid var(--line);background:var(--paper2);font-size:1.2rem;cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--ink);">−</button>
-      <input id="gen-count-display" type="number" min="1" max="30" value="5" oninput="var v=parseInt(this.value)||1;_genCount=Math.max(1,Math.min(30,v));this.value=_genCount;" onblur="this.value=_genCount;" style="font-size:1.4rem;font-weight:800;color:var(--green);width:72px;height:36px;text-align:center;border:1.5px solid var(--green);border-radius:10px;background:var(--green-light);font-family:inherit;outline:none;-moz-appearance:textfield;padding:0;"/>
+      <input id="gen-count-display" type="number" min="1" max="30" value="5" oninput="var v=parseInt(this.value)||1;_genCount=Math.max(1,Math.min(30,v));this.value=_genCount;" onblur="this.value=_genCount;" style="font-size:1.4rem;font-weight:800;color:var(--green);width:54px;text-align:center;border:none;background:transparent;font-family:inherit;outline:none;-moz-appearance:textfield;"/>
       <button onclick="adjGenCount(1)" style="width:36px;height:36px;border-radius:50%;border:1.5px solid var(--line);background:var(--paper2);font-size:1.2rem;cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--ink);">+</button>
       <span style="font-size:.72rem;color:var(--muted);">suggested based on note length</span>
     </div>
@@ -6113,7 +6126,7 @@ Rules:
 - Questions should be clear and unambiguous
 - Answers concise (1-2 sentences max)
 - No markdown, no explanation, just the array`,
-      body.substring(0,3000), 4000
+      body.substring(0,4000), 4000
     );
     let cards;
     try{cards=JSON.parse(raw.replace(/```json|```/g,'').trim());}catch{toast('AI response error — try again');return;}
@@ -8522,7 +8535,7 @@ Q: [question]|A: [answer]
   // AI always available via server-side proxy
   try{
     // Send full conversation history for memory
-    const reply=await callAIWithHistory(sys, chatHistory, 1200);
+    const reply=await callAIWithHistory(sys, chatHistory, 800);
     typing.classList.remove('show');
 
     // ── Parse ACTION blocks ──
@@ -9077,33 +9090,19 @@ function pickAvatar(av){
 
 function handleAvatarUpload(input){
   const file=input.files[0]; if(!file)return;
-  if(!file.type.startsWith('image/')){ toast('Please choose an image file'); return; }
   const reader=new FileReader();
   reader.onload=e=>{
     const dataUrl=e.target.result;
-    // Auto-compress to fit localStorage — target 200x200px, quality 0.82
-    const img=new Image();
-    img.onload=function(){
-      const MAX=200;
-      const scale=Math.min(1, MAX/Math.max(img.width,img.height));
-      const w=Math.round(img.width*scale), h=Math.round(img.height*scale);
-      const cv=document.createElement('canvas');
-      cv.width=w; cv.height=h;
-      const ctx=cv.getContext('2d');
-      ctx.drawImage(img,0,0,w,h);
-      // Try quality 0.82 first, drop to 0.65 if still too big
-      let out=cv.toDataURL('image/jpeg',0.82);
-      if(out.length>600000) out=cv.toDataURL('image/jpeg',0.65);
-      if(out.length>600000) out=cv.toDataURL('image/jpeg',0.45);
-      localStorage.setItem('fn_avatar_img', out);
-      currentAvatar='__img__';
-      localStorage.setItem('fn_avatar','__img__');
-      _updateAvatarDisplay(null, out);
-      document.querySelectorAll('.avatar-pick').forEach(b=>b.classList.remove('active'));
-      if(typeof save==='function'&&typeof userName!=='undefined') save();
-      toast('✓ Profile picture updated!');
-    };
-    img.src=dataUrl;
+    // Store as image (base64) — up to ~500KB to keep localStorage safe
+    if(dataUrl.length > 600000){ toast('Image too large — try a smaller file'); return; }
+    localStorage.setItem('fn_avatar_img', dataUrl);
+    currentAvatar='__img__';
+    localStorage.setItem('fn_avatar','__img__');
+    _updateAvatarDisplay(null, dataUrl);
+    // Clear emoji active state
+    document.querySelectorAll('.avatar-pick').forEach(b=>b.classList.remove('active'));
+    if(typeof save==='function'&&typeof userName!=='undefined') save();
+    toast('✓ Profile picture updated!');
   };
   reader.readAsDataURL(file);
 }
@@ -9495,19 +9494,21 @@ async function callAI(sys, msg, maxT = 500) {
 
 
 async function callAIWithContent(sys, contentArray, maxT=4000){
-  // Images are compressed before reaching here so requests are fast (<10s)
-  // Uses Haiku — fastest model, stays under Netlify's 26s timeout
   try{
+    const _ctrl = new AbortController();
+    const _timeout = setTimeout(()=>_ctrl.abort(), 55000); // 55s timeout (Netlify limit is 60s)
     const response = await fetch(getAIUrl(), {
       method: 'POST',
       headers: getAIHeaders(),
+      signal: _ctrl.signal,
       body: JSON.stringify({
-        model: 'claude-haiku-4-5-20251001',
-        max_tokens: Math.min(maxT, 2000),
+        model: 'claude-sonnet-4-6',
+        max_tokens: maxT,
         system: sys,
         messages: [{ role: 'user', content: contentArray }]
       })
     });
+    clearTimeout(_timeout);
     const rawText = await response.text();
     if(!response.ok){
       let _em=`AI error (${response.status})`;
@@ -9522,73 +9523,27 @@ async function callAIWithContent(sys, contentArray, maxT=4000){
     throw err;
   }
 }
-// callAIFast — Haiku model, for quick/mechanical tasks (scan PDF text)
-async function callAIFast(sys, msg, maxT=2000){
-  if(localStorage.getItem('mn_is_minor')==='1') throw new Error('COPPA: AI disabled.');
-  try{
-    const response = await fetch(getAIUrl(), {
-      method: 'POST',
-      headers: getAIHeaders(),
-      body: JSON.stringify({
-        model: 'claude-haiku-4-5-20251001',
-        max_tokens: maxT,
-        system: sys,
-        messages: [{ role: 'user', content: msg }]
-      })
-    });
-    const rawText = await response.text();
-    if(!response.ok){
-      let _em=`AI error (${response.status})`;
-      try{_em=JSON.parse(rawText).error?.message||_em;}catch(_){}
-      throw new Error(_em);
-    }
-    let parsed;
-    try{parsed=JSON.parse(rawText);}catch(_){throw new Error('Non-JSON response.');}
-    return parsed.content[0].text.trim();
-  }catch(err){
-    console.error('callAIFast failed:',err);
-    throw err;
-  }
-}
-
-// callAIMedium — Haiku model for structured output tasks (quiz, cards)
-// Fast enough to stay under Netlify timeout, generates clean JSON reliably
 async function callAIMedium(sys, msg, maxT=4000, _attempt=0){
   if(localStorage.getItem('mn_is_minor')==='1') throw new Error('COPPA: AI disabled.');
   try{
     const response = await fetch(getAIUrl(), {
-      method: 'POST',
-      headers: getAIHeaders(),
-      body: JSON.stringify({
-        model: 'claude-haiku-4-5-20251001',
-        max_tokens: maxT,
-        system: sys,
-        messages: [{ role: 'user', content: msg }]
-      })
+      method: 'POST', headers: getAIHeaders(),
+      body: JSON.stringify({ model: 'claude-haiku-4-5-20251001', max_tokens: maxT, system: sys, messages: [{ role: 'user', content: msg }] })
     });
     const rawText = await response.text();
     if((response.status===529||response.status===503||response.status===504||response.status===502)&&_attempt<2){
       await new Promise(function(r){setTimeout(r,2000+_attempt*1500);});
       return callAIMedium(sys, msg, maxT, _attempt+1);
     }
-    if(!response.ok){
-      let _em=`AI error (${response.status})`;
-      try{_em=JSON.parse(rawText).error?.message||_em;}catch(_){}
-      throw new Error(_em);
-    }
-    let parsed;
-    try{parsed=JSON.parse(rawText);}catch(_){throw new Error('Non-JSON response.');}
-    return parsed.content[0].text.trim();
+    if(!response.ok){ let _em=`AI error (${response.status})`; try{_em=JSON.parse(rawText).error?.message||_em;}catch(_){} throw new Error(_em); }
+    let parsed; try{parsed=JSON.parse(rawText);}catch(_){throw new Error('Non-JSON response.');} return parsed.content[0].text.trim();
   }catch(err){
     if(_attempt<1&&(err.message.includes('fetch')||err.message.includes('Failed')||err.message.includes('network'))){
-      await new Promise(function(r){setTimeout(r,1500);});
-      return callAIMedium(sys, msg, maxT, _attempt+1);
+      await new Promise(function(r){setTimeout(r,1500);}); return callAIMedium(sys, msg, maxT, _attempt+1);
     }
-    console.error('callAIMedium failed:',err);
-    throw err;
+    console.error('callAIMedium failed:',err); throw err;
   }
 }
-
 async function askAI(sys, msg, maxT=600){ return callAI(sys, msg, maxT); }
 async function callAIWithHistory(sys, history, maxT=600, _attempt=0){
   try{
@@ -12247,60 +12202,29 @@ function handleScanFile(input){
   _scanIsPdf = file.type==='application/pdf';
   _scanFileType = file.type;
 
-  // PDFs: 10MB max (text extracted client-side, only text sent to AI)
-  // Images: any size — compressed client-side before sending
-  var maxBytes = _scanIsPdf ? 10 * 1024 * 1024 : 999 * 1024 * 1024;
+  // Netlify has a ~4MB body limit. Base64 adds 33% overhead so cap original at 3MB.
+  var maxBytes = 3 * 1024 * 1024;
   if(file.size > maxBytes){
-    toast('PDF too large (max 10MB) — try splitting it first.');
-    input.value = ''; return;
+    var sizeMB = (file.size/1024/1024).toFixed(1);
+    toast('File too large ('+sizeMB+'MB) — max 3MB. Try a shorter PDF or compress it first.');
+    input.value = '';
+    return;
   }
 
-  var _pdfIcon = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48"><rect width="48" height="48" rx="8" fill="#1a3a24"/><text x="50%" y="58%" text-anchor="middle" fill="#52d98a" font-size="18" font-family="sans-serif">PDF</text></svg>');
-
-  function _showPreview(dataUrl, label){
+  var reader = new FileReader();
+  reader.onload = function(e){
+    _scanFileData = e.target.result.split(',')[1];
     document.getElementById('scan-drop-zone').style.display = 'none';
     var fp = document.getElementById('scan-file-preview');
     fp.style.display = 'flex';
     document.getElementById('scan-preview-name').textContent = file.name;
-    document.getElementById('scan-preview-meta').textContent = label;
+    document.getElementById('scan-preview-meta').textContent = (file.size/1024).toFixed(0)+' KB · '+(_scanIsPdf?'PDF':'Image');
     var thumb = document.getElementById('scan-preview-thumb');
-    thumb.src = _scanIsPdf ? _pdfIcon : dataUrl;
+    var _pdfIcon = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48"><rect width="48" height="48" rx="8" fill="#1a3a24"/><text x="50%" y="58%" text-anchor="middle" fill="#52d98a" font-size="18" font-family="sans-serif">PDF</text></svg>');
+    thumb.src = _scanIsPdf ? _pdfIcon : e.target.result;
     checkScanReady();
-  }
-
-  if(_scanIsPdf){
-    var reader = new FileReader();
-    reader.onload = function(e){
-      _scanFileData = e.target.result.split(',')[1];
-      _scanFileType = 'application/pdf';
-      _showPreview(null, (file.size/1024).toFixed(0)+' KB · PDF');
-    };
-    reader.readAsDataURL(file);
-  } else {
-    // Images — compress to max 1200px wide and quality 0.82 before sending
-    var reader2 = new FileReader();
-    reader2.onload = function(e){
-      var img = new Image();
-      img.onload = function(){
-        var MAX_DIM = 1200;
-        var scale = Math.min(1, MAX_DIM / Math.max(img.width, img.height));
-        var w = Math.round(img.width * scale), h = Math.round(img.height * scale);
-        var cv = document.createElement('canvas');
-        cv.width = w; cv.height = h;
-        cv.getContext('2d').drawImage(img, 0, 0, w, h);
-        var compressed = cv.toDataURL('image/jpeg', 0.82);
-        // If still big, compress more
-        if(compressed.length > 4 * 1024 * 1024) compressed = cv.toDataURL('image/jpeg', 0.65);
-        if(compressed.length > 4 * 1024 * 1024) compressed = cv.toDataURL('image/jpeg', 0.5);
-        _scanFileData = compressed.split(',')[1];
-        _scanFileType = 'image/jpeg';
-        var kb = Math.round(compressed.length * 0.75 / 1024);
-        _showPreview(compressed, kb + ' KB · Image (compressed)');
-      };
-      img.src = e.target.result;
-    };
-    reader2.readAsDataURL(file);
-  }
+  };
+  reader.readAsDataURL(file);
 }
 function clearScanFile(){
   _scanFileData=null;_scanFileType=null;_scanIsPdf=false;
@@ -12349,12 +12273,6 @@ async function _extractPdfText(base64Data){
   return text.trim();
 }
 
-// Track last scanned note id so user can continue into same note
-var _lastScanNoteId = null;
-var _pdfChunks = []; // for multi-chunk PDF processing
-var _pdfChunkIdx = 0;
-var _pdfTotalChunks = 0;
-
 async function runScan(){
   if(!_scanFileData){ toast('Upload a file first'); return; }
   var count = parseInt(document.getElementById('scan-count').value)||8;
@@ -12378,42 +12296,23 @@ async function runScan(){
   try{
     var raw;
     if(_scanIsPdf){
+      // PDF — extract text client-side with PDF.js, then send text to Claude
+      // This avoids Netlify's 10s function timeout entirely
       btn.innerHTML = spinHTML + 'Reading PDF…';
-      var fullPdfText = await _extractPdfText(_scanFileData);
-      if(!fullPdfText || fullPdfText.length < 20){
+      var pdfText = await _extractPdfText(_scanFileData);
+      if(!pdfText || pdfText.length < 20){
         throw new Error('Could not extract text from PDF — is it a scanned image PDF?');
       }
-
-      // For extract mode: chunk large PDFs and process all chunks
-      if(_scanMode==='extract' && fullPdfText.length > 8000){
-        var CHUNK = 8000;
-        var chunks = [];
-        for(var ci=0; ci<fullPdfText.length; ci+=CHUNK){
-          chunks.push(fullPdfText.slice(ci, ci+CHUNK));
-        }
-        var allExtracted = '';
-        for(var ci2=0; ci2<chunks.length; ci2++){
-          btn.innerHTML = spinHTML + 'Part '+(ci2+1)+' of '+chunks.length+'…';
-          var chunkRaw = await callAIFast(sys, 'Here is part '+(ci2+1)+' of '+chunks.length+' of the PDF content:\n\n'+chunks[ci2]+'\n\n'+usr, 2500);
-          allExtracted += (allExtracted ? '\n\n' : '') + chunkRaw.trim();
-        }
-        raw = allExtracted;
-      } else {
-        // Short PDF — single request
-        var pdfText = fullPdfText.slice(0, 8000);
-        btn.innerHTML = spinHTML + 'Analysing…';
-        raw = await callAIFast(sys, 'Here is the PDF content:\n\n' + pdfText + '\n\n' + usr, 2500);
-      }
+      // Truncate to ~12000 chars to stay within token limits
+      if(pdfText.length > 12000) pdfText = pdfText.slice(0, 12000) + '\n[truncated]';
+      btn.innerHTML = spinHTML + 'Analysing…';
+      raw = await callAI(sys, 'Here is the PDF content:\n\n' + pdfText + '\n\n' + usr, 4000);
     } else {
-      // Image — compressed before reaching here
+      // Image — use regular sync path (fast enough for 10s limit)
       var contentArr = [{type:'image', source:{type:'base64', media_type:_scanFileType, data:_scanFileData}},{type:'text', text:usr}];
       raw = await callAIWithContent(sys, contentArr, 4000);
     }
     raw = raw.replace(/```json|```/g,'').trim();
-
-    // Detect possible truncation (response ends mid-sentence without punctuation)
-    var mightBeTruncated = _scanMode==='extract' && raw.length > 50 &&
-      !/[.!?:\n]$/.test(raw.trim()) && raw.length > 3800;
 
     if(_scanMode==='extract'){
       var noteBody = document.getElementById('note-body');
@@ -12421,14 +12320,9 @@ async function runScan(){
         var existing = noteBody.innerText||'';
         noteBody.innerText = (existing?existing+'\n\n':'')+raw;
         closeScanSheet();
-        if(mightBeTruncated){
-          setTimeout(function(){
-            toast('⚠️ Some content may be cut off — open scan again to continue into this note', 5000);
-          }, 400);
-        } else {
-          toast('✓ Content extracted into note');
-        }
+        toast('✓ Content extracted into note');
       } else {
+        // Create new note and open it
         var newNote = {
           id: Date.now()+Math.random(),
           title: 'Scan — '+new Date().toLocaleDateString(),
@@ -12437,16 +12331,10 @@ async function runScan(){
           created: new Date().toISOString()
         };
         notes.unshift(newNote);
-        _lastScanNoteId = newNote.id;
-        save(); renderNotes(); closeScanSheet();
-        setTimeout(function(){
-          openNoteEditor(newNote.id);
-          if(mightBeTruncated){
-            setTimeout(function(){ toast('⚠️ Some content may be cut off — tap Upload in the note to continue', 5000); }, 400);
-          } else {
-            toast('✓ Note created from scan');
-          }
-        }, 200);
+        save();
+        renderNotes();
+        closeScanSheet();
+        setTimeout(function(){ openNoteEditor(newNote.id); toast('✓ Note created from scan'); }, 200);
       }
     } else {
       var parsed;
@@ -12471,7 +12359,9 @@ async function runScan(){
           created: new Date().toISOString()
         };
         notes.unshift(newNote2);
-        save(); renderNotes(); closeScanSheet();
+        save();
+        renderNotes();
+        closeScanSheet();
         setTimeout(function(){ openNoteEditor(newNote2.id); toast('✓ '+parsed.length+' items — note created'); }, 200);
       }
     }
